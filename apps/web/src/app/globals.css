@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  /* NAHCA — original design system (independent of the legacy hinduchaplains.com skin) */
+  --color-brand: #c17a1f; /* marigold/turmeric accent — links, buttons, highlights */
+  --color-brand-dark: #9a6118; /* hover / pressed state */
+  --color-ink: #1e2233; /* deep indigo-black — body copy */
+  --color-forest: #1a3d2a; /* deep green — hero overlay / dark bands */
+  --color-forest-soft: #2f6b46; /* lighter green for gradients/accents */
+  --color-cream: #e3f0e2; /* sage base background */
+  --color-sand: #c2ddc2; /* richer sage — card / alternate band background */
+}
+
+@theme inline {
+  --color-brand: var(--color-brand);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-ink: var(--color-ink);
+  --color-forest: var(--color-forest);
+  --color-forest-soft: var(--color-forest-soft);
+  --color-cream: var(--color-cream);
+  --color-sand: var(--color-sand);
+  --font-body: var(--font-body);
+  --font-heading: var(--font-heading);
+}
+
+body {
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), Georgia, serif;
+}

@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  member
+}
+
+enum MembershipType {
+  regular
+  student
+  institutional
+  conference
+}
+
+enum MembershipStatus {
+  active
+  expired
+  pending
+}
+
+enum CouponDiscountType {
+  percent
+  complimentary
+}
+
+enum PaymentType {
+  membership
+  donation
+  conference
+  endorsement
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  passwordHash String
+  name         String
+  role         Role         @default(member)
+  createdAt    DateTime     @default(now())
+  memberships  Membership[]
+  payments     Payment[]
+}
+
+model Membership {
+  id                   Int              @id @default(autoincrement())
+  userId               Int
+  user                 User             @relation(fields: [userId], references: [id])
+  type                 MembershipType
+  status               MembershipStatus @default(pending)
+  startDate            DateTime?
+  endDate              DateTime?
+  priceCents           Int
+  stripeSubscriptionId String?
+  groupId              String?
+  createdAt            DateTime         @default(now())
+
+  @@index([userId])
+  @@index([groupId])
+}
+
+model Donation {
+  id               Int      @id @default(autoincrement())
+  donorName        String
+  donorEmail       String
+  amountCents      Int
+  purpose          String?
+  recurring        Boolean  @default(false)
+  stripePaymentId  String?
+  createdAt        DateTime @default(now())
+  payment          Payment?
+}
+
+model Coupon {
+  id             Int                @id @default(autoincrement())
+  code           String             @unique
+  discountType   CouponDiscountType
+  discountValue  Int
+  maxUses        Int?
+  usedCount      Int                @default(0)
+  expiresAt      DateTime?
+  createdAt      DateTime           @default(now())
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  userId      Int?
+  user        User?         @relation(fields: [userId], references: [id])
+  donationId  Int?          @unique
+  donation    Donation?     @relation(fields: [donationId], references: [id])
+  type        PaymentType
+  amountCents Int
+  stripeRef   String?
+  status      PaymentStatus @default(pending)
+  createdAt   DateTime      @default(now())
+  receipt     Receipt?
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+model Receipt {
+  id        Int      @id @default(autoincrement())
+  paymentId Int      @unique
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  sentAt    DateTime @default(now())
+  emailBody String   @db.Text
+}
