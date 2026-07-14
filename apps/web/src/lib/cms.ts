@@ -16,7 +16,7 @@ export async function getUpcomingEvents(limit = 3): Promise<CmsEvent[]> {
   const url = `${cmsUrl}/api/events?sort=date:asc&pagination[limit]=${limit}`;
 
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
+    const res = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(5000) });
     if (!res.ok) return [];
 
     const json: StrapiListResponse<Omit<CmsEvent, "id">> = await res.json();
