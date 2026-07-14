@@ -11,6 +11,7 @@ export interface NavItem {
 }
 
 export const NAV: NavItem[] = [
+  { label: "Home", href: "/" },
   {
     label: "What Is Hindu Chaplaincy?",
     href: "/what-is-hindu-chaplaincy",
@@ -33,14 +34,15 @@ export const NAV: NavItem[] = [
     label: "Events",
     href: "/events",
     children: [
+      { label: "Annual Conference", href: "/events#annual-conference" },
       {
-        label: "NAHCA Monthly Q&A",
+        label: "Monthly Q&A",
         href: "https://pro.software4nonprofits.com/secure/cause_pdetails/MjQyNDI3",
         external: true,
       },
-      { label: "Upcoming Webinars", href: "/events#webinars" },
-      { label: "NAHCA Sangha", href: "/events#sangha" },
-      { label: "NAHCA Members-Only Meetings", href: "/events#members-only" },
+      { label: "Webinars", href: "/events#webinars" },
+      { label: "Sangha", href: "/events#sangha" },
+      { label: "Members-Only Meetings", href: "/events#members-only" },
     ],
   },
   {
@@ -52,14 +54,12 @@ export const NAV: NavItem[] = [
       { label: "Endorsement Fee", href: "/endorsement" },
     ],
   },
-  {
-    label: "Learn More",
-    href: "/learn-more",
-    children: [
-      { label: "Ten Useful Resources", href: "/learn-more#resources" },
-      { label: "Code of Ethics", href: "/learn-more#ethics" },
-    ],
-  },
-  { label: "Join Us", href: "/membership" },
-  { label: "Get In Touch", href: "/contact" },
+  { label: "Endorsement", href: "/endorsement" },
+  { label: "Member Portal", href: "/portal" },
+];
+
+export const FOOTER_LINKS: NavChild[] = [
+  { label: "Newsletters", href: "/newsletters" },
+  { label: "Join Us / Membership", href: "/membership" },
+  { label: "Get In Touch / Contact Us", href: "/contact" },
 ];
