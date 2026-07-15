@@ -27,22 +27,18 @@ export const NAV: NavItem[] = [
     href: "/about",
     children: [
       { label: "NAHCA Board", href: "/about#board" },
-      { label: "Organizational Partners", href: "/about#partners" },
+      { label: "Organizational Partners", href: "/organizational-partners" },
     ],
   },
   {
     label: "Events",
     href: "/events",
     children: [
-      { label: "Annual Conference", href: "/events#annual-conference" },
-      {
-        label: "Monthly Q&A",
-        href: "https://pro.software4nonprofits.com/secure/cause_pdetails/MjQyNDI3",
-        external: true,
-      },
-      { label: "Webinars", href: "/events#webinars" },
-      { label: "Sangha", href: "/events#sangha" },
-      { label: "Members-Only Meetings", href: "/events#members-only" },
+      { label: "Monthly Q&A", href: "/events/monthly-qa" },
+      { label: "Upcoming Webinars", href: "/events/webinars" },
+      { label: "Sangha", href: "/events/sangha" },
+      { label: "Members-Only Meetings", href: "/events/members-only" },
+      { label: "NAHCA Conference", href: "/events/conference" },
     ],
   },
   {

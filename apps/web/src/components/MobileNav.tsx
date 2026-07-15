@@ -23,16 +23,18 @@ export function MobileNav({
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-ink/15"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-ink/15 transition-colors group-data-[mode=transparent]/header:border-white/30"
       >
         <span className="sr-only">Toggle menu</span>
         <div className="flex flex-col gap-1.5">
           <span
-            className={`block h-0.5 w-5 bg-ink transition-transform ${open ? "translate-y-2 rotate-45" : ""}`}
+            className={`block h-0.5 w-5 bg-ink transition-transform group-data-[mode=transparent]/header:bg-white ${open ? "translate-y-2 rotate-45" : ""}`}
           />
-          <span className={`block h-0.5 w-5 bg-ink transition-opacity ${open ? "opacity-0" : ""}`} />
           <span
-            className={`block h-0.5 w-5 bg-ink transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`}
+            className={`block h-0.5 w-5 bg-ink transition-opacity group-data-[mode=transparent]/header:bg-white ${open ? "opacity-0" : ""}`}
+          />
+          <span
+            className={`block h-0.5 w-5 bg-ink transition-transform group-data-[mode=transparent]/header:bg-white ${open ? "-translate-y-2 -rotate-45" : ""}`}
           />
         </div>
       </button>
