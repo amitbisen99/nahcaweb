@@ -7,7 +7,7 @@ export default async function EventsPage() {
   return (
     <Container>
       <div className="py-16">
-        <h1 className="font-heading text-3xl font-medium text-ink">Events</h1>
+        <h1 className="font-heading text-3xl font-medium text-heading">Events</h1>
         <p className="mt-2 text-ink/70">
           Annual Conference, Monthly Q&amp;A, Webinars, Sangha, and Members-Only Meetings.
         </p>
@@ -19,7 +19,7 @@ export default async function EventsPage() {
                 <p className="text-sm text-ink/50">
                   {event.date} {event.time ? `· ${event.time}` : ""}
                 </p>
-                <h3 className="mt-1 font-heading font-medium text-ink">{event.title}</h3>
+                <h3 className="mt-1 font-heading font-medium text-heading">{event.title}</h3>
                 <p className="mt-2 text-sm text-ink/70">{event.description}</p>
                 {event.registrationLink && (
                   <a

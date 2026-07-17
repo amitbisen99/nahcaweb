@@ -50,7 +50,7 @@ export default async function Home() {
               <DiamondIcon className="h-3 w-3" />
               About NAHCA
             </span>
-            <h2 className="mt-3 font-heading text-4xl font-bold text-ink">What is NAHCA</h2>
+            <h2 className="mt-3 font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
             <p className="mt-5 text-ink/70">
               NAHCA offers a sacred space to connect with current and aspiring spiritual care-givers
               working in higher education, healthcare, corrections, military and community settings.
@@ -121,7 +121,7 @@ export default async function Home() {
               <DiamondIcon className="h-3 w-3" />
               Why you need a Hindu chaplain
             </span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-ink">
+            <h2 className="mt-3 font-heading text-3xl font-bold text-heading">
               What a Hindu chaplain brings to your organization
             </h2>
             <p className="mt-4 text-ink/70">
@@ -132,7 +132,7 @@ export default async function Home() {
 
             <div className="mt-8 flex flex-col gap-8">
               <div>
-                <h3 className="font-heading text-xl font-medium text-ink">What is a Chaplain?</h3>
+                <h3 className="font-heading text-xl font-medium text-heading">What is a Chaplain?</h3>
                 <p className="mt-3 text-ink/75">
                   Chaplains are spiritual care-givers who accompany care recipients through life&apos;s
                   many contours including loss, joy, uncertainty, grief, relationships, social engagement
@@ -141,7 +141,7 @@ export default async function Home() {
               </div>
 
               <div>
-                <h3 className="font-heading text-xl font-medium text-ink">What is a Hindu Chaplain, specifically?</h3>
+                <h3 className="font-heading text-xl font-medium text-heading">What is a Hindu Chaplain, specifically?</h3>
                 <p className="mt-3 text-ink/75">
                   Hindu chaplains engage with and support all people regardless of their social identities
                   and orientations. Hindu chaplains create open-hearted spaces of listening, respect and
@@ -163,7 +163,7 @@ export default async function Home() {
       </section>
 
       {/* Donate CTA */}
-      <section className="bg-brand py-16">
+      <section className="bg-forest py-16">
         <Container>
           <div className="flex flex-col items-center gap-5 text-center text-white">
             <h2 className="font-heading text-3xl font-medium italic">Support the Mission</h2>
@@ -171,9 +171,7 @@ export default async function Home() {
               Your gift helps NAHCA equip and endorse Hindu chaplains serving communities across North
               America — in hospitals, universities, the military, and beyond.
             </p>
-            <Button href="/donate" variant="ghost" className="!border-white !text-white hover:!bg-white hover:!text-brand">
-              Donate Now
-            </Button>
+            <Button href="/donate">Donate Now</Button>
           </div>
         </Container>
       </section>
@@ -183,7 +181,7 @@ export default async function Home() {
         <Container>
           <div className="grid gap-10 border-t border-ink/10 pt-16 sm:grid-cols-2">
             <div className="text-center sm:text-left">
-              <h2 className="font-heading text-xl font-medium text-ink">NAHCA</h2>
+              <h2 className="font-heading text-xl font-medium text-heading">NAHCA</h2>
               <p className="mt-3 text-sm text-ink/60">North American Hindu Chaplains Association.</p>
               <p className="mt-3 text-sm text-ink/60">
                 <span className="font-semibold text-ink/80">Registered Public Charity:</span> 501(c)(3)
@@ -191,7 +189,7 @@ export default async function Home() {
             </div>
 
             <div className="text-center sm:text-left">
-              <h2 className="font-heading text-xl font-medium text-ink">Get our monthly newsletter &amp; updates</h2>
+              <h2 className="font-heading text-xl font-medium text-heading">Get our monthly newsletter &amp; updates</h2>
               <form className="mt-4 flex max-w-sm gap-2 sm:mx-0 mx-auto">
                 <input
                   type="email"

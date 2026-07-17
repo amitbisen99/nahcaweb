@@ -81,7 +81,7 @@ export function HeroSlider({ events }: { events: CmsEvent[] }) {
             )}
 
             <div className="pt-2">
-              <Button href="/events" variant="ghost" className="!border-white !text-white hover:!bg-white hover:!text-forest">
+              <Button href="/events" variant="ghost" className="!border-white !text-white hover:!bg-white hover:!text-brand">
                 View All Events
               </Button>
             </div>
@@ -103,7 +103,7 @@ export function HeroSlider({ events }: { events: CmsEvent[] }) {
               <Button
                 href="/what-is-hindu-chaplaincy/community"
                 variant="ghost"
-                className="!border-white !text-white hover:!bg-white hover:!text-forest"
+                className="!border-white !text-white hover:!bg-white hover:!text-brand"
               >
                 Visit Our Community
               </Button>

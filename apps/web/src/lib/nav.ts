@@ -16,7 +16,8 @@ export const NAV: NavItem[] = [
     label: "What Is Hindu Chaplaincy?",
     href: "/what-is-hindu-chaplaincy",
     children: [
-      { label: "Defining Hindu Chaplaincy", href: "/what-is-hindu-chaplaincy/defining" },
+      { label: "Code of Ethics", href: "/what-is-hindu-chaplaincy/code-of-ethics" },
+      { label: "Useful Resources", href: "/what-is-hindu-chaplaincy/resources" },
       { label: "Higher Education", href: "/what-is-hindu-chaplaincy/higher-education" },
       { label: "Healthcare", href: "/what-is-hindu-chaplaincy/healthcare" },
       { label: "Community", href: "/what-is-hindu-chaplaincy/community" },
@@ -50,7 +51,7 @@ export const NAV: NavItem[] = [
       { label: "Endorsement Fee", href: "/endorsement" },
     ],
   },
-  { label: "Endorsement", href: "/endorsement" },
+  { label: "Membership", href: "/membership" },
   { label: "Member Portal", href: "/portal" },
 ];
 

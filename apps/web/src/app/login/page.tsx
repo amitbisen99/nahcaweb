@@ -24,7 +24,7 @@ export default function LoginPage() {
   return (
     <Container>
       <div className="mx-auto max-w-sm py-16">
-        <h1 className="mb-6 font-heading text-2xl font-medium text-ink">Member / Admin Login</h1>
+        <h1 className="mb-6 font-heading text-2xl font-medium text-heading">Member / Admin Login</h1>
         <form action={login} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-ink/80">Email</span>

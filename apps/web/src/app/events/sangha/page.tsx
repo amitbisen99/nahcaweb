@@ -33,7 +33,7 @@ export default function SanghaPage() {
               .
             </p>
 
-            <h2 className="mt-10 font-heading text-2xl font-medium text-ink">
+            <h2 className="mt-10 font-heading text-2xl font-medium text-heading">
               Join Our Monthly NAHCA Sangha
             </h2>
             <p className="mt-4 text-ink/70">
@@ -59,15 +59,15 @@ export default function SanghaPage() {
               <Button href={REGISTER_URL}>Register Here</Button>
             </div>
 
-            <h3 className="mt-10 font-heading text-xl font-medium text-ink">
+            <h3 className="mt-10 font-heading text-xl font-medium text-heading">
               Registration Details
             </h3>
 
             <div className="mt-4">
-              <h4 className="font-semibold text-ink">NAHCA Members</h4>
+              <h4 className="font-semibold text-heading">NAHCA Members</h4>
               <p className="mt-2 text-ink/70">
                 Free access. Email{" "}
-                <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-brand hover:text-brand-dark">
+                <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-heading hover:text-heading/70">
                   NAHCA108@gmail.com
                 </a>{" "}
                 with the subject line &ldquo;2024 NAHCA Circle&rdquo; to request your free code.
@@ -86,11 +86,11 @@ export default function SanghaPage() {
             </div>
 
             <div className="mt-6">
-              <h4 className="font-semibold text-ink">Non Members</h4>
+              <h4 className="font-semibold text-heading">Non Members</h4>
               <p className="mt-2 text-ink/70">
                 The first two meetings are complimentary. For subsequent meetings, a suggested
                 donation of $10 per meeting is appreciated. Email{" "}
-                <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-brand hover:text-brand-dark">
+                <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-heading hover:text-heading/70">
                   NAHCA108@gmail.com
                 </a>{" "}
                 to request a discount code or a need-based fee waiver.
@@ -105,7 +105,7 @@ export default function SanghaPage() {
             </p>
             <p className="mt-4 text-sm text-ink/60">
               For further information and registration, please contact us at{" "}
-              <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-brand hover:text-brand-dark">
+              <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-heading hover:text-heading/70">
                 NAHCA108@gmail.com
               </a>
               .

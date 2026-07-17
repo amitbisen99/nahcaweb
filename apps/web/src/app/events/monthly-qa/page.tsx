@@ -33,7 +33,7 @@ export default function MonthlyQAPage() {
           </div>
 
           <div className="max-w-md pb-20">
-            <h2 className="font-heading text-2xl font-medium text-ink">Join Our Mailing List</h2>
+            <h2 className="font-heading text-2xl font-medium text-heading">Join Our Mailing List</h2>
             <form className="mt-6 flex flex-col gap-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <input

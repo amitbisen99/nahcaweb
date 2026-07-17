@@ -7,17 +7,21 @@ const BASE =
 const VARIANTS = {
   solid: "bg-brand text-white hover:bg-brand-dark",
   outline: "bg-transparent text-ink border border-ink/25 hover:border-ink hover:bg-ink/5",
-  ghost: "bg-white/10 text-white border border-white/40 backdrop-blur hover:bg-white hover:text-forest",
+  ghost: "bg-white/10 text-white border border-white/40 backdrop-blur hover:bg-white hover:text-brand",
 };
 
 export function Button({
   href,
+  target,
+  rel,
   variant = "solid",
   children,
   className = "",
   ...rest
 }: {
   href?: string;
+  target?: string;
+  rel?: string;
   variant?: keyof typeof VARIANTS;
   children: ReactNode;
   className?: string;
@@ -26,7 +30,7 @@ export function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} target={target} rel={rel} className={classes}>
         {children}
       </Link>
     );

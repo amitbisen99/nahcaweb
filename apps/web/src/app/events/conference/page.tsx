@@ -4,7 +4,7 @@ import { EventBanner } from "@/components/EventBanner";
 export default function ConferencePage() {
   return (
     <>
-      <EventBanner title="NAHCA Conference" image="/brand/temple-home.jpg" />
+      <EventBanner title="NAHCA Conference" image="/events/mysore-green-hotel.jpg" />
       <Container>
         <div className="max-w-2xl py-16">
           <p className="text-ink/70">

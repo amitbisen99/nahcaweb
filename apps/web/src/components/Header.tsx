@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SVGProps } from "react";
 import { auth, signOut } from "@/auth";
 import { Container } from "./Container";
 import { Button } from "./Button";
@@ -7,8 +8,26 @@ import { MobileNav } from "./MobileNav";
 import { HeaderFrame } from "./HeaderFrame";
 import { NAV } from "@/lib/nav";
 
+function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  );
+}
+
 export async function Header() {
   const session = await auth();
+  const portalHref = session?.user?.role === "admin" ? "/admin" : "/portal";
 
   return (
     <HeaderFrame>
@@ -23,9 +42,8 @@ export async function Header() {
 
           <nav className="hidden flex-1 lg:block">
             <ul className="flex items-center justify-center gap-6 xl:gap-8">
-              {NAV.map((item) => {
-                const href =
-                  item.label === "Member Portal" && session?.user?.role === "admin" ? "/admin" : item.href;
+              {NAV.filter((item) => item.label !== "Member Portal").map((item) => {
+                const href = item.href;
 
                 return (
                   <li key={item.label} className="group relative">
@@ -76,7 +94,16 @@ export async function Header() {
               </form>
             )}
 
-            <Button href="/donate" className="!bg-[#FF9933] !px-5 !py-2 hover:!bg-[#e6851f]">
+            <Link
+              href={portalHref}
+              aria-label="Member Portal"
+              title="Member Portal"
+              className="hidden h-9 w-9 items-center justify-center rounded-full text-ink/75 transition-colors hover:text-brand group-data-[mode=transparent]/header:text-white/85 lg:flex"
+            >
+              <UserIcon className="h-5 w-5" />
+            </Link>
+
+            <Button href="/donate" className="!px-5 !py-2">
               Donate
             </Button>
 

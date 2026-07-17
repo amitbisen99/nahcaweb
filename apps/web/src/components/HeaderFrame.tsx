@@ -3,9 +3,17 @@
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
+const BANNER_PATHS = [
+  "/what-is-hindu-chaplaincy",
+  "/what-is-hindu-chaplaincy/code-of-ethics",
+  "/what-is-hindu-chaplaincy/resources",
+  "/what-is-hindu-chaplaincy/higher-education",
+  "/what-is-hindu-chaplaincy/healthcare",
+];
+
 export function HeaderFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isBannerPage = pathname?.startsWith("/events/") ?? false;
+  const isBannerPage = pathname?.startsWith("/events/") || BANNER_PATHS.includes(pathname ?? "");
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {

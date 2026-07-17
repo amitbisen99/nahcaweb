@@ -71,7 +71,7 @@ export default function AboutPage() {
               <DiamondIcon className="h-3 w-3" />
               About Us
             </span>
-            <h1 className="mt-3 font-heading text-4xl font-bold text-ink">NAHCA Board</h1>
+            <h1 className="mt-3 font-heading text-4xl font-bold text-heading">NAHCA Board</h1>
             <p className="mt-4 text-ink/70">
               Meet the volunteer leaders who guide NAHCA&apos;s mission to support Hindu chaplains and
               the communities they serve.
@@ -81,17 +81,17 @@ export default function AboutPage() {
           <div className="mt-14 flex flex-col gap-16">
             {BOARD_MEMBERS.map((member) => (
               <div key={member.name} className="grid gap-8 sm:grid-cols-[180px_1fr] sm:items-start">
-                <div className="mx-auto h-[180px] w-[180px] flex-none overflow-hidden rounded-full sm:mx-0">
+                <div className="mx-auto h-[225px] w-[180px] flex-none overflow-hidden rounded-lg sm:mx-0">
                   <Image
                     src={member.photo}
                     alt={member.name}
                     width={180}
-                    height={180}
-                    className="h-full w-full object-cover"
+                    height={225}
+                    className="h-full w-full object-cover object-top"
                   />
                 </div>
                 <div className="text-center sm:text-left">
-                  <h2 className="font-heading text-xl font-medium text-ink">{member.name}</h2>
+                  <h2 className="font-heading text-xl font-medium text-heading">{member.name}</h2>
                   <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-brand">
                     {member.title}
                   </p>
