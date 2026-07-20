@@ -10,7 +10,7 @@ async function login(formData: FormData) {
     await signIn("credentials", {
       email: formData.get("email"),
       password: formData.get("password"),
-      redirectTo: "/portal",
+      redirectTo: "/post-login",
     });
   } catch (error) {
     if (error instanceof AuthError) {
