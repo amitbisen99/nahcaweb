@@ -31,7 +31,13 @@ function ChevronList({ items }: { items: ReactNode[] }) {
   );
 }
 
-export default function MembershipPage() {
+export default async function MembershipPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status } = await searchParams;
+
   return (
     <>
       <section className="bg-white py-20">
@@ -44,6 +50,19 @@ export default function MembershipPage() {
             <h1 className="mt-3 font-heading text-4xl font-bold text-heading">
               Become a NAHCA Member
             </h1>
+
+            {status === "success" && (
+              <p className="mt-4 rounded-lg bg-green-100 px-4 py-3 text-sm text-green-800">
+                Welcome to NAHCA! Your membership is active — check your email for a confirmation,
+                and visit the Member Portal to see your membership status.
+              </p>
+            )}
+            {status === "cancelled" && (
+              <p className="mt-4 rounded-lg bg-yellow-100 px-4 py-3 text-sm text-yellow-800">
+                Checkout was cancelled — no charge was made.
+              </p>
+            )}
+
             <p className="mt-4 text-ink/70">Are you:</p>
             <ChevronList
               items={[

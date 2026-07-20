@@ -1,12 +1,22 @@
 import sgMail from "@sendgrid/mail";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
+const sendGridConfigured = Boolean(process.env.SENDGRID_API_KEY) && !process.env.SENDGRID_API_KEY?.includes("placeholder");
+
+if (sendGridConfigured) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
+}
 
 export async function sendReceiptEmail(opts: {
   to: string;
   subject: string;
   body: string;
 }) {
+  if (!sendGridConfigured) {
+    // eslint-disable-next-line no-console
+    console.log(`[mailer] SendGrid not configured — skipping email to ${opts.to}: "${opts.subject}"`);
+    return;
+  }
+
   await sgMail.send({
     to: opts.to,
     from: process.env.SENDGRID_FROM_EMAIL as string,

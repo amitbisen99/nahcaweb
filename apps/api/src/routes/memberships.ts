@@ -5,32 +5,14 @@ import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
+import { INSTITUTIONAL_MIN_STUDENTS, TIER_LABELS, priceForTier } from "../lib/membershipTiers";
+import { paymentsBypassed } from "../lib/paymentsBypass";
+import { activatePayment } from "../lib/paymentActivation";
 
 export const membershipsRouter = Router();
 
 // TODO(phase 2b): recurring billing (auto-renewal), coupon redemption, and
 // per-student assignment for institution-sponsored groups (Membership.groupId).
-
-const TIER_LABELS: Record<string, string> = {
-  regular: "Regular Membership",
-  student: "Student Membership",
-  institutional: "Institution-Sponsored Student Membership",
-  conference: "Conference Membership",
-};
-
-// Term length used to compute Membership.endDate on activation.
-const TIER_TERM_MONTHS: Record<string, number> = {
-  regular: 12,
-  student: 24,
-  institutional: 24,
-  conference: 12, // placeholder — confirm actual Conference membership term/price
-};
-
-const REGULAR_PRICE_CENTS = 7500; // $75 / 1 year
-const STUDENT_PRICE_CENTS = 7500; // $75 / 2 years
-const CONFERENCE_PRICE_CENTS = 7500; // placeholder — confirm actual price
-const INSTITUTIONAL_PRICE_PER_STUDENT_CENTS = 6000; // $60 / student
-const INSTITUTIONAL_MIN_STUDENTS = 5;
 
 const membershipSignupSchema = z
   .object({
@@ -44,21 +26,6 @@ const membershipSignupSchema = z
     message: `studentCount (minimum ${INSTITUTIONAL_MIN_STUDENTS}) is required for institutional memberships`,
     path: ["studentCount"],
   });
-
-function priceForTier(type: string, studentCount?: number): number {
-  switch (type) {
-    case "regular":
-      return REGULAR_PRICE_CENTS;
-    case "student":
-      return STUDENT_PRICE_CENTS;
-    case "conference":
-      return CONFERENCE_PRICE_CENTS;
-    case "institutional":
-      return (studentCount as number) * INSTITUTIONAL_PRICE_PER_STUDENT_CENTS;
-    default:
-      throw new Error(`Unknown membership type: ${type}`);
-  }
-}
 
 membershipsRouter.post(
   "/signup",
@@ -94,6 +61,11 @@ membershipsRouter.post(
         status: "pending",
       },
     });
+
+    if (paymentsBypassed()) {
+      await activatePayment(payment.id, `bypass-${Date.now()}`);
+      return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/membership?status=success` });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -150,5 +122,3 @@ membershipsRouter.get(
     res.json({ memberships });
   })
 );
-
-export { TIER_TERM_MONTHS, TIER_LABELS };

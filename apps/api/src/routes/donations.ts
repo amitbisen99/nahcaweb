@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
 import { asyncHandler } from "../lib/asyncHandler";
+import { paymentsBypassed } from "../lib/paymentsBypass";
+import { activatePayment } from "../lib/paymentActivation";
 
 export const donationsRouter = Router();
 
@@ -33,6 +35,11 @@ donationsRouter.post("/", asyncHandler(async (req, res) => {
       status: "pending",
     },
   });
+
+  if (paymentsBypassed()) {
+    await activatePayment(payment.id, `bypass-${Date.now()}`);
+    return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/donate?status=success` });
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode: recurring ? "subscription" : "payment",
