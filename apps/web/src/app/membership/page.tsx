@@ -1,8 +1,6 @@
 import { ReactNode, SVGProps } from "react";
 import { Container } from "@/components/Container";
-import { Button } from "@/components/Button";
-
-const MEMBERSHIP_PAYMENT_URL = "https://www.hinduchaplains.com/membership.html";
+import { MembershipSignup } from "./MembershipSignup";
 
 function DiamondIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -32,48 +30,6 @@ function ChevronList({ items }: { items: ReactNode[] }) {
     </ul>
   );
 }
-
-const REGULAR_BENEFITS = [
-  "Opportunities for professional development, mentoring & networking",
-  "NAHCA webinar and conference fee discounts",
-  "Opportunities to co-sponsor programming",
-  "Access to specialized resources on Hindu spiritual care",
-  "Support in pursuing professional credentialing",
-];
-
-interface MembershipTier {
-  name: string;
-  price: string;
-  term: string;
-  note: string;
-  benefits: string[];
-  highlight?: boolean;
-}
-
-const TIERS: MembershipTier[] = [
-  {
-    name: "Regular Membership",
-    price: "$75",
-    term: "per year",
-    note: "Valid for 1 year from the date you join, with an automatic renewal option available when you sign up.",
-    benefits: REGULAR_BENEFITS,
-  },
-  {
-    name: "Student Membership",
-    price: "$75",
-    term: "per 2 years",
-    note: "Discounted 50% since it's valid for 2 years. Students receive all the benefits of a regular membership.",
-    benefits: REGULAR_BENEFITS,
-    highlight: true,
-  },
-  {
-    name: "Institution-Sponsored Student Membership",
-    price: "$60",
-    term: "per membership",
-    note: "80% of the already-discounted student fee. Requires a minimum of 5 student memberships and applies to the membership fee only. Sponsored students gain a two-year student membership with the associated benefits.",
-    benefits: REGULAR_BENEFITS,
-  },
-];
 
 export default function MembershipPage() {
   return (
@@ -109,38 +65,9 @@ export default function MembershipPage() {
             </div>
           </div>
 
-          <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {TIERS.map((tier) => (
-              <div
-                key={tier.name}
-                className={`flex flex-col rounded-xl border p-7 ${
-                  tier.highlight ? "border-brand bg-white shadow-lg" : "border-ink/10 bg-white"
-                }`}
-              >
-                <h2 className="font-heading text-lg font-medium text-heading">{tier.name}</h2>
-                <div className="mt-3 flex items-baseline gap-1.5">
-                  <span className="font-heading text-3xl font-bold text-ink">{tier.price}</span>
-                  <span className="text-sm text-ink/60">{tier.term}</span>
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-ink/70">{tier.note}</p>
-                <div className="mt-5">
-                  <ChevronList items={tier.benefits} />
-                </div>
-                <div className="mt-auto pt-6">
-                  <Button
-                    href={MEMBERSHIP_PAYMENT_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full"
-                  >
-                    Join Now
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <MembershipSignup />
 
-          <div className="mt-14 max-w-2xl border-t border-ink/10 pt-10">
+          <div className="mt-16 max-w-2xl border-t border-ink/10 pt-10">
             <h2 className="font-heading text-2xl font-medium text-heading">Good to Know</h2>
             <ChevronList
               items={[

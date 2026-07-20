@@ -67,46 +67,49 @@ model Membership {
   stripeSubscriptionId String?
   groupId              String?
   createdAt            DateTime         @default(now())
+  payment              Payment?
 
   @@index([userId])
   @@index([groupId])
 }
 
 model Donation {
-  id               Int      @id @default(autoincrement())
-  donorName        String
-  donorEmail       String
-  amountCents      Int
-  purpose          String?
-  recurring        Boolean  @default(false)
-  stripePaymentId  String?
-  createdAt        DateTime @default(now())
-  payment          Payment?
+  id              Int      @id @default(autoincrement())
+  donorName       String
+  donorEmail      String
+  amountCents     Int
+  purpose         String?
+  recurring       Boolean  @default(false)
+  stripePaymentId String?
+  createdAt       DateTime @default(now())
+  payment         Payment?
 }
 
 model Coupon {
-  id             Int                @id @default(autoincrement())
-  code           String             @unique
-  discountType   CouponDiscountType
-  discountValue  Int
-  maxUses        Int?
-  usedCount      Int                @default(0)
-  expiresAt      DateTime?
-  createdAt      DateTime           @default(now())
+  id            Int                @id @default(autoincrement())
+  code          String             @unique
+  discountType  CouponDiscountType
+  discountValue Int
+  maxUses       Int?
+  usedCount     Int                @default(0)
+  expiresAt     DateTime?
+  createdAt     DateTime           @default(now())
 }
 
 model Payment {
-  id          Int           @id @default(autoincrement())
-  userId      Int?
-  user        User?         @relation(fields: [userId], references: [id])
-  donationId  Int?          @unique
-  donation    Donation?     @relation(fields: [donationId], references: [id])
-  type        PaymentType
-  amountCents Int
-  stripeRef   String?
-  status      PaymentStatus @default(pending)
-  createdAt   DateTime      @default(now())
-  receipt     Receipt?
+  id           Int           @id @default(autoincrement())
+  userId       Int?
+  user         User?         @relation(fields: [userId], references: [id])
+  donationId   Int?          @unique
+  donation     Donation?     @relation(fields: [donationId], references: [id])
+  membershipId Int?          @unique
+  membership   Membership?   @relation(fields: [membershipId], references: [id])
+  type         PaymentType
+  amountCents  Int
+  stripeRef    String?
+  status       PaymentStatus @default(pending)
+  createdAt    DateTime      @default(now())
+  receipt      Receipt?
 
   @@index([userId])
   @@index([type])

@@ -36,3 +36,25 @@ export function buildDonationReceiptBody(opts: {
     `This letter serves as your official receipt. No goods or services were provided in exchange for this contribution.`,
   ].join("\n");
 }
+
+export function buildMembershipReceiptBody(opts: {
+  memberName: string;
+  tierLabel: string;
+  amountCents: number;
+  paymentRef: string;
+  startDate: Date;
+  endDate: Date;
+}) {
+  const amount = (opts.amountCents / 100).toFixed(2);
+  return [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.memberName},`,
+    ``,
+    `Thank you for joining NAHCA! Your ${opts.tierLabel} ($${amount}) is now active.`,
+    `Membership period: ${opts.startDate.toDateString()} – ${opts.endDate.toDateString()}`,
+    `Payment reference: ${opts.paymentRef}`,
+    ``,
+    `You can view your membership status any time from the Member Portal.`,
+  ].join("\n");
+}
