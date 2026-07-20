@@ -44,6 +44,13 @@ enum PaymentStatus {
   refunded
 }
 
+enum ArticleCategory {
+  Podcast
+  Presentation
+  Referral
+  Ethics
+}
+
 model User {
   id           Int          @id @default(autoincrement())
   email        String       @unique
@@ -122,4 +129,87 @@ model Receipt {
   payment   Payment  @relation(fields: [paymentId], references: [id])
   sentAt    DateTime @default(now())
   emailBody String   @db.Text
+}
+
+// --- Content management (replaces the retired Strapi CMS) ---
+
+model Event {
+  id               Int      @id @default(autoincrement())
+  title            String
+  date             DateTime
+  time             String?
+  description      String?  @db.Text
+  registrationLink String?
+  featuredImageUrl String?
+  published        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([published])
+}
+
+model Webinar {
+  id                Int      @id @default(autoincrement())
+  title             String
+  description       String?  @db.Text
+  zoomOrYoutubeLink String?
+  priceCents        Int?
+  speakerInfo       String?  @db.Text
+  published         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([published])
+}
+
+model ConferenceVideo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  videoUrl  String
+  year      Int?
+  category  String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+}
+
+model Article {
+  id           Int             @id @default(autoincrement())
+  title        String
+  richTextBody String?         @db.Text
+  category     ArticleCategory
+  published    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([published])
+}
+
+model Newsletter {
+  id                   Int       @id @default(autoincrement())
+  title                String
+  fileUrl              String?
+  mailchimpCampaignUrl String?
+  publishedDate        DateTime?
+  published            Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([published])
+}
+
+model Board {
+  id        Int      @id @default(autoincrement())
+  name      String
+  role      String?
+  bio       String?  @db.Text
+  photoUrl  String?
+  order     Int      @default(0)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
 }

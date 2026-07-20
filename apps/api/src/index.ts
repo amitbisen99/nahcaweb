@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { authRouter } from "./routes/auth";
@@ -7,6 +8,15 @@ import { webhooksRouter } from "./routes/webhooks";
 import { membershipsRouter } from "./routes/memberships";
 import { reportsRouter } from "./routes/reports";
 import { newsletterRouter } from "./routes/newsletter";
+import { uploadsRouter } from "./routes/uploads";
+import {
+  eventsRouter,
+  webinarsRouter,
+  conferenceVideosRouter,
+  articlesRouter,
+  newslettersRouter,
+  boardRouter,
+} from "./routes/content";
 
 const app = express();
 
@@ -18,6 +28,8 @@ app.use("/webhooks", express.raw({ type: "application/json" }), webhooksRouter);
 
 app.use(express.json());
 
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 app.use("/auth", authRouter);
@@ -25,6 +37,15 @@ app.use("/donations", donationsRouter);
 app.use("/memberships", membershipsRouter);
 app.use("/reports", reportsRouter);
 app.use("/newsletter", newsletterRouter);
+app.use("/uploads", uploadsRouter);
+
+// Content management (replaces the retired Strapi CMS)
+app.use("/events", eventsRouter);
+app.use("/webinars", webinarsRouter);
+app.use("/conference-videos", conferenceVideosRouter);
+app.use("/articles", articlesRouter);
+app.use("/newsletters", newslettersRouter);
+app.use("/board", boardRouter);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);

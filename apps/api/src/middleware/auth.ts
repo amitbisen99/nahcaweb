@@ -36,3 +36,17 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   }
   next();
 }
+
+// Parses a bearer token if present, but never rejects the request — used on
+// public read routes that show extra data (e.g. drafts) to admins.
+export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (header?.startsWith("Bearer ")) {
+    try {
+      req.auth = jwt.verify(header.slice("Bearer ".length), process.env.JWT_SECRET as string) as AuthPayload;
+    } catch {
+      // Invalid/expired token on a public route — treat as anonymous rather than failing.
+    }
+  }
+  next();
+}

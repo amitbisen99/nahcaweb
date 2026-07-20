@@ -33,7 +33,8 @@ environments · finalized sitemap · page designs (Home, About, Events, Membersh
 Store) · mobile-responsive layouts · design system (colors, fonts, buttons, forms).
 
 1. ✅ **Scaffold the monorepo.** *(Done: `apps/web` Next.js+Tailwind+NextAuth, `apps/api`
-   Express+Prisma+MySQL, `apps/cms` Strapi.)*
+   Express+Prisma+MySQL. Originally scaffolded a third `apps/cms` Strapi app, later retired in
+   favor of one unified system — see item 12.)*
 
 2. 🔲 **Push to GitHub under NAHCA's account.**
    > Initialize this repo's remote pointing at NAHCA's GitHub organization (ask me for the org/repo
@@ -77,11 +78,12 @@ Store) · mobile-responsive layouts · design system (colors, fonts, buttons, fo
 
 ---
 
-## Milestone 2 — Backend Core: Database, Auth & CMS
+## Milestone 2 — Backend Core: Database, Auth & Content
 
 **Contractual deliverables:** MySQL live on staging · registration/login for all 4 membership
-tiers · role-based access (Member vs Admin) · CMS live with Events/Videos/Articles/Newsletters/
-**Board** content types · CMS admin login working · member portal shell visible on staging.
+tiers · role-based access (Member vs Admin) · content management live for
+Events/Webinars/Conference Videos/Articles/Newsletters/**Board** · one unified admin login for
+both members and content · member portal shell visible on staging.
 
 8. ✅ **Prisma schema + MySQL.** *(Done: `User`, `Membership`, `Donation`, `Coupon`, `Payment`,
    `Receipt` models, migrated against local `nahca_app` MySQL DB.)*
@@ -90,9 +92,9 @@ tiers · role-based access (Member vs Admin) · CMS live with Events/Videos/Arti
    `requireAuth`/`requireAdmin` middleware, NextAuth Credentials provider on the frontend.)*
 
 10. 🔲 **Deploy MySQL to a staging server.**
-    > Provision a staging MySQL instance on the chosen cloud host, create `nahca_app` and
-    > `nahca_cms` databases there, and update `apps/api/.env.staging` / Strapi's staging DB config
-    > to point at it. Run the existing Prisma migrations against staging and confirm connectivity.
+    > Provision a staging MySQL instance on the chosen cloud host, create the `nahca_app`
+    > database there, and update `apps/api`'s staging env config to point at it. Run the existing
+    > Prisma migrations against staging and confirm connectivity.
 
 11. 🔲 **Build the four membership-tier signup flows.**
     > Replace the stub in `apps/api/src/routes/memberships.ts` with real logic: Regular ($75/yr,
@@ -104,21 +106,20 @@ tiers · role-based access (Member vs Admin) · CMS live with Events/Videos/Arti
     > `pending` status; actual Stripe charging comes in Milestone 3. Build the corresponding
     > `/membership` signup form on the frontend with a tier-selector step.
 
-12. 🔲 **Migrate Strapi from SQLite to MySQL and define content types.**
-    > Reconfigure `apps/cms` (currently SQLite quickstart) to use the `nahca_cms` MySQL database —
-    > update `config/database.ts` and install the `mysql2` driver. Then define these content
-    > types: `Event` (title, date, time, description, registrationLink, featuredImage), `Webinar`
-    > (title, description, zoomOrYoutubeLink, price, speakerInfo), `ConferenceVideo` (title,
-    > videoUrl/embed, year, category), `Article` (title, richTextBody, category enum:
-    > Podcast/Presentation/Referral/Ethics), `Newsletter` (title, pdfOrContent,
-    > mailchimpCampaignUrl, publishedDate), and **`Board`** (name, title/role, bio, photo, order —
-    > for the About Us page's NAHCA Board section). Enable public read permissions on all six.
+12. ✅ **Content management, unified into `apps/api` + `apps/web` (no separate CMS).**
+    *(Done: originally planned as a separate Strapi CMS with its own database and admin login,
+    but changed mid-build — the client wanted exactly one admin panel for both members and
+    website content, not two logins to juggle. `Event`, `Webinar`, `ConferenceVideo`, `Article`,
+    `Newsletter`, and `Board` are now Prisma models in the same `nahca_app` database, with
+    generic admin-gated CRUD routes (`apps/api/src/lib/contentRouter.ts`) and a matching
+    config-driven admin UI at `/admin/content` in `apps/web`. Public GET routes return only
+    `published: true` items; an authenticated admin sees drafts too. File/image uploads go
+    through `apps/api/src/routes/uploads.ts`, stored on local disk under `apps/api/uploads/`.)*
 
-13. 🔲 **CMS admin users for NAHCA staff.**
-    > Set up Strapi's admin panel with at least one editor role (content create/edit, no
-    > server-config access) so NAHCA staff can log in and manage content without developer
-    > access. Document the login URL and role setup in `docs/CMS-GUIDE.md` (this becomes the
-    > seed for the Milestone 5 admin guide).
+13. ✅ **One unified admin login for NAHCA staff.**
+    *(Done: since content now lives in the same system as members, there's nothing separate to
+    set up — any `User` with `role: admin` can log in at `/login` and use both `/admin` (members)
+    and `/admin/content` (website content). No second login, no separate CMS admin panel.)*
 
 14. 🔲 **Member portal shell on staging.**
     > Deploy the current `apps/web` `/portal` shell to staging and confirm it's reachable — this
@@ -275,9 +276,9 @@ search) · web store (listings/checkout/secure downloads/purchase history) · ad
     > collections by quarter/YTD/custom range, upcoming renewals at 30/60/90 days) and build the
     > corresponding `/admin` report views, each with a "Export CSV" button.
 
-38. 🔲 **CMS access from admin dashboard.**
-    > Add a clearly-labeled link/button in `/admin` to the Strapi admin panel (`NEXT_PUBLIC_CMS_URL/admin`)
-    > so NAHCA staff have one place to find everything.
+38. ✅ **Content management access from admin dashboard.** *(Done — moot now that content lives
+    in the same admin panel: `/admin` has a "Manage Website Content →" link straight to
+    `/admin/content`, same login, no second panel to find.)*
 
 **Final QA:**
 
@@ -300,10 +301,9 @@ search) · web store (listings/checkout/secure downloads/purchase history) · ad
 mode · content migrated · admin training completed · written CMS/admin guide delivered.
 
 41. 🔲 **Production deployment.**
-    > Deploy `apps/web`, `apps/api`, and `apps/cms` to production on the chosen cloud host, with
-    > production environment variables (live Stripe keys, production DB, production
-    > `WEB_ORIGIN`/CORS settings). Confirm all three services are reachable and talking to each
-    > other correctly.
+    > Deploy `apps/web` and `apps/api` to production on the chosen cloud host, with production
+    > environment variables (live Stripe keys, production DB, production `WEB_ORIGIN`/CORS
+    > settings). Confirm both services are reachable and talking to each other correctly.
 
 42. 🔲 **DNS + SSL cutover.**
     > This step is mostly a client-side action at NAHCA's domain registrar — prepare a short

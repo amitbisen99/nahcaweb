@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container } from "@/components/Container";
 import { auth } from "@/auth";
 import { getAllMemberships } from "@/lib/api";
@@ -24,6 +25,13 @@ export default async function AdminPage() {
       <div className="py-16">
         <h1 className="font-heading text-3xl font-medium text-heading">Admin Dashboard</h1>
         <p className="mt-2 text-ink/70">Signed in as {session?.user?.name} (admin).</p>
+
+        <Link
+          href="/admin/content"
+          className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-brand px-5 py-2.5 font-body text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
+        >
+          Manage Website Content →
+        </Link>
 
         <h2 className="mt-10 font-heading text-xl font-medium text-heading">
           All Members ({memberships.length})
@@ -73,8 +81,7 @@ export default async function AdminPage() {
         )}
 
         <p className="mt-10 text-sm text-ink/40">
-          Collections and upcoming-renewals reports, plus CMS/newsletter management, will be built
-          out in a follow-up phase.
+          Collections and upcoming-renewals reports will be built out in a follow-up phase.
         </p>
       </div>
     </Container>

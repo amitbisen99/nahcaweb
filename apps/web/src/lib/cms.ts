@@ -3,26 +3,24 @@ export interface CmsEvent {
   title: string;
   date: string;
   time: string | null;
-  description: string;
+  description: string | null;
   registrationLink: string | null;
-}
-
-interface StrapiListResponse<T> {
-  data: Array<{ id: number; attributes: T }>;
+  featuredImageUrl?: string | null;
 }
 
 export async function getUpcomingEvents(limit = 3): Promise<CmsEvent[]> {
-  const cmsUrl = process.env.NEXT_PUBLIC_CMS_URL;
-  const url = `${cmsUrl}/api/events?sort=date:asc&pagination[limit]=${limit}`;
-
   try {
-    const res = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) return [];
 
-    const json: StrapiListResponse<Omit<CmsEvent, "id">> = await res.json();
-    return json.data.map((entry) => ({ id: entry.id, ...entry.attributes }));
+    const { items } = (await res.json()) as { items: CmsEvent[] };
+    const now = Date.now();
+    return items.filter((e) => new Date(e.date).getTime() >= now).slice(0, limit);
   } catch {
-    // CMS not reachable (e.g. not running yet in local dev) — degrade gracefully.
+    // API not reachable (e.g. not running yet in local dev) — degrade gracefully.
     return [];
   }
 }

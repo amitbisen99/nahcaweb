@@ -2,23 +2,23 @@
 
 Redevelopment of [hinduchaplains.com](https://www.hinduchaplains.com/) for the North American Hindu
 Chaplains Association (NAHCA) — a single owned platform replacing Flipcause/Google Forms, covering
-membership management, donations, a headless CMS, newsletter integration, and admin reporting.
+membership management, donations, website content management, newsletter integration, and admin
+reporting.
 
 See [docs/PROMPT-PLAYBOOK.md](docs/PROMPT-PLAYBOOK.md) for the full, milestone-by-milestone build plan.
 
 ## Architecture
 
-Three independent apps:
+Two apps, one login for everything:
 
 | App | Stack | Port | Purpose |
 |---|---|---|---|
-| `apps/web` | Next.js 16 + Tailwind + NextAuth | 3000 | Public site, member portal, admin dashboard |
-| `apps/api` | Express + TypeScript + Prisma | 4000 | Auth, memberships, donations, payments, reporting |
-| `apps/cms` | Strapi | 1337 | Events, Webinars, Conference Videos, Articles, Newsletters, Board |
+| `apps/web` | Next.js 16 + Tailwind + NextAuth | 3000 | Public site, member portal, and the single admin dashboard (members + website content) |
+| `apps/api` | Express + TypeScript + Prisma | 4000 | Auth, memberships, donations, payments, reporting, and content (Events, Webinars, Conference Videos, Articles, Newsletters, Board) |
 
-`apps/api` uses MySQL (`nahca_app`). `apps/cms` currently runs on its local SQLite quickstart
-database — migrating it to its own MySQL database (`nahca_cms`), alongside defining its content
-types, is a planned next step (see [docs/PROMPT-PLAYBOOK.md](docs/PROMPT-PLAYBOOK.md), item 12).
+Everything lives in one MySQL database (`nahca_app`) behind one login system — there's no separate
+CMS with its own admin login. Website content is managed at `/admin/content` inside the same admin
+dashboard that manages members, using the same `admin`-role account.
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ types, is a planned next step (see [docs/PROMPT-PLAYBOOK.md](docs/PROMPT-PLAYBOO
 
 ## Setup
 
-1. Start MySQL and create the app database (`nahca_cms` isn't needed yet — see the CMS note above):
+1. Start MySQL and create the database:
    ```sql
    CREATE DATABASE IF NOT EXISTS nahca_app;
    ```
@@ -36,19 +36,12 @@ types, is a planned next step (see [docs/PROMPT-PLAYBOOK.md](docs/PROMPT-PLAYBOO
    ```
    cd apps/api
    npm install
-   cp .env.example .env   # fill in real Stripe/SendGrid/Mailchimp keys when ready — placeholders work for local dev
+   cp .env.example .env   # fill in real Stripe/SendGrid keys when ready — PAYMENTS_BYPASS=true works for local dev/demo without them
    npx prisma migrate dev
    npm run dev
    ```
 
-3. **CMS** (`apps/cms`):
-   ```
-   cd apps/cms
-   npm install
-   npm run develop
-   ```
-
-4. **Web** (`apps/web`):
+3. **Web** (`apps/web`):
    ```
    cd apps/web
    npm install
@@ -58,14 +51,21 @@ types, is a planned next step (see [docs/PROMPT-PLAYBOOK.md](docs/PROMPT-PLAYBOO
 
 Visit `http://localhost:3000`.
 
+### Uploaded files (Board photos, Event images, etc.)
+
+Stored on local disk under `apps/api/uploads/`, served at `/uploads/*`. Not committed to git.
+
 ## Status
 
-**Foundation complete:** monorepo scaffold, full Prisma schema (Users, Memberships, Donations,
-Coupons, Payments, Receipts), working auth (register/login/JWT, role-based access), an end-to-end
-donation flow (Stripe Checkout → webhook → SendGrid receipt), route skeleton for every page in the
-sitemap, and a Home page with an original design system pulling live content from Strapi.
+**Foundation + membership + content management complete:** monorepo scaffold, full Prisma schema
+(Users, Memberships, Donations, Coupons, Payments, Receipts, and 6 content types), working auth
+(register/login/JWT, role-based access), an end-to-end donation flow (Stripe Checkout → webhook →
+SendGrid receipt), a 4-tier membership signup flow (Regular/Student/Institutional/Conference) with
+Stripe checkout and webhook activation, a `PAYMENTS_BYPASS` mode for demoing without real Stripe
+keys, a unified admin dashboard for both members and website content (with image/file upload), and
+a Home page pulling live event data from the API.
 
-**Deferred to follow-up phases** (see the playbook): membership tier signup logic + group discounts,
-coupon redemption UI, admin reporting dashboard, automated receipt/tax-letter templates, Mailchimp
-sync, member-portal gated content, the community forum, the digital-product store, and the full
-visual build-out of every remaining page.
+**Deferred to follow-up phases** (see the playbook): coupon redemption UI, group-membership
+discounts, admin reporting dashboard (collections/renewals), automated tax-letter templates,
+Mailchimp sync, member-portal gated content, the community forum, the digital-product store, and
+the full visual build-out of every remaining page.

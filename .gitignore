@@ -7,16 +7,12 @@ build/
 .next/
 out/
 
-# Strapi
-apps/cms/.tmp/
-apps/cms/.cache/
-apps/cms/.strapi/
-apps/cms/build/
-apps/cms/dist/
-apps/cms/public/uploads/
-
 # Prisma
 apps/api/prisma/*.db
+
+# Uploaded content (Board photos, Event images, Newsletter files, etc.)
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
 
 # Logs
 *.log
