@@ -1,89 +1,58 @@
 import Link from "next/link";
-import { Container } from "@/components/Container";
 import { auth } from "@/auth";
 import { getAllMemberships } from "@/lib/api";
+import { CONTENT_TYPES } from "@/lib/contentTypes";
+import { listContent } from "@/lib/adminApi";
 
-const TIER_LABELS: Record<string, string> = {
-  regular: "Regular",
-  student: "Student",
-  institutional: "Institutional",
-  conference: "Conference",
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  active: "bg-forest/10 text-forest",
-  pending: "bg-brand/10 text-brand-dark",
-  expired: "bg-ink/10 text-ink/60",
-};
-
-export default async function AdminPage() {
+export default async function AdminDashboardPage() {
   const session = await auth();
-  const memberships = session?.apiToken ? await getAllMemberships(session.apiToken) : [];
+  const token = session?.apiToken ?? "";
+
+  const [memberships, contentCounts] = await Promise.all([
+    getAllMemberships(token),
+    Promise.all(
+      Object.values(CONTENT_TYPES).map(async (config) => {
+        const items = await listContent(config.key, token);
+        return items.length;
+      })
+    ),
+  ]);
+
+  const activeMembers = memberships.filter((m) => m.status === "active").length;
+  const totalContentItems = contentCounts.reduce((sum, n) => sum + n, 0);
 
   return (
-    <Container>
-      <div className="py-16">
-        <h1 className="font-heading text-3xl font-medium text-heading">Admin Dashboard</h1>
-        <p className="mt-2 text-ink/70">Signed in as {session?.user?.name} (admin).</p>
+    <div>
+      <h1 className="font-heading text-3xl font-medium text-heading">Dashboard</h1>
+      <p className="mt-2 text-ink/70">Signed in as {session?.user?.name}.</p>
 
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <Link
+          href="/admin/members"
+          className="rounded-xl border border-ink/10 bg-white p-6 transition-colors hover:border-brand/40"
+        >
+          <p className="text-sm font-medium text-ink/60">Total Members</p>
+          <p className="mt-1 font-heading text-3xl font-bold text-heading">{memberships.length}</p>
+        </Link>
+        <Link
+          href="/admin/members"
+          className="rounded-xl border border-ink/10 bg-white p-6 transition-colors hover:border-brand/40"
+        >
+          <p className="text-sm font-medium text-ink/60">Active Memberships</p>
+          <p className="mt-1 font-heading text-3xl font-bold text-heading">{activeMembers}</p>
+        </Link>
         <Link
           href="/admin/content"
-          className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-brand px-5 py-2.5 font-body text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
+          className="rounded-xl border border-ink/10 bg-white p-6 transition-colors hover:border-brand/40"
         >
-          Manage Website Content →
+          <p className="text-sm font-medium text-ink/60">Content Items</p>
+          <p className="mt-1 font-heading text-3xl font-bold text-heading">{totalContentItems}</p>
         </Link>
-
-        <h2 className="mt-10 font-heading text-xl font-medium text-heading">
-          All Members ({memberships.length})
-        </h2>
-        <p className="mt-1 text-sm text-ink/60">
-          This list is only visible to admin accounts — regular members only see their own
-          membership on the Member Portal.
-        </p>
-
-        {memberships.length === 0 ? (
-          <p className="mt-4 text-sm text-ink/60">No memberships have been created yet.</p>
-        ) : (
-          <div className="mt-4 overflow-x-auto rounded-xl border border-ink/10">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-sand/40 text-xs uppercase tracking-wide text-ink/60">
-                <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Tier</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Price</th>
-                  <th className="px-4 py-3">Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {memberships.map((m) => (
-                  <tr key={m.id} className="border-t border-ink/10">
-                    <td className="px-4 py-3 font-medium text-ink">{m.user.name}</td>
-                    <td className="px-4 py-3 text-ink/70">{m.user.email}</td>
-                    <td className="px-4 py-3 text-ink/70">{TIER_LABELS[m.type] ?? m.type}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[m.status] ?? "bg-ink/10 text-ink/60"}`}
-                      >
-                        {m.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-ink/70">${(m.priceCents / 100).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-ink/70">
-                      {new Date(m.createdAt).toDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <p className="mt-10 text-sm text-ink/40">
-          Collections and upcoming-renewals reports will be built out in a follow-up phase.
-        </p>
       </div>
-    </Container>
+
+      <p className="mt-10 text-sm text-ink/40">
+        Collections and upcoming-renewals reports will be built out in a follow-up phase.
+      </p>
+    </div>
   );
 }
