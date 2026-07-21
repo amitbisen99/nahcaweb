@@ -5,7 +5,7 @@ import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
-import { INSTITUTIONAL_MIN_STUDENTS, TIER_LABELS, priceForTier } from "../lib/membershipTiers";
+import { INSTITUTIONAL_MIN_STUDENTS, getMembershipPlan } from "../lib/membershipTiers";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
 
@@ -20,10 +20,10 @@ const membershipSignupSchema = z
     email: z.string().email(),
     password: z.string().min(8),
     type: z.enum(["regular", "student", "institutional", "conference"]),
-    studentCount: z.number().int().min(INSTITUTIONAL_MIN_STUDENTS).optional(),
+    studentCount: z.number().int().min(1).optional(),
   })
   .refine((data) => data.type !== "institutional" || data.studentCount !== undefined, {
-    message: `studentCount (minimum ${INSTITUTIONAL_MIN_STUDENTS}) is required for institutional memberships`,
+    message: "studentCount is required for institutional memberships",
     path: ["studentCount"],
   });
 
@@ -43,7 +43,20 @@ membershipsRouter.post(
         .json({ error: "Email already registered — please log in to add a membership." });
     }
 
-    const priceCents = priceForTier(type, studentCount);
+    const plan = await getMembershipPlan(type);
+    if (!plan) return res.status(400).json({ error: "Unknown membership type" });
+
+    if (type === "institutional") {
+      const minStudents = plan.minStudents ?? INSTITUTIONAL_MIN_STUDENTS;
+      if ((studentCount as number) < minStudents) {
+        return res.status(400).json({
+          error: { message: `studentCount must be at least ${minStudents} for institutional memberships` },
+        });
+      }
+    }
+
+    const priceCents =
+      type === "institutional" ? (studentCount as number) * (plan.pricePerStudentCents ?? 0) : plan.priceCents;
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({ data: { email, passwordHash, name } });
@@ -75,7 +88,7 @@ membershipsRouter.post(
         {
           price_data: {
             currency: "usd",
-            product_data: { name: `NAHCA Membership — ${TIER_LABELS[type]}` },
+            product_data: { name: `NAHCA Membership — ${plan.name}` },
             unit_amount: priceCents,
           },
           quantity: 1,

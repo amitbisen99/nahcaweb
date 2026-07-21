@@ -1,5 +1,6 @@
 import { ReactNode, SVGProps } from "react";
 import { Container } from "@/components/Container";
+import { getMembershipPlans } from "@/lib/api";
 import { MembershipSignup } from "./MembershipSignup";
 
 function DiamondIcon(props: SVGProps<SVGSVGElement>) {
@@ -37,6 +38,7 @@ export default async function MembershipPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status } = await searchParams;
+  const plans = await getMembershipPlans();
 
   return (
     <>
@@ -84,7 +86,7 @@ export default async function MembershipPage({
             </div>
           </div>
 
-          <MembershipSignup />
+          <MembershipSignup plans={plans} />
 
           <div className="mt-16 max-w-2xl border-t border-ink/10 pt-10">
             <h2 className="font-heading text-2xl font-medium text-heading">Good to Know</h2>

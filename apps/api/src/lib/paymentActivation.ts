@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 import { buildDonationReceiptBody, buildMembershipReceiptBody, sendReceiptEmail } from "./mailer";
-import { TIER_LABELS, TIER_TERM_MONTHS } from "./membershipTiers";
+import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTiers";
 
 // Shared by the Stripe webhook (real payments) and the payments-bypass paths
 // (demo/staging without Stripe configured) — marks a Payment succeeded and
@@ -42,9 +42,11 @@ export async function activatePayment(paymentId: number, stripeRef: string) {
       data: { status: "active", startDate, endDate },
     });
 
+    const plan = await getMembershipPlan(payment.membership.type);
+
     const body = buildMembershipReceiptBody({
       memberName: payment.membership.user.name,
-      tierLabel: TIER_LABELS[payment.membership.type],
+      tierLabel: plan?.name ?? TIER_LABELS[payment.membership.type],
       amountCents: payment.amountCents,
       paymentRef: stripeRef,
       startDate,

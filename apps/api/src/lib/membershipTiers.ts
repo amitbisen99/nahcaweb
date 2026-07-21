@@ -1,3 +1,9 @@
+import { MembershipType } from "@prisma/client";
+import { prisma } from "../prisma";
+
+// Static fallbacks — used only if a plan row is somehow missing (e.g. a
+// fresh DB that hasn't been seeded yet). The admin-editable source of truth
+// is the MembershipPlan table.
 export const TIER_LABELS: Record<string, string> = {
   regular: "Regular Membership",
   student: "Student Membership",
@@ -5,7 +11,9 @@ export const TIER_LABELS: Record<string, string> = {
   conference: "Conference Membership",
 };
 
-// Term length used to compute Membership.endDate on activation.
+// Term length used to compute Membership.endDate on activation. Not
+// admin-editable — changing a plan's billing duration is a structural
+// change, not "content and price".
 export const TIER_TERM_MONTHS: Record<string, number> = {
   regular: 12,
   student: 24,
@@ -13,23 +21,8 @@ export const TIER_TERM_MONTHS: Record<string, number> = {
   conference: 12,
 };
 
-const REGULAR_PRICE_CENTS = 7500; // $75 / 1 year
-const STUDENT_PRICE_CENTS = 7500; // $75 / 2 years
-const CONFERENCE_PRICE_CENTS = 7500; // $75 / 1 year
-const INSTITUTIONAL_PRICE_PER_STUDENT_CENTS = 6000; // $60 / student
 export const INSTITUTIONAL_MIN_STUDENTS = 5;
 
-export function priceForTier(type: string, studentCount?: number): number {
-  switch (type) {
-    case "regular":
-      return REGULAR_PRICE_CENTS;
-    case "student":
-      return STUDENT_PRICE_CENTS;
-    case "conference":
-      return CONFERENCE_PRICE_CENTS;
-    case "institutional":
-      return (studentCount as number) * INSTITUTIONAL_PRICE_PER_STUDENT_CENTS;
-    default:
-      throw new Error(`Unknown membership type: ${type}`);
-  }
+export function getMembershipPlan(type: MembershipType) {
+  return prisma.membershipPlan.findUnique({ where: { type } });
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, ReactNode, SVGProps, useState } from "react";
+import { FormEvent, ReactNode, SVGProps, useMemo, useState } from "react";
+import { ApiMembershipPlan } from "@/lib/api";
 
 interface Tier {
   type: "regular" | "student" | "institutional" | "conference";
@@ -11,56 +12,6 @@ interface Tier {
   benefits: string[];
   highlight?: boolean;
 }
-
-const REGULAR_BENEFITS = [
-  "Opportunities for professional development, mentoring & networking",
-  "NAHCA webinar and conference fee discounts",
-  "Opportunities to co-sponsor programming",
-  "Access to specialized resources on Hindu spiritual care",
-  "Support in pursuing professional credentialing",
-];
-
-const TIERS: Tier[] = [
-  {
-    type: "regular",
-    name: "Regular Membership",
-    price: "$75",
-    term: "per year",
-    note: "Valid for 1 year from the date you join, with an automatic renewal option available when you sign up.",
-    benefits: REGULAR_BENEFITS,
-  },
-  {
-    type: "student",
-    name: "Student Membership",
-    price: "$75",
-    term: "per 2 years",
-    note: "Discounted 50% since it's valid for 2 years. Students receive all the benefits of a regular membership.",
-    benefits: REGULAR_BENEFITS,
-    highlight: true,
-  },
-  {
-    type: "institutional",
-    name: "Institution-Sponsored Student Membership",
-    price: "$60",
-    term: "per student (min. 5)",
-    note: "80% of the already-discounted student fee. Requires a minimum of 5 student memberships and applies to the membership fee only. Sponsored students gain a two-year student membership with the associated benefits.",
-    benefits: REGULAR_BENEFITS,
-  },
-  {
-    type: "conference",
-    name: "Conference Membership",
-    price: "$75",
-    term: "per year",
-    note: "A plan focused on attending NAHCA's conference programming throughout the year.",
-    benefits: REGULAR_BENEFITS,
-  },
-];
-
-const MAIN_TIERS = TIERS.filter((t) => t.type !== "conference");
-const CONFERENCE_TIER = TIERS.find((t) => t.type === "conference")!;
-
-const INSTITUTIONAL_MIN_STUDENTS = 5;
-const INSTITUTIONAL_PRICE_PER_STUDENT = 60;
 
 function ChevronIcon(props: { className?: string }) {
   return (
@@ -91,15 +42,40 @@ function ChevronList({ items }: { items: ReactNode[] }) {
   );
 }
 
-export function MembershipSignup() {
+function planToTier(plan: ApiMembershipPlan): Tier {
+  const price =
+    plan.type === "institutional"
+      ? `$${((plan.pricePerStudentCents ?? 0) / 100).toFixed(0)}`
+      : `$${(plan.priceCents / 100).toFixed(0)}`;
+
+  return {
+    type: plan.type,
+    name: plan.name,
+    price,
+    term: plan.term,
+    note: plan.note,
+    benefits: plan.benefits.split("\n").filter(Boolean),
+    highlight: plan.type === "student",
+  };
+}
+
+export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
+  const tiers = useMemo(() => plans.map(planToTier), [plans]);
+  const mainTiers = tiers.filter((t) => t.type !== "conference");
+  const conferenceTier = tiers.find((t) => t.type === "conference");
+  const institutionalPlan = plans.find((p) => p.type === "institutional");
+  const institutionalMinStudents = institutionalPlan?.minStudents ?? 5;
+  const institutionalPricePerStudentCents = institutionalPlan?.pricePerStudentCents ?? 0;
+
   const [selectedType, setSelectedType] = useState<Tier["type"]>("regular");
-  const [studentCount, setStudentCount] = useState(INSTITUTIONAL_MIN_STUDENTS);
+  const [studentCount, setStudentCount] = useState(institutionalMinStudents);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function openModal(type: Tier["type"]) {
     setSelectedType(type);
+    setStudentCount(institutionalMinStudents);
     setError(null);
     setModalOpen(true);
   }
@@ -141,16 +117,24 @@ export function MembershipSignup() {
     }
   }
 
-  const selectedTier = TIERS.find((t) => t.type === selectedType)!;
+  if (tiers.length === 0) {
+    return (
+      <p className="mt-14 text-sm text-ink/60">
+        Membership plans are temporarily unavailable. Please check back soon.
+      </p>
+    );
+  }
+
+  const selectedTier = tiers.find((t) => t.type === selectedType) ?? tiers[0];
   const computedPrice =
     selectedType === "institutional"
-      ? `$${studentCount * INSTITUTIONAL_PRICE_PER_STUDENT}`
+      ? `$${((studentCount * institutionalPricePerStudentCents) / 100).toFixed(0)}`
       : selectedTier.price;
 
   return (
     <>
       <div className="mt-14 grid gap-6 lg:grid-cols-3">
-        {MAIN_TIERS.map((tier) => (
+        {mainTiers.map((tier) => (
           <div
             key={tier.type}
             className={`flex flex-col rounded-xl border p-7 ${
@@ -179,28 +163,30 @@ export function MembershipSignup() {
         ))}
       </div>
 
-      <div className="mt-16 border-t border-ink/10 pt-10">
-        <div className="rounded-xl border border-ink/10 bg-white p-7 lg:flex lg:items-center lg:justify-between lg:gap-10">
-          <div className="lg:max-w-md">
-            <h2 className="font-heading text-lg font-medium text-heading">{CONFERENCE_TIER.name}</h2>
-            <div className="mt-3 flex items-baseline gap-1.5">
-              <span className="font-heading text-3xl font-bold text-ink">{CONFERENCE_TIER.price}</span>
-              <span className="text-sm text-ink/60">{CONFERENCE_TIER.term}</span>
+      {conferenceTier && (
+        <div className="mt-16 border-t border-ink/10 pt-10">
+          <div className="rounded-xl border border-ink/10 bg-white p-7 lg:flex lg:items-center lg:justify-between lg:gap-10">
+            <div className="lg:max-w-md">
+              <h2 className="font-heading text-lg font-medium text-heading">{conferenceTier.name}</h2>
+              <div className="mt-3 flex items-baseline gap-1.5">
+                <span className="font-heading text-3xl font-bold text-ink">{conferenceTier.price}</span>
+                <span className="text-sm text-ink/60">{conferenceTier.term}</span>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-ink/70">{conferenceTier.note}</p>
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-ink/70">{CONFERENCE_TIER.note}</p>
-          </div>
-          <div className="mt-6 lg:mt-0 lg:max-w-sm lg:flex-none">
-            <ChevronList items={CONFERENCE_TIER.benefits} />
-            <button
-              type="button"
-              onClick={() => openModal("conference")}
-              className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-brand px-6 py-3 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-dark lg:w-auto"
-            >
-              Join Now
-            </button>
+            <div className="mt-6 lg:mt-0 lg:max-w-sm lg:flex-none">
+              <ChevronList items={conferenceTier.benefits} />
+              <button
+                type="button"
+                onClick={() => openModal("conference")}
+                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-brand px-6 py-3 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-dark lg:w-auto"
+              >
+                Join Now
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {modalOpen && (
         <div
@@ -230,7 +216,7 @@ export function MembershipSignup() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {TIERS.map((tier) => (
+              {tiers.map((tier) => (
                 <button
                   key={tier.type}
                   type="button"
@@ -281,15 +267,15 @@ export function MembershipSignup() {
               {selectedType === "institutional" && (
                 <label className="flex flex-col gap-1">
                   <span className="text-sm font-medium text-ink/80">
-                    Number of students to sponsor (minimum {INSTITUTIONAL_MIN_STUDENTS})
+                    Number of students to sponsor (minimum {institutionalMinStudents})
                   </span>
                   <input
                     type="number"
-                    min={INSTITUTIONAL_MIN_STUDENTS}
+                    min={institutionalMinStudents}
                     value={studentCount}
                     onChange={(e) =>
                       setStudentCount(
-                        Math.max(INSTITUTIONAL_MIN_STUDENTS, Number(e.target.value) || INSTITUTIONAL_MIN_STUDENTS)
+                        Math.max(institutionalMinStudents, Number(e.target.value) || institutionalMinStudents)
                       )
                     }
                     className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"

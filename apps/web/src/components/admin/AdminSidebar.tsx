@@ -8,6 +8,7 @@ import { CONTENT_TYPES } from "@/lib/contentTypes";
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin" },
   { label: "Members", href: "/admin/members" },
+  { label: "Membership Plans", href: "/admin/membership-plans" },
 ];
 
 function linkClasses(active: boolean) {

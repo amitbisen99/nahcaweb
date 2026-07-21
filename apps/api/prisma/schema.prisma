@@ -80,6 +80,20 @@ model Membership {
   @@index([groupId])
 }
 
+model MembershipPlan {
+  id                   Int            @id @default(autoincrement())
+  type                 MembershipType @unique
+  name                 String
+  priceCents           Int
+  term                 String
+  note                 String         @db.Text
+  benefits             String         @db.Text
+  minStudents          Int?
+  pricePerStudentCents Int?
+  updatedAt            DateTime       @updatedAt
+  createdAt            DateTime       @default(now())
+}
+
 model Donation {
   id              Int      @id @default(autoincrement())
   donorName       String

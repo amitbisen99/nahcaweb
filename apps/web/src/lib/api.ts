@@ -31,6 +31,18 @@ export interface ApiNewsletter {
   createdAt: string;
 }
 
+export interface ApiMembershipPlan {
+  id: number;
+  type: "regular" | "student" | "institutional" | "conference";
+  name: string;
+  priceCents: number;
+  term: string;
+  note: string;
+  benefits: string;
+  minStudents: number | null;
+  pricePerStudentCents: number | null;
+}
+
 export interface ApiArticle {
   id: number;
   title: string;
@@ -79,6 +91,11 @@ export async function getAllMemberships(token: string): Promise<AdminMembership[
 export async function getMyPayments(token: string): Promise<ApiPayment[]> {
   const data = await apiFetch<{ payments: ApiPayment[] }>("/payments/me", token);
   return data?.payments ?? [];
+}
+
+export async function getMembershipPlans(): Promise<ApiMembershipPlan[]> {
+  const data = await publicFetch<{ plans: ApiMembershipPlan[] }>("/membership-plans");
+  return data?.plans ?? [];
 }
 
 export async function getPublishedNewsletters(): Promise<ApiNewsletter[]> {
