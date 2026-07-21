@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { CONTENT_TYPES } from "@/lib/contentTypes";
 
 const NAV_ITEMS = [
@@ -17,6 +18,8 @@ function linkClasses(active: boolean) {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const isOnContentPage = pathname?.startsWith("/admin/content") ?? false;
+  const [expanded, setExpanded] = useState(isOnContentPage);
 
   return (
     <nav className="flex flex-col gap-1 p-4">
@@ -30,29 +33,35 @@ export function AdminSidebar() {
       })}
 
       <div className="mt-2">
-        <Link
-          href="/admin/content"
-          className={linkClasses(pathname === "/admin/content")}
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className={`flex w-full items-center justify-between ${linkClasses(isOnContentPage && !expanded)}`}
         >
           Website Content
-        </Link>
-        <div className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-white/10 pl-3">
-          {Object.values(CONTENT_TYPES).map((config) => {
-            const href = `/admin/content/${config.key}`;
-            const active = pathname?.startsWith(href);
-            return (
-              <Link
-                key={config.key}
-                href={href}
-                className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                  active ? "bg-brand text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {config.label}
-              </Link>
-            );
-          })}
-        </div>
+          <span className={`transition-transform ${expanded ? "rotate-180" : ""}`}>⌄</span>
+        </button>
+
+        {expanded && (
+          <div className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-white/10 pl-3">
+            {Object.values(CONTENT_TYPES).map((config) => {
+              const href = `/admin/content/${config.key}`;
+              const active = pathname?.startsWith(href);
+              return (
+                <Link
+                  key={config.key}
+                  href={href}
+                  className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    active ? "bg-brand text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {config.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </nav>
   );

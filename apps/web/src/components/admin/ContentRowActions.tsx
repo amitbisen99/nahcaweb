@@ -84,32 +84,32 @@ export function ContentRowActions({
           onClick={() => setViewing(false)}
         >
           <div
-            className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
-              <h2 className="font-heading text-xl font-medium text-heading">
+              <h2 className="font-heading text-2xl font-medium text-heading">
                 {String(item[config.titleField])}
               </h2>
               <button
                 type="button"
                 onClick={() => setViewing(false)}
                 aria-label="Close"
-                className="text-ink/40 hover:text-ink"
+                className="flex-none text-ink/40 hover:text-ink"
               >
-                <XIcon className="h-5 w-5" />
+                <XIcon className="h-6 w-6" />
               </button>
             </div>
 
             <span
-              className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
+              className={`mt-3 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${
                 item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-ink/60"
               }`}
             >
               {item.published ? "Published" : "Draft"}
             </span>
 
-            <dl className="mt-4 flex flex-col gap-4">
+            <dl className="mt-6 flex flex-col gap-5">
               {detailFields.map((field) => {
                 const value = item[field.name];
                 if (value === null || value === undefined || value === "") return null;
@@ -119,13 +119,13 @@ export function ContentRowActions({
                     <dt className="text-xs font-semibold uppercase tracking-wide text-ink/50">
                       {field.label}
                     </dt>
-                    <dd className="mt-1 text-sm text-ink/80">
+                    <dd className="mt-1.5 text-base leading-relaxed text-ink/80">
                       {field.type === "file" && typeof value === "string" ? (
                         isImageUrl(value) ? (
                           <img
                             src={`${process.env.NEXT_PUBLIC_API_URL}${value}`}
                             alt=""
-                            className="mt-1 h-24 w-24 rounded-lg border border-ink/10 object-cover"
+                            className="mt-1 h-40 w-40 rounded-lg border border-ink/10 object-cover"
                           />
                         ) : (
                           <a
@@ -146,13 +146,13 @@ export function ContentRowActions({
               })}
             </dl>
 
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-8 flex items-center gap-3 border-t border-ink/10 pt-6">
               {!item.published && (
                 <button
                   type="button"
                   onClick={handlePublish}
                   disabled={isPending}
-                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+                  className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
                 >
                   {isPending ? "Publishing…" : "Publish"}
                 </button>

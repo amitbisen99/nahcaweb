@@ -6,9 +6,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await auth();
 
   return (
-    <div className="flex min-h-full">
+    <div className="flex h-screen overflow-hidden">
       <aside className="flex w-64 flex-none flex-col bg-ink">
-        <Link href="/admin" className="px-5 py-5 font-heading text-lg font-semibold text-white">
+        <Link href="/admin" className="flex-none px-5 py-5 font-heading text-lg font-semibold text-white">
           NAHCA Admin
         </Link>
 
@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminSidebar />
         </div>
 
-        <div className="border-t border-white/10 p-4">
+        <div className="flex-none border-t border-white/10 p-4">
           <p className="truncate text-xs text-white/50">{session?.user?.email}</p>
           <div className="mt-2 flex flex-col gap-2">
             <Link href="/" className="text-sm font-medium text-white/70 hover:text-white">
