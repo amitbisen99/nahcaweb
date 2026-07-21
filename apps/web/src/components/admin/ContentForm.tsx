@@ -1,5 +1,6 @@
 import { ContentTypeConfig } from "@/lib/contentTypes";
 import { Button } from "@/components/Button";
+import { isImageUrl } from "./icons";
 
 function dateInputValue(value: unknown): string {
   if (!value) return "";
@@ -31,25 +32,42 @@ export function ContentForm({
         }
 
         if (field.type === "file") {
+          const hasCurrent = typeof currentValue === "string" && currentValue.length > 0;
           return (
-            <label key={field.name} className="flex flex-col gap-1">
+            <div key={field.name} className="flex flex-col gap-2">
               <span className="text-sm font-medium text-ink/80">{field.label}</span>
-              {typeof currentValue === "string" && currentValue && (
-                <a
-                  href={`${process.env.NEXT_PUBLIC_API_URL}${currentValue}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-semibold text-brand hover:text-brand-dark"
-                >
-                  View current file
-                </a>
+
+              {hasCurrent && (
+                <div className="flex items-center gap-3">
+                  {isImageUrl(currentValue as string) ? (
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${currentValue}`}
+                      alt=""
+                      className="h-20 w-20 rounded-lg border border-ink/10 object-cover"
+                    />
+                  ) : (
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_API_URL}${currentValue}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-brand hover:text-brand-dark"
+                    >
+                      View current file
+                    </a>
+                  )}
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-ink/60">
+                    <input type="checkbox" name={`${field.name}__remove`} />
+                    Remove this file
+                  </label>
+                </div>
               )}
+
               <input
                 type="file"
                 name={field.name}
                 className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm"
               />
-            </label>
+            </div>
           );
         }
 

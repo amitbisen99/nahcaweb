@@ -36,6 +36,8 @@ async function buildPayload(type: ContentTypeKey, formData: FormData, token: str
       if (file && file.size > 0) {
         const url = await uploadFile(file, token);
         if (url) payload[field.name] = url;
+      } else if (formData.get(`${field.name}__remove`) === "on") {
+        payload[field.name] = null;
       }
       continue;
     }
@@ -87,6 +89,18 @@ export async function deleteContentItem(type: ContentTypeKey, id: string) {
   await fetch(`${process.env.API_URL}/${type}/${id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
+  });
+
+  revalidatePath(`/admin/content/${type}`);
+}
+
+export async function publishContentItem(type: ContentTypeKey, id: string) {
+  const token = await requireAdminToken();
+
+  await fetch(`${process.env.API_URL}/${type}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ published: true }),
   });
 
   revalidatePath(`/admin/content/${type}`);

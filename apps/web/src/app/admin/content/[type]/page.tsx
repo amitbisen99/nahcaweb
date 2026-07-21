@@ -4,7 +4,7 @@ import { Button } from "@/components/Button";
 import { auth } from "@/auth";
 import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
 import { listContent } from "@/lib/adminApi";
-import { deleteContentItem } from "../actions";
+import { ContentRowActions } from "@/components/admin/ContentRowActions";
 
 export default async function ContentListPage({
   params,
@@ -49,19 +49,7 @@ export default async function ContentListPage({
                 {item.published ? "Published" : "Draft"}
               </span>
             </div>
-            <div className="flex items-center gap-4">
-              <Link
-                href={`/admin/content/${config.key}/${item.id}`}
-                className="text-sm font-semibold text-brand hover:text-brand-dark"
-              >
-                Edit
-              </Link>
-              <form action={deleteContentItem.bind(null, config.key, String(item.id))}>
-                <button type="submit" className="text-sm font-semibold text-red-600 hover:text-red-800">
-                  Delete
-                </button>
-              </form>
-            </div>
+            <ContentRowActions type={config.key} item={item} config={config} />
           </div>
         ))}
       </div>
