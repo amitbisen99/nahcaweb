@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//opt/lampp/bin/**)",
+      "Bash(/opt/lampp/bin/mysqladmin -u root status)",
+      "Bash(sudo /opt/lampp/bin/mysql_upgrade -u root)",
+      "Bash(whoami; ls *)",
+      "Read(//opt/lampp/var/mysql/**)",
+      "Bash(/opt/lampp/bin/mysql_upgrade -u root)",
+      "Bash(sudo -n /opt/lampp/bin/mysql_upgrade -u root)",
+      "Bash(npx prisma *)",
+      "Bash(npx ts-node *)"
+    ]
+  }
+}
