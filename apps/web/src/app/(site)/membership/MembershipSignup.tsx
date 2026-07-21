@@ -164,7 +164,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
       </div>
 
       {conferenceTier && (
-        <div className="mt-16 border-t border-ink/10 pt-10">
+        <div className="mt-16">
           <div className="rounded-xl border border-ink/10 bg-white p-7 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div className="lg:max-w-md">
               <h2 className="font-heading text-lg font-medium text-heading">{conferenceTier.name}</h2>

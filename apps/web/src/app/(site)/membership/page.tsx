@@ -88,7 +88,7 @@ export default async function MembershipPage({
 
           <MembershipSignup plans={plans} />
 
-          <div className="mt-16 max-w-2xl border-t border-ink/10 pt-10">
+          <div className="mt-16 max-w-2xl">
             <h2 className="font-heading text-2xl font-medium text-heading">Good to Know</h2>
             <ChevronList
               items={[
