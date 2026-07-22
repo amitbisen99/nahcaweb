@@ -1,0 +1,424 @@
+{
+  "info": {
+    "_postman_id": "b6f2f2b0-3a3a-4a1a-9c1a-nahca00000001",
+    "name": "NAHCA API",
+    "description": "Test collection for apps/api. Set `baseUrl` to wherever the API is deployed (defaults to http://localhost:4000). Register/Login requests auto-save their token into the `token` collection variable, so everything else just works once you run one of those. For admin-only endpoints, log in with an admin account and copy the returned token into the `adminToken` variable (or promote the account you just registered to admin in the DB and re-run Login).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "adminToken", "value": "", "type": "string" },
+    { "key": "eventId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+            "description": "Confirms the API process is up and can reach the database. Returns { ok: true, db: \"connected\" } or a 503 with the underlying DB error."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('token', data.token);",
+                  "  console.log('Saved token for user', data.user.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"postman-test@example.com\",\n  \"password\": \"testpass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "description": "Creates a new member-role account. Saves the returned token into {{token}}. Change the email if you run this more than once — it 409s on a duplicate."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('token', data.token);",
+                  "  console.log('Saved token for', data.user.email, '- role:', data.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"postman-test@example.com\",\n  \"password\": \"testpass123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "description": "Saves the returned token into {{token}}. If this account has role 'admin', also paste the token into {{adminToken}} manually to run the admin-only requests below."
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"testpass123\",\n  \"newPassword\": \"newpass456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/auth/change-password", "host": ["{{baseUrl}}"], "path": ["auth", "change-password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Membership Plans (public)",
+      "item": [
+        {
+          "name": "List Membership Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/membership-plans", "host": ["{{baseUrl}}"], "path": ["membership-plans"] }
+          }
+        },
+        {
+          "name": "Get Membership Plan by Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/membership-plans/regular", "host": ["{{baseUrl}}"], "path": ["membership-plans", "regular"] },
+            "description": "type is one of: regular, student, institutional, conference"
+          }
+        },
+        {
+          "name": "Update Membership Plan (admin)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Regular Membership\",\n  \"priceCents\": 7500,\n  \"term\": \"per year\",\n  \"note\": \"Valid for 1 year from the date you join.\",\n  \"benefits\": \"Line one\\nLine two\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/membership-plans/regular", "host": ["{{baseUrl}}"], "path": ["membership-plans", "regular"] },
+            "description": "Requires {{adminToken}}. No create/delete endpoints exist by design — only these 4 plans exist and can only be updated."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Memberships",
+      "item": [
+        {
+          "name": "Signup (Regular tier, PAYMENTS_BYPASS)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"email\": \"postman-member@example.com\",\n  \"password\": \"testpass123\",\n  \"type\": \"regular\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/memberships/signup", "host": ["{{baseUrl}}"], "path": ["memberships", "signup"] },
+            "description": "With PAYMENTS_BYPASS=true, this creates the account and activates the membership instantly, returning a checkoutUrl that just redirects back with ?status=success. For type \"institutional\" also send studentCount (minimum comes from that plan's minStudents)."
+          }
+        },
+        {
+          "name": "Get My Memberships",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/memberships/me", "host": ["{{baseUrl}}"], "path": ["memberships", "me"] }
+          }
+        },
+        {
+          "name": "List All Memberships (admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/memberships", "host": ["{{baseUrl}}"], "path": ["memberships"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get My Payments",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/payments/me", "host": ["{{baseUrl}}"], "path": ["payments", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donations",
+      "item": [
+        {
+          "name": "Make a Donation (PAYMENTS_BYPASS)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donorName\": \"Postman Donor\",\n  \"donorEmail\": \"postman-donor@example.com\",\n  \"amountCents\": 2500,\n  \"purpose\": \"General fund\",\n  \"recurring\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/donations", "host": ["{{baseUrl}}"], "path": ["donations"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content - Events",
+      "item": [
+        {
+          "name": "List Events (public, published only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+          }
+        },
+        {
+          "name": "Create Event (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('eventId', data.item.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Test Event\",\n  \"date\": \"2026-12-01\",\n  \"time\": \"10:00 AM\",\n  \"description\": \"Created from Postman\",\n  \"published\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+            "description": "Saves the new event's id into {{eventId}} for the Get/Update/Delete requests below."
+          }
+        },
+        {
+          "name": "Get Event by Id (admin sees drafts)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events", "{{eventId}}"] }
+          }
+        },
+        {
+          "name": "Update Event / Publish (admin)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"published\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events", "{{eventId}}"] }
+          }
+        },
+        {
+          "name": "Delete Event (admin)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events", "{{eventId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content - Other Types (public list, same CRUD pattern as Events)",
+      "item": [
+        {
+          "name": "List Webinars",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/webinars", "host": ["{{baseUrl}}"], "path": ["webinars"] }
+          }
+        },
+        {
+          "name": "List Conference Videos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/conference-videos", "host": ["{{baseUrl}}"], "path": ["conference-videos"] }
+          }
+        },
+        {
+          "name": "List Articles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/articles", "host": ["{{baseUrl}}"], "path": ["articles"] }
+          }
+        },
+        {
+          "name": "List Newsletters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/newsletters", "host": ["{{baseUrl}}"], "path": ["newsletters"] }
+          }
+        },
+        {
+          "name": "List Board Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/board", "host": ["{{baseUrl}}"], "path": ["board"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "Upload a File (admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": [] }]
+            },
+            "url": { "raw": "{{baseUrl}}/uploads", "host": ["{{baseUrl}}"], "path": ["uploads"] },
+            "description": "In Postman, open the Body tab and click 'Select Files' next to the 'file' field to attach an image/PDF before sending. Returns { url: \"/uploads/<filename>\" }."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports (admin, not yet implemented — expect 501)",
+      "item": [
+        {
+          "name": "Member List Report",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/reports/members", "host": ["{{baseUrl}}"], "path": ["reports", "members"] }
+          }
+        },
+        {
+          "name": "Collections Report",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/reports/collections", "host": ["{{baseUrl}}"], "path": ["reports", "collections"] }
+          }
+        },
+        {
+          "name": "Upcoming Renewals Report",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/reports/renewals", "host": ["{{baseUrl}}"], "path": ["reports", "renewals"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Newsletter Signup (not yet implemented — expect 501)",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"postman-newsletter@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/newsletter/signup", "host": ["{{baseUrl}}"], "path": ["newsletter", "signup"] }
+          }
+        }
+      ]
+    }
+  ]
+}

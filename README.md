@@ -79,6 +79,15 @@ Use these right after deploying to confirm everything is actually wired up:
 Uncaught errors in the web app show a friendly fallback page (via `error.tsx`/`global-error.tsx`)
 instead of a blank screen, and are logged server-side for diagnosis.
 
+### Testing the API with Postman
+
+Import [`docs/postman/NAHCA-API.postman_collection.json`](docs/postman/NAHCA-API.postman_collection.json)
+into Postman. Set the `baseUrl` collection variable to wherever `apps/api` is deployed (defaults to
+`http://localhost:4000`). Run **Auth → Register** or **Auth → Login** first — either one auto-saves its
+token into the `token` variable, so every other request just works. For the admin-only requests (event
+CRUD, membership plan edits, reports), log in with an admin account and paste its token into the
+`adminToken` variable.
+
 ## Status
 
 **Foundation + membership + content management complete:** monorepo scaffold, full Prisma schema
