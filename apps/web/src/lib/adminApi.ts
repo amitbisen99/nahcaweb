@@ -5,10 +5,14 @@ export async function listContent(apiPath: string, token: string): Promise<Recor
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`listContent ${apiPath} failed: ${res.status} ${res.statusText}`);
+      return [];
+    }
     const data = await res.json();
     return data.items ?? [];
-  } catch {
+  } catch (err) {
+    console.error(`listContent ${apiPath} threw:`, err);
     return [];
   }
 }
@@ -24,10 +28,14 @@ export async function getContentItem(
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`getContentItem ${apiPath}/${id} failed: ${res.status} ${res.statusText}`);
+      return null;
+    }
     const data = await res.json();
     return data.item ?? null;
-  } catch {
+  } catch (err) {
+    console.error(`getContentItem ${apiPath}/${id} threw:`, err);
     return null;
   }
 }
@@ -52,10 +60,14 @@ export async function listMembershipPlans(token: string): Promise<AdminMembershi
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`listMembershipPlans failed: ${res.status} ${res.statusText}`);
+      return [];
+    }
     const data = await res.json();
     return data.plans ?? [];
-  } catch {
+  } catch (err) {
+    console.error("listMembershipPlans threw:", err);
     return [];
   }
 }
@@ -67,10 +79,14 @@ export async function getMembershipPlanByType(type: string, token: string): Prom
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`getMembershipPlanByType ${type} failed: ${res.status} ${res.statusText}`);
+      return null;
+    }
     const data = await res.json();
     return data.plan ?? null;
-  } catch {
+  } catch (err) {
+    console.error(`getMembershipPlanByType ${type} threw:`, err);
     return null;
   }
 }

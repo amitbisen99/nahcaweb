@@ -11,6 +11,11 @@ interface ApiUser {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
+  // Auth.js only auto-trusts the host on Vercel/Cloudflare or when NODE_ENV
+  // isn't "production" — on any other self-hosted server (NODE_ENV=production,
+  // no AUTH_URL set) every request is rejected with UntrustedHost unless this
+  // is set explicitly. That's what breaks sign-in/session after deployment.
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {

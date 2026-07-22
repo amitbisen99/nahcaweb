@@ -55,6 +55,30 @@ Visit `http://localhost:3000`.
 
 Stored on local disk under `apps/api/uploads/`, served at `/uploads/*`. Not committed to git.
 
+## Deploying to a real server
+
+Two env vars are the most common source of "it works locally but breaks after deploy":
+
+- **`apps/web` `NEXTAUTH_URL`** must be the app's real public URL (e.g. `https://portal.hinduchaplains.com`),
+  not `localhost`. NextAuth also needs `trustHost: true` (already set in `src/auth.ts`) — without it,
+  every sign-in fails with an `UntrustedHost` error as soon as the app runs with `NODE_ENV=production`
+  outside Vercel/Cloudflare, which is exactly what happens on a plain Node host.
+- **`apps/api` `WEB_ORIGIN`** must be that same real public URL, or the API's CORS check will reject
+  every request from the browser.
+
+### Health / test endpoints
+
+Use these right after deploying to confirm everything is actually wired up:
+
+- `GET <api-url>/health` — checks the API process is up and can reach the database. Returns
+  `{ ok: true, db: "connected" }` or a `503` with the underlying DB error.
+- `GET <web-url>/api/health` — checks the web app's required env vars are set and that it can reach
+  the API. Returns `{ ok: true, env: {...}, api: { reachable: true, ... } }` or a `503` explaining
+  what's missing/unreachable.
+
+Uncaught errors in the web app show a friendly fallback page (via `error.tsx`/`global-error.tsx`)
+instead of a blank screen, and are logged server-side for diagnosis.
+
 ## Status
 
 **Foundation + membership + content management complete:** monorepo scaffold, full Prisma schema

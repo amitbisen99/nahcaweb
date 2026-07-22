@@ -2,6 +2,7 @@ import "dotenv/config";
 import path from "path";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
+import { prisma } from "./prisma";
 import { authRouter } from "./routes/auth";
 import { donationsRouter } from "./routes/donations";
 import { webhooksRouter } from "./routes/webhooks";
@@ -19,6 +20,18 @@ import {
   newslettersRouter,
   boardRouter,
 } from "./routes/content";
+import { asyncHandler } from "./lib/asyncHandler";
+
+// Surface crashes that happen outside the request/response cycle (bad
+// startup config, an unawaited rejected promise) instead of the process
+// dying silently with no trace in the host's logs.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+  process.exit(1);
+});
 
 const app = express();
 
@@ -32,7 +45,25 @@ app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+// Test endpoint: hit this after deploying to confirm the API process is up
+// and can actually reach the database (the two most common deploy failures).
+app.get(
+  "/health",
+  asyncHandler(async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ ok: true, db: "connected", timestamp: new Date().toISOString() });
+    } catch (err) {
+      console.error("Health check DB query failed:", err);
+      res.status(503).json({
+        ok: false,
+        db: "error",
+        error: err instanceof Error ? err.message : "Unknown database error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  })
+);
 
 app.use("/auth", authRouter);
 app.use("/donations", donationsRouter);

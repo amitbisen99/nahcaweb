@@ -58,9 +58,13 @@ async function apiFetch<T>(path: string, token: string): Promise<T | null> {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`apiFetch ${path} failed: ${res.status} ${res.statusText}`);
+      return null;
+    }
     return (await res.json()) as T;
-  } catch {
+  } catch (err) {
+    console.error(`apiFetch ${path} threw:`, err);
     return null;
   }
 }
@@ -71,9 +75,13 @@ async function publicFetch<T>(path: string): Promise<T | null> {
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`publicFetch ${path} failed: ${res.status} ${res.statusText}`);
+      return null;
+    }
     return (await res.json()) as T;
-  } catch {
+  } catch (err) {
+    console.error(`publicFetch ${path} threw:`, err);
     return null;
   }
 }
