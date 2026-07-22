@@ -23,16 +23,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const res = await fetch(`${process.env.API_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: credentials?.email,
-            password: credentials?.password,
-          }),
-        });
+        let res: Response;
+        try {
+          res = await fetch(`${process.env.API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials?.email,
+              password: credentials?.password,
+            }),
+          });
+        } catch (err) {
+          // A network-level failure here (wrong API_URL, API down, DNS/firewall)
+          // looks identical to a wrong password unless logged distinctly — this
+          // is almost always the deploy-time bug, not a user's typo.
+          console.error(`NextAuth: could not reach API_URL (${process.env.API_URL}) for /auth/login:`, err);
+          return null;
+        }
 
-        if (!res.ok) return null;
+        if (!res.ok) {
+          if (res.status !== 401) {
+            console.error(`NextAuth: /auth/login returned unexpected status ${res.status}`);
+          }
+          return null;
+        }
 
         const data: { token: string; user: ApiUser } = await res.json();
         return {

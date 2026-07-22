@@ -1,6 +1,7 @@
 import sgMail from "@sendgrid/mail";
 
-const sendGridConfigured = Boolean(process.env.SENDGRID_API_KEY) && !process.env.SENDGRID_API_KEY?.includes("placeholder");
+export const sendGridConfigured =
+  Boolean(process.env.SENDGRID_API_KEY) && !process.env.SENDGRID_API_KEY?.includes("placeholder");
 
 if (sendGridConfigured) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);

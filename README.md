@@ -70,11 +70,28 @@ Two env vars are the most common source of "it works locally but breaks after de
 
 Use these right after deploying to confirm everything is actually wired up:
 
-- `GET <api-url>/health` — checks the API process is up and can reach the database. Returns
-  `{ ok: true, db: "connected" }` or a `503` with the underlying DB error.
+- `GET <api-url>/health` — checks the API process is up and can reach the database, and reports
+  whether Stripe/SendGrid are configured (vs still using placeholder keys) and whether
+  `PAYMENTS_BYPASS` is on. Returns `{ ok: true, db: "connected", paymentsBypass, stripeConfigured,
+  sendgridConfigured }` or a `503` with the underlying DB error.
 - `GET <web-url>/api/health` — checks the web app's required env vars are set and that it can reach
   the API. Returns `{ ok: true, env: {...}, api: { reachable: true, ... } }` or a `503` explaining
   what's missing/unreachable.
+
+### Diagnosing "why isn't this API request working"
+
+- **Every request the API receives is logged** (`METHOD path -> status (Nms)`) to the server console —
+  if a request never shows up in that log at all, the problem is upstream of the app (DNS, firewall,
+  reverse proxy), not in the code.
+- **Every 500 is logged with the route and the real error message**, not just a bare stack trace.
+- **Sign-in failures are logged distinctly**: a wrong password logs nothing (expected, silent by
+  design), but an unreachable `API_URL` or an unexpected API response is logged explicitly in the web
+  app's server console — so a broken deploy doesn't just look like "wrong password" with no way to
+  tell the difference.
+- **CORS is a blind spot for server logs**: if `WEB_ORIGIN` doesn't match, the API still processes the
+  request and logs a normal `200` — the browser silently discards the response due to the missing CORS
+  header. If the API's request log looks fine but the browser shows nothing / a network error, check
+  the browser DevTools Console/Network tab for a CORS error, and check `WEB_ORIGIN`.
 
 Uncaught errors in the web app show a friendly fallback page (via `error.tsx`/`global-error.tsx`)
 instead of a blank screen, and are logged server-side for diagnosis.

@@ -21,7 +21,7 @@
             "method": "GET",
             "header": [],
             "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
-            "description": "Confirms the API process is up and can reach the database. Returns { ok: true, db: \"connected\" } or a 503 with the underlying DB error."
+            "description": "Confirms the API process is up and can reach the database, and reports whether Stripe/SendGrid are configured (vs placeholder keys) and whether PAYMENTS_BYPASS is on. Returns { ok: true, db: \"connected\", paymentsBypass, stripeConfigured, sendgridConfigured } or a 503 with the underlying DB error."
           }
         }
       ]
