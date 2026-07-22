@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `payment` ADD COLUMN `membershipId` INTEGER NULL;
+ALTER TABLE `Payment` ADD COLUMN `membershipId` INTEGER NULL;
 
 -- CreateIndex
 CREATE UNIQUE INDEX `Payment_membershipId_key` ON `Payment`(`membershipId`);
