@@ -4,7 +4,7 @@ node_modules/
 .env.*.local
 dist/
 build/
-.next/
+#.next/
 out/
 
 # Prisma
