@@ -29,18 +29,19 @@ export default async function WebinarDetailPage({
                 Members Only
               </span>
             )}
-            {webinar.speakerInfo && (
-              <div
-                className="text-sm text-ink/50 [&_a]:text-brand [&_a]:underline"
-                dangerouslySetInnerHTML={{ __html: webinar.speakerInfo }}
-              />
-            )}
-            <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{webinar.title}</h1>
+            <h1 className="font-heading text-3xl font-medium text-heading">{webinar.title}</h1>
 
             {webinar.description && (
               <div
                 className="mt-6 text-base leading-relaxed text-ink/80 [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{ __html: webinar.description }}
+              />
+            )}
+
+            {webinar.speakerInfo && (
+              <div
+                className="mt-6 border-t border-ink/10 pt-6 text-sm leading-relaxed text-ink/70 [&_a]:text-brand [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: webinar.speakerInfo }}
               />
             )}
 

@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { getOpenWebinars } from "@/lib/cms";
 
 const EXCERPT_LIMIT = 300;
-const SPEAKER_EXCERPT_LIMIT = 120;
 
 function excerptOf(html: string, max = EXCERPT_LIMIT): string {
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -39,10 +38,7 @@ export default async function WebinarsPage() {
                       Members Only
                     </span>
                   )}
-                  {webinar.speakerInfo && (
-                    <p className="text-sm text-ink/50">{excerptOf(webinar.speakerInfo, SPEAKER_EXCERPT_LIMIT)}</p>
-                  )}
-                  <h3 className="mt-1 font-heading font-medium text-heading">{webinar.title}</h3>
+                  <h3 className="font-heading font-medium text-heading">{webinar.title}</h3>
                   {webinar.description && (
                     <p className="mt-2 flex-1 overflow-hidden text-sm leading-relaxed text-ink/70">
                       {excerptOf(webinar.description)}
