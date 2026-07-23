@@ -9,6 +9,10 @@ function excerptOf(html: string, max = EXCERPT_LIMIT): string {
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default async function EventsPage() {
   const events = await getUpcomingEvents(50);
 
@@ -28,7 +32,7 @@ export default async function EventsPage() {
                 className="flex h-80 flex-col rounded-lg border border-ink/10 bg-white p-5"
               >
                 <p className="text-sm text-ink/50">
-                  {event.date} {event.time ? `· ${event.time}` : ""}
+                  {formatDate(event.date)} {event.time ? `· ${event.time}` : ""}
                 </p>
                 <h3 className="mt-1 font-heading font-medium text-heading">{event.title}</h3>
                 {event.description && (
