@@ -55,15 +55,30 @@ async function buildPayload(type: ContentTypeKey, formData: FormData, token: str
   return payload;
 }
 
+async function extractErrorMessage(res: Response): Promise<string> {
+  const data = await res.json().catch(() => null);
+  if (!data?.error) return `Request failed with status ${res.status}`;
+  if (typeof data.error === "string") return data.error;
+  // zod's .flatten() shape: { fieldErrors: { field: ["message", ...] }, formErrors: [...] }
+  const fieldErrors = Object.entries(data.error.fieldErrors ?? {})
+    .map(([field, messages]) => `${field}: ${(messages as string[]).join(", ")}`)
+    .join("; ");
+  return fieldErrors || data.error.formErrors?.join("; ") || `Request failed with status ${res.status}`;
+}
+
 export async function createContentItem(type: ContentTypeKey, formData: FormData) {
   const token = await requireAdminToken();
   const payload = await buildPayload(type, formData, token);
 
-  await fetch(`${process.env.API_URL}/${type}`, {
+  const res = await fetch(`${process.env.API_URL}/${type}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
+
+  if (!res.ok) {
+    throw new Error(`Failed to create ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+  }
 
   revalidatePath(`/admin/content/${type}`);
   redirect(`/admin/content/${type}`);
@@ -73,11 +88,15 @@ export async function updateContentItem(type: ContentTypeKey, id: string, formDa
   const token = await requireAdminToken();
   const payload = await buildPayload(type, formData, token);
 
-  await fetch(`${process.env.API_URL}/${type}/${id}`, {
+  const res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
+
+  if (!res.ok) {
+    throw new Error(`Failed to update ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+  }
 
   revalidatePath(`/admin/content/${type}`);
   redirect(`/admin/content/${type}`);
@@ -86,10 +105,14 @@ export async function updateContentItem(type: ContentTypeKey, id: string, formDa
 export async function deleteContentItem(type: ContentTypeKey, id: string) {
   const token = await requireAdminToken();
 
-  await fetch(`${process.env.API_URL}/${type}/${id}`, {
+  const res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  if (!res.ok) {
+    throw new Error(`Failed to delete ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+  }
 
   revalidatePath(`/admin/content/${type}`);
 }
@@ -97,11 +120,15 @@ export async function deleteContentItem(type: ContentTypeKey, id: string) {
 export async function publishContentItem(type: ContentTypeKey, id: string) {
   const token = await requireAdminToken();
 
-  await fetch(`${process.env.API_URL}/${type}/${id}`, {
+  const res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ published: true }),
   });
+
+  if (!res.ok) {
+    throw new Error(`Failed to publish ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+  }
 
   revalidatePath(`/admin/content/${type}`);
 }
