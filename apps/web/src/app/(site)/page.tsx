@@ -4,7 +4,6 @@ import { SVGProps } from "react";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
 import { HeroSlider } from "@/components/HeroSlider";
-import { getUpcomingEvents } from "@/lib/cms";
 
 function ChevronIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -35,12 +34,10 @@ function DiamondIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export default async function Home() {
-  const events = await getUpcomingEvents();
-
+export default function Home() {
   return (
     <>
-      <HeroSlider events={events} />
+      <HeroSlider />
 
       {/* What is NAHCA */}
       <section className="border-t-4 border-brand bg-sand py-20">

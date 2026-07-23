@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Container } from "./Container";
 import { Button } from "./Button";
-import type { CmsEvent } from "@/lib/cms";
 
 const SLIDE_INTERVAL_MS = 6500;
-const SLIDE_COUNT = 3;
+const SLIDE_COUNT = 2;
 
-export function HeroSlider({ events }: { events: CmsEvent[] }) {
+export function HeroSlider() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -56,39 +55,8 @@ export function HeroSlider({ events }: { events: CmsEvent[] }) {
             </div>
           </div>
 
-          {/* Slide 2 — Upcoming Events */}
+          {/* Slide 2 — Community Support */}
           <div className={slideClasses(1)}>
-            <span className="font-heading text-sm font-semibold uppercase tracking-widest text-white/70">
-              What&apos;s Happening
-            </span>
-            <h2 className="font-heading text-4xl font-medium italic leading-tight sm:text-5xl">
-              Upcoming Events
-            </h2>
-
-            {events.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {events.slice(0, 2).map((event) => (
-                  <div key={event.id} className="rounded-lg border border-white/20 bg-white/10 p-4">
-                    <p className="text-sm text-white/60">{event.date}</p>
-                    <p className="mt-1 font-heading font-medium">{event.title}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-base leading-relaxed text-white/85 sm:text-lg">
-                Stay tuned for events in Fall 2026.
-              </p>
-            )}
-
-            <div className="pt-2">
-              <Button href="/events" variant="ghost" className="!border-white !text-white hover:!bg-white hover:!text-brand">
-                View All Events
-              </Button>
-            </div>
-          </div>
-
-          {/* Slide 3 — Community Support */}
-          <div className={slideClasses(2)}>
             <span className="font-heading text-sm font-semibold uppercase tracking-widest text-white/70">
               Get Involved
             </span>
