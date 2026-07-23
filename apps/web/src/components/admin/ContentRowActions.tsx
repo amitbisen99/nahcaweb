@@ -137,6 +137,11 @@ export function ContentRowActions({
                             View file
                           </a>
                         )
+                      ) : field.type === "richtext" && typeof value === "string" ? (
+                        <div
+                          className="[&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                          dangerouslySetInnerHTML={{ __html: value }}
+                        />
                       ) : (
                         formatValue(value, field.type)
                       )}

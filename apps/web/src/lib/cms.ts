@@ -24,3 +24,17 @@ export async function getUpcomingEvents(limit = 3): Promise<CmsEvent[]> {
     return [];
   }
 }
+
+export async function getEvent(id: string): Promise<CmsEvent | null> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`, {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const { item } = (await res.json()) as { item: CmsEvent };
+    return item;
+  } catch {
+    return null;
+  }
+}

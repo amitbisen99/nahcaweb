@@ -1,5 +1,13 @@
+import Link from "next/link";
 import { Container } from "@/components/Container";
 import { getUpcomingEvents } from "@/lib/cms";
+
+const EXCERPT_LIMIT = 300;
+
+function excerptOf(html: string, max = EXCERPT_LIMIT): string {
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
 
 export default async function EventsPage() {
   const events = await getUpcomingEvents(50);
@@ -15,25 +23,35 @@ export default async function EventsPage() {
         {events.length > 0 ? (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => (
-              <div key={event.id} className="rounded-lg border border-ink/10 bg-white p-5">
+              <div
+                key={event.id}
+                className="flex h-80 flex-col rounded-lg border border-ink/10 bg-white p-5"
+              >
                 <p className="text-sm text-ink/50">
                   {event.date} {event.time ? `· ${event.time}` : ""}
                 </p>
                 <h3 className="mt-1 font-heading font-medium text-heading">{event.title}</h3>
                 {event.description && (
-                  <div
-                    className="mt-2 text-sm leading-relaxed text-ink/70 [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
-                    dangerouslySetInnerHTML={{ __html: event.description }}
-                  />
+                  <p className="mt-2 flex-1 overflow-hidden text-sm leading-relaxed text-ink/70">
+                    {excerptOf(event.description)}
+                  </p>
                 )}
-                {event.registrationLink && (
-                  <a
-                    href={event.registrationLink}
-                    className="mt-3 inline-block text-sm font-medium text-brand hover:text-brand-dark"
+                <div className="mt-3 flex items-center gap-4">
+                  <Link
+                    href={`/events/${event.id}`}
+                    className="text-sm font-medium text-brand hover:text-brand-dark"
                   >
-                    Register →
-                  </a>
-                )}
+                    Read more →
+                  </Link>
+                  {event.registrationLink && (
+                    <a
+                      href={event.registrationLink}
+                      className="text-sm font-medium text-brand hover:text-brand-dark"
+                    >
+                      Register →
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
