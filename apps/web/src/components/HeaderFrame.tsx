@@ -9,11 +9,16 @@ const BANNER_PATHS = [
   "/what-is-hindu-chaplaincy/resources",
   "/what-is-hindu-chaplaincy/higher-education",
   "/what-is-hindu-chaplaincy/healthcare",
+  "/events/conference",
+  "/events/members-only",
+  "/events/monthly-qa",
+  "/events/sangha",
+  "/events/webinars",
 ];
 
 export function HeaderFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isBannerPage = pathname?.startsWith("/events/") || BANNER_PATHS.includes(pathname ?? "");
+  const isBannerPage = BANNER_PATHS.includes(pathname ?? "");
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
