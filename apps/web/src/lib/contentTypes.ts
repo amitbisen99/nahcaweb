@@ -50,10 +50,9 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
     titleField: "title",
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
-      { name: "description", label: "Description", type: "textarea" },
+      { name: "description", label: "Description", type: "richtext" },
       { name: "zoomOrYoutubeLink", label: "Zoom / YouTube Link", type: "text" },
-      { name: "priceCents", label: "Price in cents (blank = free)", type: "number" },
-      { name: "speakerInfo", label: "Speaker Info", type: "textarea" },
+      { name: "speakerInfo", label: "Speaker Info", type: "richtext" },
       {
         name: "access",
         label: "Visibility",

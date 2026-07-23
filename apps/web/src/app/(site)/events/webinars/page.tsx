@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { EventBanner } from "@/components/EventBanner";
+import { auth } from "@/auth";
 import { getOpenWebinars } from "@/lib/cms";
 
 const EXCERPT_LIMIT = 300;
+const SPEAKER_EXCERPT_LIMIT = 120;
 
-function excerptOf(text: string, max = EXCERPT_LIMIT): string {
-  const clean = text.replace(/\s+/g, " ").trim();
-  return clean.length > max ? `${clean.slice(0, max)}…` : clean;
+function excerptOf(html: string, max = EXCERPT_LIMIT): string {
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
 export default async function WebinarsPage() {
-  const webinars = await getOpenWebinars();
+  const session = await auth();
+  const webinars = await getOpenWebinars(session?.apiToken);
 
   return (
     <>
@@ -31,8 +34,13 @@ export default async function WebinarsPage() {
                   key={webinar.id}
                   className="flex h-80 flex-col rounded-lg border border-ink/10 bg-white p-5"
                 >
+                  {webinar.access === "members_only" && (
+                    <span className="mb-1 inline-block w-fit rounded-full bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand-dark">
+                      Members Only
+                    </span>
+                  )}
                   {webinar.speakerInfo && (
-                    <p className="text-sm text-ink/50">{webinar.speakerInfo}</p>
+                    <p className="text-sm text-ink/50">{excerptOf(webinar.speakerInfo, SPEAKER_EXCERPT_LIMIT)}</p>
                   )}
                   <h3 className="mt-1 font-heading font-medium text-heading">{webinar.title}</h3>
                   {webinar.description && (
@@ -40,9 +48,6 @@ export default async function WebinarsPage() {
                       {excerptOf(webinar.description)}
                     </p>
                   )}
-                  <p className="mt-2 text-sm font-semibold text-ink">
-                    {webinar.priceCents ? `$${(webinar.priceCents / 100).toFixed(2)}` : "Free"}
-                  </p>
                   <div className="mt-3 flex items-center gap-4">
                     <Link
                       href={`/events/webinars/${webinar.id}`}

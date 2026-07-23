@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
+import { auth } from "@/auth";
 import { getOpenWebinar } from "@/lib/cms";
 
 export default async function WebinarDetailPage({
@@ -10,7 +11,8 @@ export default async function WebinarDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const webinar = await getOpenWebinar(id);
+  const session = await auth();
+  const webinar = await getOpenWebinar(id, session?.apiToken);
   if (!webinar) notFound();
 
   return (
@@ -22,16 +24,24 @@ export default async function WebinarDetailPage({
           </Link>
 
           <div className="mt-6 max-w-2xl">
-            {webinar.speakerInfo && <p className="text-sm text-ink/50">{webinar.speakerInfo}</p>}
+            {webinar.access === "members_only" && (
+              <span className="mb-2 inline-block w-fit rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand-dark">
+                Members Only
+              </span>
+            )}
+            {webinar.speakerInfo && (
+              <div
+                className="text-sm text-ink/50 [&_a]:text-brand [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: webinar.speakerInfo }}
+              />
+            )}
             <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{webinar.title}</h1>
-            <p className="mt-2 text-sm font-semibold text-ink">
-              {webinar.priceCents ? `$${(webinar.priceCents / 100).toFixed(2)}` : "Free"}
-            </p>
 
             {webinar.description && (
-              <p className="mt-6 whitespace-pre-line text-base leading-relaxed text-ink/80">
-                {webinar.description}
-              </p>
+              <div
+                className="mt-6 text-base leading-relaxed text-ink/80 [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: webinar.description }}
+              />
             )}
 
             {webinar.zoomOrYoutubeLink && (
