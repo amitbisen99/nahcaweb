@@ -20,7 +20,12 @@ export default async function EventsPage() {
                   {event.date} {event.time ? `· ${event.time}` : ""}
                 </p>
                 <h3 className="mt-1 font-heading font-medium text-heading">{event.title}</h3>
-                <p className="mt-2 text-sm text-ink/70">{event.description}</p>
+                {event.description && (
+                  <div
+                    className="mt-2 text-sm leading-relaxed text-ink/70 [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                    dangerouslySetInnerHTML={{ __html: event.description }}
+                  />
+                )}
                 {event.registrationLink && (
                   <a
                     href={event.registrationLink}

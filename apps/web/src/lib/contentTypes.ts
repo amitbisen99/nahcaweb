@@ -9,7 +9,7 @@ export type ContentTypeKey =
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "textarea" | "date" | "number" | "checkbox" | "select" | "file";
+  type: "text" | "textarea" | "richtext" | "date" | "time" | "number" | "checkbox" | "select" | "file";
   required?: boolean;
   options?: string[];
 }
@@ -31,8 +31,8 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
       { name: "date", label: "Date", type: "date", required: true },
-      { name: "time", label: "Time", type: "text" },
-      { name: "description", label: "Description", type: "textarea" },
+      { name: "time", label: "Time", type: "time" },
+      { name: "description", label: "Description", type: "richtext" },
       { name: "registrationLink", label: "Registration Link", type: "text" },
       { name: "featuredImageUrl", label: "Featured Image", type: "file" },
       { name: "published", label: "Published", type: "checkbox" },
