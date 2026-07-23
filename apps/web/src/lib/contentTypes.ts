@@ -6,12 +6,17 @@ export type ContentTypeKey =
   | "newsletters"
   | "board";
 
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
 export interface FieldConfig {
   name: string;
   label: string;
   type: "text" | "textarea" | "richtext" | "date" | "time" | "number" | "checkbox" | "select" | "file";
   required?: boolean;
-  options?: string[];
+  options?: (string | SelectOption)[];
 }
 
 export interface ContentTypeConfig {
@@ -49,6 +54,16 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "zoomOrYoutubeLink", label: "Zoom / YouTube Link", type: "text" },
       { name: "priceCents", label: "Price in cents (blank = free)", type: "number" },
       { name: "speakerInfo", label: "Speaker Info", type: "textarea" },
+      {
+        name: "access",
+        label: "Visibility",
+        type: "select",
+        required: true,
+        options: [
+          { value: "open", label: "Open (visible on the website)" },
+          { value: "members_only", label: "Members Only (visible in the member portal)" },
+        ],
+      },
       { name: "published", label: "Published", type: "checkbox" },
     ],
   },

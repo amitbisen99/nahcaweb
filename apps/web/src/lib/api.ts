@@ -51,6 +51,14 @@ export interface ApiArticle {
   createdAt: string;
 }
 
+export interface ApiConferenceVideo {
+  id: number;
+  title: string;
+  videoUrl: string;
+  year: number | null;
+  category: string | null;
+}
+
 async function apiFetch<T>(path: string, token: string): Promise<T | null> {
   try {
     const res = await fetch(`${process.env.API_URL}${path}`, {
@@ -113,5 +121,10 @@ export async function getPublishedNewsletters(): Promise<ApiNewsletter[]> {
 
 export async function getPublishedArticles(): Promise<ApiArticle[]> {
   const data = await publicFetch<{ items: ApiArticle[] }>("/articles");
+  return data?.items ?? [];
+}
+
+export async function getMemberConferenceVideos(token: string): Promise<ApiConferenceVideo[]> {
+  const data = await apiFetch<{ items: ApiConferenceVideo[] }>("/conference-videos", token);
   return data?.items ?? [];
 }

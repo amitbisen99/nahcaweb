@@ -12,14 +12,9 @@ import { paymentsRouter } from "./routes/payments";
 import { reportsRouter } from "./routes/reports";
 import { newsletterRouter } from "./routes/newsletter";
 import { uploadsRouter } from "./routes/uploads";
-import {
-  eventsRouter,
-  webinarsRouter,
-  conferenceVideosRouter,
-  articlesRouter,
-  newslettersRouter,
-  boardRouter,
-} from "./routes/content";
+import { eventsRouter, articlesRouter, newslettersRouter, boardRouter } from "./routes/content";
+import { webinarsRouter } from "./routes/webinars";
+import { conferenceVideosRouter } from "./routes/conferenceVideos";
 import { asyncHandler } from "./lib/asyncHandler";
 import { paymentsBypassed } from "./lib/paymentsBypass";
 import { sendGridConfigured } from "./lib/mailer";

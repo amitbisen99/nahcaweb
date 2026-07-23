@@ -18,31 +18,6 @@ export const eventsRouter = createContentRouter({
   orderBy: { date: "asc" },
 });
 
-export const webinarsRouter = createContentRouter({
-  delegate: prisma.webinar,
-  schema: z.object({
-    title: z.string().min(1),
-    description: z.string().optional(),
-    zoomOrYoutubeLink: z.string().optional(),
-    priceCents: z.number().int().optional(),
-    speakerInfo: z.string().optional(),
-    published: z.boolean().optional(),
-  }),
-  orderBy: { createdAt: "desc" },
-});
-
-export const conferenceVideosRouter = createContentRouter({
-  delegate: prisma.conferenceVideo,
-  schema: z.object({
-    title: z.string().min(1),
-    videoUrl: z.string().min(1),
-    year: z.number().int().optional(),
-    category: z.string().optional(),
-    published: z.boolean().optional(),
-  }),
-  orderBy: { createdAt: "desc" },
-});
-
 export const articlesRouter = createContentRouter({
   delegate: prisma.article,
   schema: z.object({

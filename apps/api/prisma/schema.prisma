@@ -51,6 +51,11 @@ enum ArticleCategory {
   Ethics
 }
 
+enum WebinarAccess {
+  open
+  members_only
+}
+
 model User {
   id           Int          @id @default(autoincrement())
   email        String       @unique
@@ -163,17 +168,19 @@ model Event {
 }
 
 model Webinar {
-  id                Int      @id @default(autoincrement())
+  id                Int           @id @default(autoincrement())
   title             String
-  description       String?  @db.Text
+  description       String?       @db.Text
   zoomOrYoutubeLink String?
   priceCents        Int?
-  speakerInfo       String?  @db.Text
-  published         Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  speakerInfo       String?       @db.Text
+  access            WebinarAccess @default(open)
+  published         Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@index([published])
+  @@index([access])
 }
 
 model ConferenceVideo {
