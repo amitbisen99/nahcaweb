@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
-import { Button } from "@/components/Button";
+import { AddToCalendar } from "@/components/AddToCalendar";
 import { getEvent } from "@/lib/cms";
 
 function formatDate(date: string): string {
@@ -46,11 +46,18 @@ export default async function EventDetailPage({
               />
             )}
 
-            {event.registrationLink && (
-              <Button href={event.registrationLink} className="mt-8">
-                Register →
-              </Button>
-            )}
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <AddToCalendar
+                event={{
+                  title: event.title,
+                  description: event.description,
+                  date: event.date,
+                  time: event.time,
+                  url: event.registrationLink,
+                }}
+                triggerClassName="inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand px-6 py-3 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-dark"
+              />
+            </div>
           </div>
         </div>
       </Container>

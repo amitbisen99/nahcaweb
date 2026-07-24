@@ -35,17 +35,26 @@ export function MobileNav({
             <li key={item.label} className="border-b border-ink/10 py-2">
               {item.children ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setExpanded((cur) => (cur === item.label ? null : item.label))}
-                    aria-expanded={expanded === item.label}
-                    className="flex w-full items-center justify-between py-2 font-heading text-base font-medium text-ink"
-                  >
-                    {item.label}
-                    <span className={`transition-transform ${expanded === item.label ? "rotate-180" : ""}`}>
-                      ⌄
-                    </span>
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      className="block flex-1 py-2 font-heading text-base font-medium text-ink"
+                    >
+                      {item.label}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((cur) => (cur === item.label ? null : item.label))}
+                      aria-expanded={expanded === item.label}
+                      aria-label={`Toggle ${item.label} submenu`}
+                      className="flex h-10 w-10 flex-none items-center justify-center text-ink/60"
+                    >
+                      <span className={`transition-transform ${expanded === item.label ? "rotate-180" : ""}`}>
+                        ⌄
+                      </span>
+                    </button>
+                  </div>
                   {expanded === item.label && (
                     <ul className="ml-3 flex flex-col gap-1 pb-2">
                       {item.children.map((child) => (

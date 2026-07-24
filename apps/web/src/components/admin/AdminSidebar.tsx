@@ -17,7 +17,7 @@ function linkClasses(active: boolean) {
   }`;
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const isOnContentPage = pathname?.startsWith("/admin/content") ?? false;
   const [expanded, setExpanded] = useState(isOnContentPage);
@@ -27,7 +27,7 @@ export function AdminSidebar() {
       {NAV_ITEMS.map((item) => {
         const active = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
         return (
-          <Link key={item.href} href={item.href} className={linkClasses(Boolean(active))}>
+          <Link key={item.href} href={item.href} onClick={onNavigate} className={linkClasses(Boolean(active))}>
             {item.label}
           </Link>
         );
@@ -53,6 +53,7 @@ export function AdminSidebar() {
                 <Link
                   key={config.key}
                   href={href}
+                  onClick={onNavigate}
                   className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     active ? "bg-brand text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
                   }`}
