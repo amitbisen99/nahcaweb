@@ -17,18 +17,18 @@ export default function MembersOnlyPage() {
 
       <section className="bg-white">
         <Container>
-          <div className="max-w-2xl py-16">
+          <div className="py-16">
             <h2 className="font-heading text-2xl font-medium italic text-heading">
               Birds of a Feather, Let&apos;s Flock Together!
             </h2>
 
-            <p className="mt-6 text-ink/70">
+            <p className="mt-6 text-black">
               Calling our NAHCA members! Every month, we&apos;re gathering for exclusive,
               members-only meetups where the heartfelt and the practical synchronize.
             </p>
 
-            <p className="mt-4 text-ink/70">In this inviting virtual space, you will:</p>
-            <ul className="mt-3 flex flex-col gap-2 text-ink/70">
+            <p className="mt-4 text-black">In this inviting virtual space, you will:</p>
+            <ul className="mt-3 flex flex-col gap-2 text-black">
               <li>
                 Find genuine camaraderie, encouragement, and creative ideas for challenges you
                 may be facing
@@ -36,7 +36,7 @@ export default function MembersOnlyPage() {
               <li>Recharge your energy to keep doing the soul-tending work you do</li>
             </ul>
 
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               Bring your lunch, bring your favorite brew—chai, coffee, kombucha—it&apos;s your
               vibe! For this hour, let&apos;s laugh, learn, strategize, and uplift one another in
               a sacred circle informed by Hindu chaplaincy. Together, we will strengthen our
@@ -46,7 +46,7 @@ export default function MembersOnlyPage() {
             <h3 className="mt-10 font-heading text-xl font-medium text-heading">
               Upcoming Meetings
             </h3>
-            <p className="mt-2 text-ink/70">
+            <p className="mt-2 text-black">
               This series of 5 monthly meetings will be held on the following Fridays. Dates and
               times will change for Fall 2026.
             </p>
@@ -64,17 +64,17 @@ export default function MembersOnlyPage() {
                   </div>
                   <div>
                     <p className="font-heading text-sm font-semibold text-heading">Friday</p>
-                    <p className="text-sm text-ink/60">{meeting.time}</p>
+                    <p className="text-sm text-black">{meeting.time}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               The gatherings will be convened by Sanjay Mathur, Bindu Gupta, and Bindu Lanka,
               NAHCA Membership Committee.
             </p>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               When you register, you will receive a confirmation email from NAHCA with the Zoom
               link. Save that Zoom link in your calendar for easy access.
             </p>
@@ -91,7 +91,7 @@ export default function MembersOnlyPage() {
             </h3>
             <div className="mt-4">
               <h4 className="font-semibold text-heading">NAHCA Members</h4>
-              <p className="mt-2 text-ink/70">
+              <p className="mt-2 text-black">
                 Free access. Email{" "}
                 <a
                   href="mailto:NAHCA108@gmail.com"
@@ -104,7 +104,7 @@ export default function MembersOnlyPage() {
               </p>
             </div>
 
-            <p className="mt-10 text-sm text-ink/60">
+            <p className="mt-10 text-sm text-black">
               For further information and registration, please contact us at{" "}
               <a
                 href="mailto:NAHCA108@gmail.com"

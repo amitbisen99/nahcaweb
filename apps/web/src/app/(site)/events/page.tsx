@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
+import { EventBanner } from "@/components/EventBanner";
 import { AddToCalendar } from "@/components/AddToCalendar";
+import { EventPhotoSlider } from "@/components/EventPhotoSlider";
+import { EventTestimonialSlider } from "@/components/EventTestimonialSlider";
 import { getUpcomingEvents } from "@/lib/cms";
 
 function formatDate(date: string): string {
@@ -19,11 +22,19 @@ export default async function EventsPage() {
   const events = await getUpcomingEvents(50);
 
   return (
-    <div className="bg-white">
+    <>
+      <EventBanner title="Events" image="/events/mysore-green-hotel.jpg" />
+
+      <div className="bg-white py-12">
+        <Container>
+          <EventPhotoSlider />
+        </Container>
+      </div>
+
+      <div className="bg-white">
       <Container>
         <div className="py-16">
-          <h1 className="font-heading text-3xl font-medium text-heading">Events</h1>
-          <p className="mt-2 text-ink/70">
+          <p className="mt-2 text-black">
             Annual Conference, Monthly Q&amp;A, Webinars, Sangha, and Members-Only Meetings.
           </p>
 
@@ -49,7 +60,7 @@ export default async function EventsPage() {
                       >
                         {event.title}
                       </Link>
-                      <p className="mt-0.5 text-sm text-ink/50">
+                      <p className="mt-0.5 text-sm text-black">
                         {formatDate(event.date)}
                         {event.time ? ` · ${event.time}` : ""}
                       </p>
@@ -77,12 +88,29 @@ export default async function EventsPage() {
               ))}
             </div>
           ) : (
-            <p className="mt-8 text-sm text-ink/50">
+            <p className="mt-8 text-sm text-black">
               No events published yet — once events are added in the CMS, they&apos;ll appear here automatically.
             </p>
           )}
         </div>
       </Container>
-    </div>
+      </div>
+
+      <div className="bg-sand/30 py-16">
+        <Container>
+          <div className="text-center">
+            <span className="font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+              Feedback
+            </span>
+            <h2 className="mt-3 font-heading text-3xl font-bold text-heading">
+              What People Are Saying
+            </h2>
+          </div>
+          <div className="mt-10">
+            <EventTestimonialSlider />
+          </div>
+        </Container>
+      </div>
+    </>
   );
 }

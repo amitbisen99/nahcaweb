@@ -9,7 +9,7 @@ export default async function InvitePage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Invite</h1>
-      <p className="mt-2 text-ink/70">Share NAHCA with colleagues and friends who might want to join.</p>
+      <p className="mt-2 text-black">Share NAHCA with colleagues and friends who might want to join.</p>
 
       <InviteLinkCard referralLink={referralLink} />
     </div>

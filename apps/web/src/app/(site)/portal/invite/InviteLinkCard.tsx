@@ -13,13 +13,13 @@ export function InviteLinkCard({ referralLink }: { referralLink: string }) {
 
   return (
     <div className="mt-6 rounded-xl border border-ink/10 bg-white p-6">
-      <p className="text-sm font-medium text-ink/80">Your personal invite link</p>
+      <p className="text-sm font-medium text-black">Your personal invite link</p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <input
           readOnly
           value={referralLink}
           onFocus={(e) => e.currentTarget.select()}
-          className="min-w-0 flex-1 rounded-lg border border-ink/20 bg-sand/20 px-3 py-2 text-sm text-ink/70"
+          className="min-w-0 flex-1 rounded-lg border border-ink/20 bg-sand/20 px-3 py-2 text-sm text-black"
         />
         <button
           type="button"
@@ -29,7 +29,7 @@ export function InviteLinkCard({ referralLink }: { referralLink: string }) {
           {copied ? "Copied!" : "Copy link"}
         </button>
       </div>
-      <p className="mt-3 text-sm text-ink/60">
+      <p className="mt-3 text-sm text-black">
         Share this link with anyone you&apos;d like to invite to NAHCA membership.
       </p>
     </div>

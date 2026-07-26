@@ -16,6 +16,7 @@ const webinarSchema = z.object({
   zoomOrYoutubeLink: z.string().optional(),
   priceCents: z.number().int().optional(),
   speakerInfo: z.string().optional(),
+  featuredImageUrl: z.string().nullable().optional(),
   access: z.enum(["open", "members_only"]).optional(),
   published: z.boolean().optional(),
 });

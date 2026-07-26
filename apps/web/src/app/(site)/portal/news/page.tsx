@@ -39,10 +39,10 @@ export default async function PortalNewsPage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">News and Updates</h1>
-      <p className="mt-2 text-ink/70">The latest newsletters and articles from NAHCA.</p>
+      <p className="mt-2 text-black">The latest newsletters and articles from NAHCA.</p>
 
       {items.length === 0 ? (
-        <p className="mt-6 text-sm text-ink/60">Nothing published yet — check back soon.</p>
+        <p className="mt-6 text-sm text-black">Nothing published yet — check back soon.</p>
       ) : (
         <div className="mt-6 flex flex-col gap-3">
           {items.map((item) => (
@@ -51,10 +51,10 @@ export default async function PortalNewsPage() {
                 <span className="rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
                   {item.meta ?? item.kind}
                 </span>
-                <span className="text-xs text-ink/50">{new Date(item.date).toDateString()}</span>
+                <span className="text-xs text-black">{new Date(item.date).toDateString()}</span>
               </div>
               <p className="mt-2 font-heading text-base font-medium text-heading">{item.title}</p>
-              {item.excerpt && <p className="mt-1 text-sm leading-relaxed text-ink/70">{item.excerpt}</p>}
+              {item.excerpt && <p className="mt-1 text-sm leading-relaxed text-black">{item.excerpt}</p>}
               {item.href && (
                 <a
                   href={item.href}

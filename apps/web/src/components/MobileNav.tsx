@@ -9,10 +9,12 @@ export function MobileNav({
   isAdmin,
   isLoggedIn,
   signOutAction,
+  transparent = false,
 }: {
   isAdmin: boolean;
   isLoggedIn: boolean;
   signOutAction: () => Promise<void>;
+  transparent?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function MobileNav({
                       onClick={() => setExpanded((cur) => (cur === item.label ? null : item.label))}
                       aria-expanded={expanded === item.label}
                       aria-label={`Toggle ${item.label} submenu`}
-                      className="flex h-10 w-10 flex-none items-center justify-center text-ink/60"
+                      className="flex h-10 w-10 flex-none items-center justify-center text-black"
                     >
                       <span className={`transition-transform ${expanded === item.label ? "rotate-180" : ""}`}>
                         ⌄
@@ -64,7 +66,7 @@ export function MobileNav({
                             target={child.external ? "_blank" : undefined}
                             rel={child.external ? "noopener noreferrer" : undefined}
                             onClick={() => setOpen(false)}
-                            className="block py-1.5 text-sm text-ink/70"
+                            className="block py-1.5 text-sm text-black"
                           >
                             {child.label}
                           </Link>
@@ -89,7 +91,7 @@ export function MobileNav({
 
       {isLoggedIn && (
         <form action={signOutAction} className="pt-4">
-          <button type="submit" className="text-sm font-medium text-ink/50">
+          <button type="submit" className="text-sm font-medium text-black">
             Sign out
           </button>
         </form>
@@ -104,18 +106,20 @@ export function MobileNav({
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-ink/15 transition-colors group-data-[mode=transparent]/header:border-white/30"
+        className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors duration-300 ${
+          transparent ? "border-white/30" : "border-ink/15"
+        }`}
       >
         <span className="sr-only">Toggle menu</span>
         <div className="flex flex-col gap-1.5">
           <span
-            className={`block h-0.5 w-5 bg-ink transition-transform group-data-[mode=transparent]/header:bg-white ${open ? "translate-y-2 rotate-45" : ""}`}
+            className={`block h-0.5 w-5 transition-transform duration-300 ${transparent ? "bg-white" : "bg-ink"} ${open ? "translate-y-2 rotate-45" : ""}`}
           />
           <span
-            className={`block h-0.5 w-5 bg-ink transition-opacity group-data-[mode=transparent]/header:bg-white ${open ? "opacity-0" : ""}`}
+            className={`block h-0.5 w-5 transition-opacity duration-300 ${transparent ? "bg-white" : "bg-ink"} ${open ? "opacity-0" : ""}`}
           />
           <span
-            className={`block h-0.5 w-5 bg-ink transition-transform group-data-[mode=transparent]/header:bg-white ${open ? "-translate-y-2 -rotate-45" : ""}`}
+            className={`block h-0.5 w-5 transition-transform duration-300 ${transparent ? "bg-white" : "bg-ink"} ${open ? "-translate-y-2 -rotate-45" : ""}`}
           />
         </div>
       </button>

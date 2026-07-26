@@ -11,7 +11,7 @@ export function PasswordForm() {
   return (
     <form action={formAction} className="mt-6 flex max-w-md flex-col gap-4">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Current password</span>
+        <span className="text-sm font-medium text-black">Current password</span>
         <input
           type="password"
           name="currentPassword"
@@ -21,7 +21,7 @@ export function PasswordForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">New password</span>
+        <span className="text-sm font-medium text-black">New password</span>
         <input
           type="password"
           name="newPassword"
@@ -32,7 +32,7 @@ export function PasswordForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Confirm new password</span>
+        <span className="text-sm font-medium text-black">Confirm new password</span>
         <input
           type="password"
           name="confirmPassword"

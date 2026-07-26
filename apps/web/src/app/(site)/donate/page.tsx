@@ -1,4 +1,5 @@
 import { Container } from "@/components/Container";
+import { EventBanner } from "@/components/EventBanner";
 import { DonateForm } from "./DonateForm";
 
 export default async function DonatePage({
@@ -9,10 +10,11 @@ export default async function DonatePage({
   const { status } = await searchParams;
 
   return (
-    <Container>
+    <>
+      <EventBanner title="Donate" image="/chaplaincy/puja.jpg" />
+      <Container>
       <div className="mx-auto max-w-lg py-16">
-        <h1 className="font-heading text-3xl font-medium text-heading">Donate</h1>
-        <p className="mt-2 text-ink/70">
+        <p className="mt-2 text-black">
           Your gift directly supports NAHCA&apos;s mission of advancing Hindu chaplaincy.
         </p>
 
@@ -31,6 +33,7 @@ export default async function DonatePage({
           <DonateForm />
         </div>
       </div>
-    </Container>
+      </Container>
+    </>
   );
 }

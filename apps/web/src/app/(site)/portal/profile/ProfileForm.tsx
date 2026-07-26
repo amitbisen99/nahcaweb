@@ -11,7 +11,7 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
   return (
     <form action={formAction} className="mt-6 flex max-w-md flex-col gap-4">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Name</span>
+        <span className="text-sm font-medium text-black">Name</span>
         <input
           type="text"
           name="name"
@@ -22,14 +22,14 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Email</span>
+        <span className="text-sm font-medium text-black">Email</span>
         <input
           type="email"
           value={email}
           disabled
-          className="rounded-lg border border-ink/20 bg-sand/20 px-3 py-2 text-ink/50"
+          className="rounded-lg border border-ink/20 bg-sand/20 px-3 py-2 text-black"
         />
-        <span className="text-xs text-ink/50">Contact us if you need to change your email address.</span>
+        <span className="text-xs text-black">Contact us if you need to change your email address.</span>
       </label>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

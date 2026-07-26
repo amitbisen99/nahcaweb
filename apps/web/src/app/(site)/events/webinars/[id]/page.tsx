@@ -23,7 +23,7 @@ export default async function WebinarDetailPage({
             ← All Webinars
           </Link>
 
-          <div className="mt-6 max-w-2xl">
+          <div className="mt-6">
             {webinar.access === "members_only" && (
               <span className="mb-2 inline-block w-fit rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand-dark">
                 Members Only
@@ -33,14 +33,14 @@ export default async function WebinarDetailPage({
 
             {webinar.description && (
               <div
-                className="mt-6 text-base leading-relaxed text-ink/80 [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                className="mt-6 text-base leading-relaxed text-black [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{ __html: webinar.description }}
               />
             )}
 
             {webinar.speakerInfo && (
               <div
-                className="mt-6 border-t border-ink/10 pt-6 text-sm leading-relaxed text-ink/70 [&_a]:text-brand [&_a]:underline"
+                className="mt-6 border-t border-ink/10 pt-6 text-sm leading-relaxed text-black [&_a]:text-brand [&_a]:underline"
                 dangerouslySetInnerHTML={{ __html: webinar.speakerInfo }}
               />
             )}

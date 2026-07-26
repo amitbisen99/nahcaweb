@@ -17,6 +17,7 @@ export interface FieldConfig {
   type: "text" | "textarea" | "richtext" | "date" | "time" | "number" | "checkbox" | "select" | "file";
   required?: boolean;
   options?: (string | SelectOption)[];
+  helpText?: string;
 }
 
 export interface ContentTypeConfig {
@@ -53,6 +54,12 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "description", label: "Description", type: "richtext" },
       { name: "zoomOrYoutubeLink", label: "Zoom / YouTube Link", type: "text" },
       { name: "speakerInfo", label: "Speaker Info", type: "richtext" },
+      {
+        name: "featuredImageUrl",
+        label: "Featured Image",
+        type: "file",
+        helpText: "Recommended size: 800 × 800px (square) — the image is displayed as a square card.",
+      },
       {
         name: "access",
         label: "Visibility",

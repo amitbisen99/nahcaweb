@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-ink/10 bg-sand">
       <Container>
-        <div className="flex flex-col gap-4 py-8 text-sm text-ink/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 py-8 text-sm text-black sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} North American Hindu Chaplains Association. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             {FOOTER_LINKS.map((link) => (

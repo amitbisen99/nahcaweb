@@ -12,10 +12,10 @@ export default function GlobalError({
       <body className="flex min-h-screen items-center justify-center bg-cream px-6 text-center font-sans">
         <div>
           <h1 className="text-2xl font-semibold text-heading">Something went wrong</h1>
-          <p className="mt-2 text-sm text-ink/60">
+          <p className="mt-2 text-center text-sm text-black">
             An unexpected error occurred. Please try again, or contact us if this keeps happening.
           </p>
-          {error.digest && <p className="mt-1 text-xs text-ink/40">Reference: {error.digest}</p>}
+          {error.digest && <p className="mt-1 text-center text-xs text-black">Reference: {error.digest}</p>}
           <button
             type="button"
             onClick={() => unstable_retry()}

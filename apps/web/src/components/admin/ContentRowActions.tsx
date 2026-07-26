@@ -54,7 +54,7 @@ export function ContentRowActions({
           onClick={() => setViewing(true)}
           aria-label="View"
           title="View"
-          className="text-ink/50 transition-colors hover:text-brand"
+          className="text-black transition-colors hover:text-brand"
         >
           <EyeIcon className="h-[18px] w-[18px]" />
         </button>
@@ -62,7 +62,7 @@ export function ContentRowActions({
           href={`/admin/content/${type}/${item.id}`}
           aria-label="Edit"
           title="Edit"
-          className="text-ink/50 transition-colors hover:text-brand"
+          className="text-black transition-colors hover:text-brand"
         >
           <PencilIcon className="h-[18px] w-[18px]" />
         </Link>
@@ -72,7 +72,7 @@ export function ContentRowActions({
           disabled={isPending}
           aria-label="Delete"
           title="Delete"
-          className="text-ink/50 transition-colors hover:text-red-600 disabled:opacity-50"
+          className="text-black transition-colors hover:text-red-600 disabled:opacity-50"
         >
           <TrashIcon className="h-[18px] w-[18px]" />
         </button>
@@ -95,7 +95,7 @@ export function ContentRowActions({
                 type="button"
                 onClick={() => setViewing(false)}
                 aria-label="Close"
-                className="flex-none text-ink/40 hover:text-ink"
+                className="flex-none text-black hover:text-ink"
               >
                 <XIcon className="h-6 w-6" />
               </button>
@@ -103,7 +103,7 @@ export function ContentRowActions({
 
             <span
               className={`mt-3 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${
-                item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-ink/60"
+                item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"
               }`}
             >
               {item.published ? "Published" : "Draft"}
@@ -116,10 +116,10 @@ export function ContentRowActions({
 
                 return (
                   <div key={field.name}>
-                    <dt className="text-xs font-semibold uppercase tracking-wide text-ink/50">
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-black">
                       {field.label}
                     </dt>
-                    <dd className="mt-1.5 text-base leading-relaxed text-ink/80">
+                    <dd className="mt-1.5 text-base leading-relaxed text-black">
                       {field.type === "file" && typeof value === "string" ? (
                         isImageUrl(value) ? (
                           <img

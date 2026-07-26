@@ -6,10 +6,12 @@ import { isImageUrl } from "./icons";
 export function ContentFileField({
   name,
   label,
+  helpText,
   currentValue,
 }: {
   name: string;
   label: string;
+  helpText?: string;
   currentValue?: string | null;
 }) {
   const [removed, setRemoved] = useState(false);
@@ -43,14 +45,15 @@ export function ContentFileField({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-ink/80">{label}</span>
+      <span className="text-sm font-medium text-black">{label}</span>
+      {helpText && <span className="text-xs text-black/60">{helpText}</span>}
 
       {preview ? (
         <div className="flex items-center gap-3">
           {preview.isImage ? (
             <img src={preview.url} alt="" className="h-20 w-20 rounded-lg border border-ink/10 object-cover" />
           ) : (
-            <span className="text-sm text-ink/70">{preview.name}</span>
+            <span className="text-sm text-black">{preview.name}</span>
           )}
           <button
             type="button"
@@ -88,7 +91,7 @@ export function ContentFileField({
         </div>
       ) : null}
 
-      <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm font-medium text-ink/80 transition-colors hover:bg-sand/40">
+      <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-sand/40">
         Upload Image
         <input ref={inputRef} type="file" name={name} onChange={handleFileChange} className="hidden" />
       </label>

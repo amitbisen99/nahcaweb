@@ -2,14 +2,15 @@
 
 :root {
   /* NAHCA — official brand palette */
-  --color-brand: #ef28c1; /* official pink — buttons */
-  --color-brand-dark: #b31e91; /* hover / pressed state */
+  --color-brand: #c84869; /* buttons */
+  --color-brand-dark: #a03a54; /* hover / pressed state */
   --color-heading: #011689; /* official blue — headings */
   --color-ink: #1e2233; /* deep indigo-black — body copy */
   --color-forest: #00945e; /* official green — background bands, used sparingly */
   --color-forest-soft: #3fb98c; /* lighter green for gradients/accents */
   --color-cream: #f6f5f7; /* neutral off-white — default surface */
   --color-sand: #dcefe6; /* pale green tint — occasional alternate band background */
+  --color-navy: #101f46; /* dark navy — Support the Mission band */
 }
 
 @theme inline {
@@ -21,8 +22,9 @@
   --color-forest-soft: var(--color-forest-soft);
   --color-cream: var(--color-cream);
   --color-sand: var(--color-sand);
+  --color-navy: var(--color-navy);
   --font-body: var(--font-body);
-  --font-heading: var(--font-heading);
+  --font-heading: var(--font-body);
 }
 
 body {
@@ -30,5 +32,47 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading), Georgia, serif;
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  p {
+    text-align: justify;
+  }
+}
+
+/* Body copy: every text-size utility bumped +2px over the Tailwind default. */
+.text-xs { font-size: 14px; }
+.text-sm { font-size: 16px; }
+.text-base { font-size: 18px; }
+.text-lg { font-size: 20px; }
+.text-xl { font-size: 22px; }
+.text-2xl { font-size: 26px; }
+.text-3xl { font-size: 32px; }
+.text-4xl { font-size: 38px; }
+.text-5xl { font-size: 50px; }
+.text-6xl { font-size: 62px; }
+.text-7xl { font-size: 74px; }
+
+/* Headings (h1-h6): +4px over the Tailwind default — takes priority over the
+   body bump above via the higher-specificity tag+class selector. */
+h1.text-xs, h2.text-xs, h3.text-xs, h4.text-xs, h5.text-xs, h6.text-xs { font-size: 16px; }
+h1.text-sm, h2.text-sm, h3.text-sm, h4.text-sm, h5.text-sm, h6.text-sm { font-size: 18px; }
+h1.text-base, h2.text-base, h3.text-base, h4.text-base, h5.text-base, h6.text-base { font-size: 20px; }
+h1.text-lg, h2.text-lg, h3.text-lg, h4.text-lg, h5.text-lg, h6.text-lg { font-size: 22px; }
+h1.text-xl, h2.text-xl, h3.text-xl, h4.text-xl, h5.text-xl, h6.text-xl { font-size: 24px; }
+h1.text-2xl, h2.text-2xl, h3.text-2xl, h4.text-2xl, h5.text-2xl, h6.text-2xl { font-size: 28px; }
+h1.text-3xl, h2.text-3xl, h3.text-3xl, h4.text-3xl, h5.text-3xl, h6.text-3xl { font-size: 34px; }
+h1.text-4xl, h2.text-4xl, h3.text-4xl, h4.text-4xl, h5.text-4xl, h6.text-4xl { font-size: 40px; }
+h1.text-5xl, h2.text-5xl, h3.text-5xl, h4.text-5xl, h5.text-5xl, h6.text-5xl { font-size: 52px; }
+h1.text-6xl, h2.text-6xl, h3.text-6xl, h4.text-6xl, h5.text-6xl, h6.text-6xl { font-size: 64px; }
+
+/* Responsive size variants used alongside the base classes above. */
+@media (min-width: 40rem) {
+  .sm\:text-lg { font-size: 20px; }
+  h1.sm\:text-4xl, h2.sm\:text-4xl, h3.sm\:text-4xl { font-size: 40px; }
+  h1.sm\:text-5xl, h2.sm\:text-5xl, h3.sm\:text-5xl { font-size: 52px; }
+}
+@media (min-width: 64rem) {
+  h1.lg\:text-6xl, h2.lg\:text-6xl, h3.lg\:text-6xl { font-size: 64px; }
 }

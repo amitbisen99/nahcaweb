@@ -27,7 +27,7 @@ export default function LoginPage() {
         <h1 className="mb-6 font-heading text-2xl font-medium text-heading">Member / Admin Login</h1>
         <form action={login} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink/80">Email</span>
+            <span className="text-sm font-medium text-black">Email</span>
             <input
               type="email"
               name="email"
@@ -36,7 +36,7 @@ export default function LoginPage() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink/80">Password</span>
+            <span className="text-sm font-medium text-black">Password</span>
             <input
               type="password"
               name="password"

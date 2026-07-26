@@ -93,6 +93,7 @@ model MembershipPlan {
   term                 String
   note                 String         @db.Text
   benefits             String         @db.Text
+  tooltip              String?        @db.Text
   minStudents          Int?
   pricePerStudentCents Int?
   updatedAt            DateTime       @updatedAt
@@ -174,6 +175,7 @@ model Webinar {
   zoomOrYoutubeLink String?
   priceCents        Int?
   speakerInfo       String?       @db.Text
+  featuredImageUrl  String?
   access            WebinarAccess @default(open)
   published         Boolean       @default(false)
   createdAt         DateTime      @default(now())

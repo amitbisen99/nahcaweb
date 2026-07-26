@@ -9,10 +9,10 @@ export default async function PortalConferenceVideosPage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Conference Videos</h1>
-      <p className="mt-2 text-ink/70">Recordings from past NAHCA conferences — a member-only benefit.</p>
+      <p className="mt-2 text-black">Recordings from past NAHCA conferences — a member-only benefit.</p>
 
       {videos.length === 0 ? (
-        <p className="mt-6 text-sm text-ink/60">No conference videos published yet.</p>
+        <p className="mt-6 text-sm text-black">No conference videos published yet.</p>
       ) : (
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           {videos.map((video) => {
@@ -41,7 +41,7 @@ export default async function PortalConferenceVideosPage() {
                 )}
 
                 <p className="mt-3 font-heading text-base font-medium text-heading">{video.title}</p>
-                <p className="mt-1 text-sm text-ink/50">
+                <p className="mt-1 text-sm text-black">
                   {[video.year, video.category].filter(Boolean).join(" · ")}
                 </p>
               </div>

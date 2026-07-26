@@ -17,10 +17,10 @@ export default function AdminError({
   return (
     <div className="rounded-xl border border-ink/10 bg-white p-8 text-center">
       <h1 className="font-heading text-xl font-medium text-heading">Something went wrong</h1>
-      <p className="mt-2 text-sm text-ink/60">
+      <p className="mt-2 text-center text-sm text-black">
         An unexpected error occurred loading this page. Please try again.
       </p>
-      {error.digest && <p className="mt-1 text-xs text-ink/40">Reference: {error.digest}</p>}
+      {error.digest && <p className="mt-1 text-center text-xs text-black">Reference: {error.digest}</p>}
       <div className="mt-6 flex justify-center gap-3">
         <button
           type="button"

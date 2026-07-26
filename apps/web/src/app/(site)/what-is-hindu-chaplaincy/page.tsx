@@ -14,8 +14,8 @@ export default function WhatIsHinduChaplaincyPage() {
 
       <section className="bg-white py-16">
         <Container>
-          <div className="max-w-2xl">
-            <blockquote className="border-l-4 border-brand pl-5 text-ink/80 italic leading-relaxed">
+          <div>
+            <blockquote className="border-l-4 border-brand pl-5 text-black leading-relaxed">
               &ldquo;Hindu Chaplain&rdquo; as a designator of a category of employment refers to
               professional providers of spiritual and pastoral care from a Dharmic lens and is
               best expressed as a Hindu Spiritual Care Provider. They will have accreditation and
@@ -32,7 +32,7 @@ export default function WhatIsHinduChaplaincyPage() {
             <h2 className="mt-10 font-heading text-2xl font-medium text-heading">
               Credentials of a Hindu Spiritual Care Provider
             </h2>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               A Hindu Spiritual Care Provider will typically hold a graduate degree and then have
               specialized training in spiritual care either through the Clinical Pastoral
               Education programs or through academic certification in Hindu spiritual care.
@@ -46,7 +46,7 @@ export default function WhatIsHinduChaplaincyPage() {
               Provider if not.
             </p>
 
-            <p className="mt-8 text-ink/70">
+            <p className="mt-8 text-black">
               For specific details on the definitions, conceptualization and standards adopted by
               NAHCA, please refer to the documents below.
             </p>
@@ -57,7 +57,7 @@ export default function WhatIsHinduChaplaincyPage() {
                   <p className="font-heading text-lg font-medium text-heading">
                     Defining Hindu Chaplaincy
                   </p>
-                  <p className="mt-1 text-sm text-ink/60">
+                  <p className="mt-1 text-sm text-black">
                     NAHCA&apos;s foundational paper on definitions and conceptualization.
                   </p>
                 </div>
@@ -76,7 +76,7 @@ export default function WhatIsHinduChaplaincyPage() {
                   <p className="font-heading text-lg font-medium text-heading">
                     Hindu Chaplain: Requisite Qualifications
                   </p>
-                  <p className="mt-1 text-sm text-ink/60">
+                  <p className="mt-1 text-sm text-black">
                     NAHCA&apos;s standards for credentialing and professional training.
                   </p>
                 </div>

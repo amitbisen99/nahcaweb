@@ -21,7 +21,7 @@ export function MembershipPlanRowActions({ plan }: { plan: AdminMembershipPlan }
           onClick={() => setViewing(true)}
           aria-label="View"
           title="View"
-          className="text-ink/50 transition-colors hover:text-brand"
+          className="text-black transition-colors hover:text-brand"
         >
           <EyeIcon className="h-[18px] w-[18px]" />
         </button>
@@ -29,7 +29,7 @@ export function MembershipPlanRowActions({ plan }: { plan: AdminMembershipPlan }
           href={`/admin/membership-plans/${plan.type}`}
           aria-label="Edit"
           title="Edit"
-          className="text-ink/50 transition-colors hover:text-brand"
+          className="text-black transition-colors hover:text-brand"
         >
           <PencilIcon className="h-[18px] w-[18px]" />
         </Link>
@@ -50,24 +50,24 @@ export function MembershipPlanRowActions({ plan }: { plan: AdminMembershipPlan }
                 type="button"
                 onClick={() => setViewing(false)}
                 aria-label="Close"
-                className="flex-none text-ink/40 hover:text-ink"
+                className="flex-none text-black hover:text-ink"
               >
                 <XIcon className="h-6 w-6" />
               </button>
             </div>
 
-            <p className="mt-2 text-sm font-semibold text-ink/70">{priceDisplay}</p>
+            <p className="mt-2 text-sm font-semibold text-black">{priceDisplay}</p>
 
             <dl className="mt-6 flex flex-col gap-5">
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink/50">Description</dt>
-                <dd className="mt-1.5 text-base leading-relaxed text-ink/80">{plan.note}</dd>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-black">Description</dt>
+                <dd className="mt-1.5 text-base leading-relaxed text-black">{plan.note}</dd>
               </div>
 
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-ink/50">Benefits</dt>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-black">Benefits</dt>
                 <dd className="mt-1.5">
-                  <ul className="flex flex-col gap-1.5 text-base leading-relaxed text-ink/80">
+                  <ul className="flex flex-col gap-1.5 text-base leading-relaxed text-black">
                     {benefitsList.map((b, i) => (
                       <li key={i}>• {b}</li>
                     ))}
@@ -77,8 +77,8 @@ export function MembershipPlanRowActions({ plan }: { plan: AdminMembershipPlan }
 
               {plan.type === "institutional" && (
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-ink/50">Minimum Students</dt>
-                  <dd className="mt-1.5 text-base text-ink/80">{plan.minStudents}</dd>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-black">Minimum Students</dt>
+                  <dd className="mt-1.5 text-base text-black">{plan.minStudents}</dd>
                 </div>
               )}
             </dl>

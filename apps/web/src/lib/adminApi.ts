@@ -48,6 +48,7 @@ export interface AdminMembershipPlan {
   term: string;
   note: string;
   benefits: string;
+  tooltip: string | null;
   minStudents: number | null;
   pricePerStudentCents: number | null;
   updatedAt: string;

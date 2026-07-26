@@ -17,11 +17,14 @@ export async function updateMembershipPlan(type: string, formData: FormData) {
 
   const isInstitutional = type === "institutional";
 
+  const tooltip = formData.get("tooltip");
+
   const payload: Record<string, unknown> = {
     name: formData.get("name"),
     term: formData.get("term"),
     note: formData.get("note"),
     benefits: formData.get("benefits"),
+    tooltip: typeof tooltip === "string" && tooltip.trim().length > 0 ? tooltip : null,
     priceCents: isInstitutional ? 0 : Math.round(Number(formData.get("price")) * 100),
   };
 

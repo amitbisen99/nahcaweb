@@ -18,7 +18,7 @@ function slugify(text: string): string {
 }
 
 const DEFAULT_TRIGGER_CLASSNAME =
-  "inline-flex items-center gap-1.5 rounded-md border border-ink/15 px-3 py-1.5 text-sm font-medium text-ink/70 transition-colors hover:border-brand hover:text-brand";
+  "inline-flex items-center gap-1.5 rounded-md border border-ink/15 px-3 py-1.5 text-sm font-medium text-black transition-colors hover:border-brand hover:text-brand";
 
 export function AddToCalendar({
   event,
@@ -68,7 +68,7 @@ export function AddToCalendar({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="block px-3 py-2 text-sm text-ink/75 hover:bg-sand"
+            className="block px-3 py-2 text-sm text-black hover:bg-sand"
           >
             Google Calendar
           </a>
@@ -77,7 +77,7 @@ export function AddToCalendar({
             href={icsHref}
             download={`${slugify(event.title)}.ics`}
             onClick={() => setOpen(false)}
-            className="block px-3 py-2 text-sm text-ink/75 hover:bg-sand"
+            className="block px-3 py-2 text-sm text-black hover:bg-sand"
           >
             Apple / Outlook (.ics)
           </a>

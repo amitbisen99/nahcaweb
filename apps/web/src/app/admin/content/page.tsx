@@ -17,7 +17,7 @@ export default async function ContentHubPage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Website Content</h1>
-      <p className="mt-2 text-ink/70">
+      <p className="mt-2 text-black">
         Manage events, webinars, videos, articles, newsletters, and board members shown on the
         public site.
       </p>
@@ -30,7 +30,7 @@ export default async function ContentHubPage() {
             className="rounded-xl border border-ink/10 bg-white p-6 transition-colors hover:border-brand/40"
           >
             <h2 className="font-heading text-lg font-medium text-heading">{c.label}</h2>
-            <p className="mt-1 text-sm text-ink/60">
+            <p className="mt-1 text-sm text-black">
               {c.count} item{c.count === 1 ? "" : "s"}
             </p>
           </Link>

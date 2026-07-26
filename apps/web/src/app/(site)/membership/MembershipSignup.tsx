@@ -3,6 +3,11 @@
 import { FormEvent, ReactNode, SVGProps, useMemo, useState } from "react";
 import { ApiMembershipPlan } from "@/lib/api";
 
+// The Conference plan will be featured on its own page later — keep all of
+// its data, admin editing, and signup-modal support intact, just hide the
+// promo card here.
+const SHOW_CONFERENCE_PLAN = false;
+
 interface Tier {
   type: "regular" | "student" | "institutional" | "conference";
   name: string;
@@ -10,6 +15,7 @@ interface Tier {
   term: string;
   note: string;
   benefits: string[];
+  tooltip: string | null;
   highlight?: boolean;
 }
 
@@ -29,11 +35,38 @@ function XIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function InfoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path strokeLinecap="round" d="M12 11v5.5" />
+      <circle cx="12" cy="7.75" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function PlanTooltip({ text }: { text: string }) {
+  return (
+    <span className="group/tip absolute right-4 top-4 z-10 inline-block">
+      <button
+        type="button"
+        aria-label="Plan information"
+        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/20 bg-white text-black transition-colors hover:border-brand hover:text-brand"
+      >
+        <InfoIcon className="h-3.5 w-3.5" />
+      </button>
+      <span className="pointer-events-none absolute right-0 top-8 w-56 rounded-lg bg-navy p-3 text-xs leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100">
+        {text}
+      </span>
+    </span>
+  );
+}
+
 function ChevronList({ items }: { items: ReactNode[] }) {
   return (
     <ul className="flex flex-col gap-2.5">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-2 text-sm leading-relaxed text-ink/75">
+        <li key={i} className="flex gap-2 text-sm leading-relaxed text-black">
           <ChevronIcon className="mt-0.5 h-3.5 w-3.5 flex-none text-brand" />
           <span>{item}</span>
         </li>
@@ -55,6 +88,7 @@ function planToTier(plan: ApiMembershipPlan): Tier {
     term: plan.term,
     note: plan.note,
     benefits: plan.benefits.split("\n").filter(Boolean),
+    tooltip: plan.tooltip,
     highlight: plan.type === "student",
   };
 }
@@ -119,7 +153,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
 
   if (tiers.length === 0) {
     return (
-      <p className="mt-14 text-sm text-ink/60">
+      <p className="mt-14 text-sm text-black">
         Membership plans are temporarily unavailable. Please check back soon.
       </p>
     );
@@ -137,16 +171,17 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
         {mainTiers.map((tier) => (
           <div
             key={tier.type}
-            className={`flex flex-col rounded-xl border p-7 ${
+            className={`relative flex flex-col rounded-xl border p-7 ${
               tier.highlight ? "border-brand bg-white shadow-lg" : "border-ink/10 bg-white"
             }`}
           >
+            {tier.tooltip && <PlanTooltip text={tier.tooltip} />}
             <h2 className="font-heading text-lg font-medium text-heading">{tier.name}</h2>
             <div className="mt-3 flex items-baseline gap-1.5">
               <span className="font-heading text-3xl font-bold text-ink">{tier.price}</span>
-              <span className="text-sm text-ink/60">{tier.term}</span>
+              <span className="text-sm text-black">{tier.term}</span>
             </div>
-            <p className="mt-3 text-sm leading-relaxed text-ink/70">{tier.note}</p>
+            <p className="mt-3 text-sm leading-relaxed text-black">{tier.note}</p>
             <div className="mt-5">
               <ChevronList items={tier.benefits} />
             </div>
@@ -163,16 +198,17 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
         ))}
       </div>
 
-      {conferenceTier && (
+      {SHOW_CONFERENCE_PLAN && conferenceTier && (
         <div className="mt-16">
-          <div className="rounded-xl border border-ink/10 bg-white p-7 lg:flex lg:items-center lg:justify-between lg:gap-10">
+          <div className="relative rounded-xl border border-ink/10 bg-white p-7 lg:flex lg:items-center lg:justify-between lg:gap-10">
+            {conferenceTier.tooltip && <PlanTooltip text={conferenceTier.tooltip} />}
             <div className="lg:max-w-md">
               <h2 className="font-heading text-lg font-medium text-heading">{conferenceTier.name}</h2>
               <div className="mt-3 flex items-baseline gap-1.5">
                 <span className="font-heading text-3xl font-bold text-ink">{conferenceTier.price}</span>
-                <span className="text-sm text-ink/60">{conferenceTier.term}</span>
+                <span className="text-sm text-black">{conferenceTier.term}</span>
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-ink/70">{conferenceTier.note}</p>
+              <p className="mt-3 text-sm leading-relaxed text-black">{conferenceTier.note}</p>
             </div>
             <div className="mt-6 lg:mt-0 lg:max-w-sm lg:flex-none">
               <ChevronList items={conferenceTier.benefits} />
@@ -200,7 +236,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-heading text-2xl font-medium text-heading">Join NAHCA</h2>
-                <p className="mt-1 text-sm text-ink/60">
+                <p className="mt-1 text-sm text-black">
                   Selected plan: <span className="font-semibold text-heading">{selectedTier.name}</span> —{" "}
                   {computedPrice}
                 </p>
@@ -209,7 +245,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
                 type="button"
                 onClick={closeModal}
                 aria-label="Close"
-                className="flex-none text-ink/40 hover:text-ink"
+                className="flex-none text-black hover:text-ink"
               >
                 <XIcon className="h-6 w-6" />
               </button>
@@ -224,7 +260,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
                     selectedType === tier.type
                       ? "border-brand bg-brand text-white"
-                      : "border-ink/20 bg-white text-ink/70"
+                      : "border-ink/20 bg-white text-black"
                   }`}
                 >
                   {tier.name}
@@ -234,7 +270,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-ink/80">Name</span>
+                <span className="text-sm font-medium text-black">Name</span>
                 <input
                   type="text"
                   name="name"
@@ -244,7 +280,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-ink/80">Email</span>
+                <span className="text-sm font-medium text-black">Email</span>
                 <input
                   type="email"
                   name="email"
@@ -254,7 +290,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-ink/80">Password</span>
+                <span className="text-sm font-medium text-black">Password</span>
                 <input
                   type="password"
                   name="password"
@@ -266,7 +302,7 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
 
               {selectedType === "institutional" && (
                 <label className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-ink/80">
+                  <span className="text-sm font-medium text-black">
                     Number of students to sponsor (minimum {institutionalMinStudents})
                   </span>
                   <input

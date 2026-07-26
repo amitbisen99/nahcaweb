@@ -32,7 +32,7 @@ export function TimeField({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-ink/80">{label}</span>
+      <span className="text-sm font-medium text-black">{label}</span>
       <div className="flex items-center gap-2">
         <select value={hour} onChange={(e) => setHour(e.target.value)} className={selectClasses}>
           <option value="">Hour</option>
@@ -42,7 +42,7 @@ export function TimeField({
             </option>
           ))}
         </select>
-        <span className="text-ink/50">:</span>
+        <span className="text-black">:</span>
         <select value={minute} onChange={(e) => setMinute(e.target.value)} className={selectClasses}>
           <option value="">Min</option>
           {MINUTES.map((m) => (

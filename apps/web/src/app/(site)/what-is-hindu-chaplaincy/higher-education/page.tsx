@@ -12,15 +12,15 @@ export default function HigherEducationPage() {
 
       <section className="bg-white py-16">
         <Container>
-          <div className="max-w-2xl">
-            <p className="text-ink/70">
+          <div>
+            <p className="text-black">
               Hindu Spiritual Care Providers in higher education settings serve to accompany
               students, staff, faculty, alumni and other members of the institution&apos;s
               community through the numerous points in life during which spiritual issues are
               encountered.
             </p>
 
-            <blockquote className="mt-8 border-l-4 border-brand pl-5 text-ink/80 italic leading-relaxed">
+            <blockquote className="mt-8 border-l-4 border-brand pl-5 text-black leading-relaxed">
               US campuses generally aspire to be microcosmic laboratories of social, intellectual
               and spiritual inquiry and practice. There is an increasing awareness among higher
               education professionals that to fully serve our students our institutions should
@@ -35,7 +35,7 @@ export default function HigherEducationPage() {
               as role models for students on how to successfully navigate the pluralistic social
               environments that comprise our global community.
             </blockquote>
-            <p className="mt-3 text-sm text-ink/60">
+            <p className="mt-3 text-sm text-black">
               — Excerpted from <em className="not-italic font-semibold">Hindu Chaplaincy in US Higher Education</em>,
               Asha Shipman, 2020
             </p>
@@ -45,7 +45,7 @@ export default function HigherEducationPage() {
                 <p className="font-heading text-lg font-medium text-heading">
                   Hindu Chaplaincy in US Higher Education
                 </p>
-                <p className="mt-1 text-sm text-ink/60">
+                <p className="mt-1 text-sm text-black">
                   Read the full article — also available on our Resources page.
                 </p>
               </div>

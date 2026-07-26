@@ -5,6 +5,7 @@ export default function EndorsementPage() {
     <PagePlaceholder
       title="Endorsement"
       description="NAHCA's ecclesiastical endorsement role for BCC (via APC) and ACPE educator certification, plus the endorsement fee payment flow."
+      image="/chaplaincy/code-ethics.jpg"
     />
   );
 }

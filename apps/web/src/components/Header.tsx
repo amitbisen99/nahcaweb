@@ -1,123 +1,19 @@
-import Image from "next/image";
-import Link from "next/link";
-import { SVGProps } from "react";
 import { auth, signOut } from "@/auth";
-import { Container } from "./Container";
-import { Button } from "./Button";
-import { MobileNav } from "./MobileNav";
-import { HeaderFrame } from "./HeaderFrame";
-import { NAV } from "@/lib/nav";
-
-function UserIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  );
-}
+import { HeaderChrome } from "./HeaderChrome";
 
 export async function Header() {
   const session = await auth();
   const portalHref = session?.user?.role === "admin" ? "/admin" : "/portal";
 
   return (
-    <HeaderFrame>
-      <Container>
-        <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/brand/logo.png" alt="NAHCA logo" width={40} height={40} priority />
-            <span className="font-heading text-lg font-semibold text-ink transition-colors group-data-[mode=transparent]/header:text-white">
-              NAHCA
-            </span>
-          </Link>
-
-          <nav className="hidden flex-1 lg:block">
-            <ul className="flex items-center justify-center gap-6 xl:gap-8">
-              {NAV.filter((item) => item.label !== "Member Portal").map((item) => {
-                const href = item.href;
-
-                return (
-                  <li key={item.label} className="group relative">
-                    <Link
-                      href={href}
-                      className="relative block py-2 text-sm font-medium text-ink/75 transition-colors hover:text-brand group-data-[mode=transparent]/header:text-white/85"
-                    >
-                      {item.label}
-                      <span className="absolute inset-x-0 -bottom-0.5 h-0.5 origin-left scale-x-0 bg-brand transition-transform group-hover:scale-x-100" />
-                    </Link>
-
-                    {item.children && (
-                      <div className="invisible absolute left-0 top-full z-10 min-w-56 rounded-lg border border-ink/10 bg-white p-2 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.label}
-                            href={child.href}
-                            target={child.external ? "_blank" : undefined}
-                            rel={child.external ? "noopener noreferrer" : undefined}
-                            className="block rounded-md px-3 py-2 text-sm text-ink/70 hover:bg-sand hover:text-brand"
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {session?.user && (
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut();
-                }}
-                className="hidden sm:block"
-              >
-                <button
-                  type="submit"
-                  className="text-sm font-medium text-ink/40 transition-colors hover:text-brand group-data-[mode=transparent]/header:text-white/60"
-                >
-                  Sign out
-                </button>
-              </form>
-            )}
-
-            <Link
-              href={portalHref}
-              aria-label="Member Portal"
-              title="Member Portal"
-              className="hidden h-9 w-9 items-center justify-center rounded-full text-ink/75 transition-colors hover:text-brand group-data-[mode=transparent]/header:text-white/85 lg:flex"
-            >
-              <UserIcon className="h-5 w-5" />
-            </Link>
-
-            <Button href="/donate" className="!px-5 !py-2">
-              Donate
-            </Button>
-
-            <MobileNav
-              isAdmin={session?.user?.role === "admin"}
-              isLoggedIn={!!session?.user}
-              signOutAction={async () => {
-                "use server";
-                await signOut();
-              }}
-            />
-          </div>
-        </div>
-      </Container>
-    </HeaderFrame>
+    <HeaderChrome
+      portalHref={portalHref}
+      isAdmin={session?.user?.role === "admin"}
+      isLoggedIn={!!session?.user}
+      signOutAction={async () => {
+        "use server";
+        await signOut();
+      }}
+    />
   );
 }

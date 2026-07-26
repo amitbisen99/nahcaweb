@@ -10,10 +10,10 @@ export default async function PurchasesPage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Purchases</h1>
-      <p className="mt-2 text-ink/70">Your full membership and donation history.</p>
+      <p className="mt-2 text-black">Your full membership and donation history.</p>
 
       {payments.length === 0 ? (
-        <p className="mt-6 text-sm text-ink/60">You haven&apos;t made any purchases yet.</p>
+        <p className="mt-6 text-sm text-black">You haven&apos;t made any purchases yet.</p>
       ) : (
         <div className="mt-6 flex flex-col gap-3">
           {payments.map((p) => (
@@ -23,12 +23,12 @@ export default async function PurchasesPage() {
             >
               <div>
                 <p className="font-medium text-ink">{paymentLabel(p)}</p>
-                <p className="text-sm text-ink/60">{new Date(p.createdAt).toDateString()}</p>
+                <p className="text-sm text-black">{new Date(p.createdAt).toDateString()}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-ink">${(p.amountCents / 100).toFixed(2)}</span>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${PAYMENT_STATUS_STYLES[p.status] ?? "bg-ink/10 text-ink/60"}`}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${PAYMENT_STATUS_STYLES[p.status] ?? "bg-ink/10 text-black"}`}
                 >
                   {p.status}
                 </span>

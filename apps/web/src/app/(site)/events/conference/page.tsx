@@ -6,13 +6,13 @@ export default function ConferencePage() {
     <>
       <EventBanner title="NAHCA Conference" image="/events/mysore-green-hotel.jpg" />
       <Container>
-        <div className="max-w-2xl py-16">
-          <p className="text-ink/70">
+        <div className="py-16">
+          <p className="text-black">
             NAHCA&apos;s conference brings together Hindu chaplains, spiritual care professionals,
             and students from across North America for a shared program of learning, professional
             development, and community.
           </p>
-          <p className="mt-6 text-sm text-ink/50">
+          <p className="mt-6 text-sm text-black">
             Dates, registration, and the full program will be published here soon.
           </p>
         </div>

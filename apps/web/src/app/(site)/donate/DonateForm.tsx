@@ -48,7 +48,7 @@ export function DonateForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div>
-        <span className="text-sm font-medium text-ink/80">Amount</span>
+        <span className="text-sm font-medium text-black">Amount</span>
         <div className="mt-2 flex flex-wrap gap-2">
           {PRESET_AMOUNTS.map((preset) => (
             <button
@@ -61,7 +61,7 @@ export function DonateForm() {
               className={`rounded-lg border px-4 py-2 text-sm font-medium ${
                 amount === preset && !customAmount
                   ? "border-brand bg-brand text-white"
-                  : "border-ink/20 bg-white text-ink/80"
+                  : "border-ink/20 bg-white text-black"
               }`}
             >
               ${preset}
@@ -79,7 +79,7 @@ export function DonateForm() {
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Purpose / Dedication (optional)</span>
+        <span className="text-sm font-medium text-black">Purpose / Dedication (optional)</span>
         <input
           type="text"
           name="purpose"
@@ -89,7 +89,7 @@ export function DonateForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Name</span>
+        <span className="text-sm font-medium text-black">Name</span>
         <input
           type="text"
           name="donorName"
@@ -99,7 +99,7 @@ export function DonateForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Email</span>
+        <span className="text-sm font-medium text-black">Email</span>
         <input
           type="email"
           name="donorEmail"

@@ -34,7 +34,8 @@ const updateSchema = z.object({
   priceCents: z.number().int().min(0),
   term: z.string().min(1),
   note: z.string().min(1),
-  benefits: z.string().min(1),
+  benefits: z.string(),
+  tooltip: z.string().nullable().optional(),
   minStudents: z.number().int().min(1).nullable().optional(),
   pricePerStudentCents: z.number().int().min(0).nullable().optional(),
 });

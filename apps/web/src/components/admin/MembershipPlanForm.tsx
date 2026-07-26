@@ -13,7 +13,7 @@ export function MembershipPlanForm({
   return (
     <form action={action} className="flex flex-col gap-5">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Name</span>
+        <span className="text-sm font-medium text-black">Name</span>
         <input
           type="text"
           name="name"
@@ -24,7 +24,7 @@ export function MembershipPlanForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Term (display text, e.g. &ldquo;per year&rdquo;)</span>
+        <span className="text-sm font-medium text-black">Term (display text, e.g. &ldquo;per year&rdquo;)</span>
         <input
           type="text"
           name="term"
@@ -37,7 +37,7 @@ export function MembershipPlanForm({
       {isInstitutional ? (
         <>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink/80">Price per student (USD)</span>
+            <span className="text-sm font-medium text-black">Price per student (USD)</span>
             <input
               type="number"
               name="pricePerStudent"
@@ -49,7 +49,7 @@ export function MembershipPlanForm({
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink/80">Minimum students</span>
+            <span className="text-sm font-medium text-black">Minimum students</span>
             <input
               type="number"
               name="minStudents"
@@ -62,7 +62,7 @@ export function MembershipPlanForm({
         </>
       ) : (
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink/80">Price (USD)</span>
+          <span className="text-sm font-medium text-black">Price (USD)</span>
           <input
             type="number"
             name="price"
@@ -76,7 +76,7 @@ export function MembershipPlanForm({
       )}
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Description</span>
+        <span className="text-sm font-medium text-black">Description</span>
         <textarea
           name="note"
           required
@@ -87,12 +87,23 @@ export function MembershipPlanForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink/80">Benefits (one per line)</span>
+        <span className="text-sm font-medium text-black">Benefits (one per line)</span>
         <textarea
           name="benefits"
-          required
           rows={6}
           defaultValue={plan.benefits}
+          className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-black">
+          Info Tooltip (shown from the &lsquo;i&rsquo; icon on the plan card)
+        </span>
+        <textarea
+          name="tooltip"
+          rows={3}
+          defaultValue={plan.tooltip ?? ""}
           className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
         />
       </label>

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { SVGProps } from "react";
 import { Container } from "@/components/Container";
+import { EventBanner } from "@/components/EventBanner";
 
 function DiamondIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -56,15 +57,16 @@ const PARTNERS: Partner[] = [
 
 export default function OrganizationalPartnersPage() {
   return (
-    <section className="bg-white py-20">
+    <>
+      <EventBanner title="Organizational Partners" image="/brand/temple-home.jpg" />
+      <section className="bg-white py-20">
       <Container>
-        <div className="max-w-2xl">
+        <div>
           <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
             <DiamondIcon className="h-3 w-3" />
             About Us
           </span>
-          <h1 className="mt-3 font-heading text-4xl font-bold text-heading">Organizational Partners</h1>
-          <p className="mt-4 text-ink/70">
+          <p className="mt-4 text-black">
             NAHCA collaborates with a growing network of organizations that support Hindu spiritual care
             and chaplaincy across North America.
           </p>
@@ -99,6 +101,7 @@ export default function OrganizationalPartnersPage() {
           ))}
         </div>
       </Container>
-    </section>
+      </section>
+    </>
   );
 }

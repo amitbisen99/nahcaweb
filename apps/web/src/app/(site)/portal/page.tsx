@@ -64,7 +64,7 @@ export default async function PortalDashboardPage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Dashboard</h1>
-      <p className="mt-2 text-ink/70">Welcome, {session?.user?.name}.</p>
+      <p className="mt-2 text-black">Welcome, {session?.user?.name}.</p>
 
       <section className="mt-10">
         <div className="flex items-center justify-between">
@@ -77,7 +77,7 @@ export default async function PortalDashboardPage() {
         </div>
 
         {recentPurchases.length === 0 ? (
-          <p className="mt-3 text-sm text-ink/60">
+          <p className="mt-3 text-sm text-black">
             No purchases yet. Visit the{" "}
             <Link href="/membership" className="font-semibold text-brand hover:text-brand-dark">
               Membership page
@@ -93,12 +93,12 @@ export default async function PortalDashboardPage() {
               >
                 <div>
                   <p className="font-medium text-ink">{paymentLabel(p)}</p>
-                  <p className="text-sm text-ink/60">{new Date(p.createdAt).toDateString()}</p>
+                  <p className="text-sm text-black">{new Date(p.createdAt).toDateString()}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-ink">${(p.amountCents / 100).toFixed(2)}</span>
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${PAYMENT_STATUS_STYLES[p.status] ?? "bg-ink/10 text-ink/60"}`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${PAYMENT_STATUS_STYLES[p.status] ?? "bg-ink/10 text-black"}`}
                   >
                     {p.status}
                   </span>
@@ -113,11 +113,11 @@ export default async function PortalDashboardPage() {
         <h2 className="font-heading text-xl font-medium text-heading">Reminders</h2>
 
         {reminders.length === 0 ? (
-          <p className="mt-3 text-sm text-ink/60">You&apos;re all caught up — no reminders right now.</p>
+          <p className="mt-3 text-sm text-black">You&apos;re all caught up — no reminders right now.</p>
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {reminders.map((r, i) => (
-              <div key={i} className={`rounded-xl border p-4 text-sm text-ink/80 ${REMINDER_STYLES[r.tone]}`}>
+              <div key={i} className={`rounded-xl border p-4 text-sm text-black ${REMINDER_STYLES[r.tone]}`}>
                 {r.text}
                 {r.href && (
                   <Link href={r.href} className="ml-2 font-semibold text-brand hover:text-brand-dark">

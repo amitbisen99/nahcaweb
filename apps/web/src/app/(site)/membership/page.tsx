@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { ReactNode, SVGProps } from "react";
 import { Container } from "@/components/Container";
+import { EventBanner } from "@/components/EventBanner";
 import { getMembershipPlans } from "@/lib/api";
 import { MembershipSignup } from "./MembershipSignup";
 
@@ -23,7 +25,7 @@ function ChevronList({ items }: { items: ReactNode[] }) {
   return (
     <ul className="flex flex-col gap-2.5">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-2 text-sm leading-relaxed text-ink/75">
+        <li key={i} className="flex gap-2 text-sm leading-relaxed text-black">
           <ChevronIcon className="mt-0.5 h-3.5 w-3.5 flex-none text-brand" />
           <span>{item}</span>
         </li>
@@ -42,16 +44,17 @@ export default async function MembershipPage({
 
   return (
     <>
+      <EventBanner title="Membership" image="/chaplaincy/puja.jpg" />
       <section className="bg-white py-20">
         <Container>
-          <div className="max-w-2xl">
+          <div>
             <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
               <DiamondIcon className="h-3 w-3" />
               Join Us
             </span>
-            <h1 className="mt-3 font-heading text-4xl font-bold text-heading">
+            <h2 className="mt-3 font-heading text-4xl font-bold text-heading">
               Become a NAHCA Member
-            </h1>
+            </h2>
 
             {status === "success" && (
               <p className="mt-4 rounded-lg bg-green-100 px-4 py-3 text-sm text-green-800">
@@ -65,7 +68,7 @@ export default async function MembershipPage({
               </p>
             )}
 
-            <p className="mt-4 text-ink/70">Are you:</p>
+            <p className="mt-4 text-black">Are you:</p>
             <ChevronList
               items={[
                 "Currently working as a spiritual care provider",
@@ -74,12 +77,19 @@ export default async function MembershipPage({
                 "In support of diversifying professional spiritual caregiving",
               ]}
             />
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               ...and eager to learn about spiritual care from a Hindu lens? Then join us!
             </p>
 
-            <div className="mt-8 rounded-xl border border-ink/10 bg-sand/40 p-6">
-              <p className="text-ink/75">
+            <div className="mt-8 flex items-center gap-4 rounded-xl border border-ink/10 bg-sand/40 p-6">
+              <Image
+                src="/brand/BinduGupta.jpeg"
+                alt="Bindu Gupta"
+                width={56}
+                height={56}
+                className="h-14 w-14 flex-none rounded-full object-cover"
+              />
+              <p className="text-black">
                 Hello! I am Bindu, your Membership Chair, and would like to share some benefits
                 of becoming a member of NAHCA.
               </p>
@@ -88,7 +98,7 @@ export default async function MembershipPage({
 
           <MembershipSignup plans={plans} />
 
-          <div className="mt-16 max-w-2xl">
+          <div className="mt-16">
             <h2 className="font-heading text-2xl font-medium text-heading">Good to Know</h2>
             <ChevronList
               items={[

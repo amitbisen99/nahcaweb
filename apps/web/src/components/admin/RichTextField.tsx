@@ -54,7 +54,7 @@ export function RichTextField({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-ink/80">{label}</span>
+      <span className="text-sm font-medium text-black">{label}</span>
       <div className="flex flex-wrap gap-1 rounded-t-lg border border-b-0 border-ink/20 bg-sand/30 p-1.5">
         {TOOLBAR.map((btn) => (
           <button
@@ -62,7 +62,7 @@ export function RichTextField({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => exec(btn.command)}
-            className="rounded px-2 py-1 text-xs font-semibold text-ink/70 hover:bg-white"
+            className="rounded px-2 py-1 text-xs font-semibold text-black hover:bg-white"
           >
             {btn.label}
           </button>
@@ -71,7 +71,7 @@ export function RichTextField({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleLink}
-          className="rounded px-2 py-1 text-xs font-semibold text-ink/70 hover:bg-white"
+          className="rounded px-2 py-1 text-xs font-semibold text-black hover:bg-white"
         >
           Link
         </button>

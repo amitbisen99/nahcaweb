@@ -45,6 +45,7 @@ export interface CmsWebinar {
   description: string | null;
   zoomOrYoutubeLink: string | null;
   speakerInfo: string | null;
+  featuredImageUrl: string | null;
   access: "open" | "members_only";
 }
 

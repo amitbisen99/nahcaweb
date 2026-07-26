@@ -5,6 +5,7 @@ export default function NewslettersPage() {
     <PagePlaceholder
       title="Newsletters"
       description="Archive of past newsletters, plus a Mailchimp-integrated sign-up form."
+      image="/brand/temple-home.jpg"
     />
   );
 }

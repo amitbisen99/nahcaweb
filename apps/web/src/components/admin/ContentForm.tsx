@@ -26,7 +26,7 @@ export function ContentForm({
 
         if (field.type === "checkbox") {
           return (
-            <label key={field.name} className="flex items-center gap-2 text-sm font-medium text-ink/80">
+            <label key={field.name} className="flex items-center gap-2 text-sm font-medium text-black">
               <input type="checkbox" name={field.name} defaultChecked={Boolean(currentValue)} />
               {field.label}
             </label>
@@ -39,6 +39,7 @@ export function ContentForm({
               key={field.name}
               name={field.name}
               label={field.label}
+              helpText={field.helpText}
               currentValue={typeof currentValue === "string" ? currentValue : null}
             />
           );
@@ -69,7 +70,7 @@ export function ContentForm({
         if (field.type === "textarea") {
           return (
             <label key={field.name} className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink/80">{field.label}</span>
+              <span className="text-sm font-medium text-black">{field.label}</span>
               <textarea
                 name={field.name}
                 required={field.required}
@@ -84,7 +85,7 @@ export function ContentForm({
         if (field.type === "select") {
           return (
             <label key={field.name} className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink/80">{field.label}</span>
+              <span className="text-sm font-medium text-black">{field.label}</span>
               <select
                 name={field.name}
                 required={field.required}
@@ -110,7 +111,7 @@ export function ContentForm({
 
         return (
           <label key={field.name} className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink/80">{field.label}</span>
+            <span className="text-sm font-medium text-black">{field.label}</span>
             <input
               type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
               name={field.name}

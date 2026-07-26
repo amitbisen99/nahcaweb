@@ -18,6 +18,18 @@
       "runtimeExecutable": "C:\\Windows\\System32\\cmd.exe",
       "runtimeArgs": ["/c", "set PATH=C:\\Program Files\\nodejs;%PATH% && cd /d C:\\xampp\\htdocs\\Nahca\\apps\\cms && npm run develop"],
       "port": 1337
+    },
+    {
+      "name": "web-design",
+      "runtimeExecutable": "C:\\Windows\\System32\\cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Program Files\\nodejs;%PATH% && cd /d C:\\xampp\\htdocs\\Nahca-design\\apps\\web && npm run dev -- -p 3100"],
+      "port": 3100
+    },
+    {
+      "name": "api-design",
+      "runtimeExecutable": "C:\\Windows\\System32\\cmd.exe",
+      "runtimeArgs": ["/c", "set PATH=C:\\Program Files\\nodejs;%PATH% && cd /d C:\\xampp\\htdocs\\Nahca-design\\apps\\api && npm run dev"],
+      "port": 4100
     }
   ]
 }

@@ -5,6 +5,7 @@ export default function ContactPage() {
     <PagePlaceholder
       title="Contact Us"
       description="Improved contact form with service routing."
+      image="/brand/temple-home.jpg"
     />
   );
 }

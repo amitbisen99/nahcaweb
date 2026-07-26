@@ -32,7 +32,7 @@ export default async function ContentListPage({
 
       <div className="mt-8 flex flex-col gap-3">
         {items.length === 0 && (
-          <p className="text-sm text-ink/60">No {config.label.toLowerCase()} yet.</p>
+          <p className="text-sm text-black">No {config.label.toLowerCase()} yet.</p>
         )}
         {items.map((item) => (
           <div
@@ -43,7 +43,7 @@ export default async function ContentListPage({
               <p className="font-medium text-ink">{String(item[config.titleField])}</p>
               <span
                 className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-ink/60"
+                  item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"
                 }`}
               >
                 {item.published ? "Published" : "Draft"}

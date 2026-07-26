@@ -12,13 +12,13 @@ export default function MonthlyQAPage() {
 
       <section className="bg-white">
         <Container>
-          <div className="max-w-2xl py-16">
-            <p className="text-ink/70">
+          <div className="py-16">
+            <p className="text-black">
               Namaste! Thank you for your interest in NAHCA professional development
               programming. Spring 2026 programming has ended; we will post programming for
               Fall 2026 beginning in August.
             </p>
-            <p className="mt-6 text-ink/70">
+            <p className="mt-6 text-black">
               Sign up for our newsletter to get timely updates.{" "}
               <a
                 href={NEWSLETTER_SIGNUP_URL}

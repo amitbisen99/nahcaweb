@@ -5,6 +5,7 @@ export default function StorePage() {
     <PagePlaceholder
       title="Store"
       description="Webinars, conference videos, and endorsement fee — CMS-managed and integrated with Stripe for paid content."
+      image="/chaplaincy/colorful-palm-leaf-books.jpg"
     />
   );
 }

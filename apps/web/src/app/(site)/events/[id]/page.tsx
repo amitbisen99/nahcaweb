@@ -25,7 +25,7 @@ export default async function EventDetailPage({
             ← All Events
           </Link>
 
-          <div className="mt-6 max-w-2xl">
+          <div className="mt-6">
             {event.featuredImageUrl && (
               <img
                 src={`${process.env.NEXT_PUBLIC_API_URL}${event.featuredImageUrl}`}
@@ -34,14 +34,14 @@ export default async function EventDetailPage({
               />
             )}
 
-            <p className="text-sm text-ink/50">
+            <p className="text-sm text-black">
               {formatDate(event.date)} {event.time ? `· ${event.time}` : ""}
             </p>
             <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{event.title}</h1>
 
             {event.description && (
               <div
-                className="mt-6 text-base leading-relaxed text-ink/80 [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                className="mt-6 text-base leading-relaxed text-black [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{ __html: event.description }}
               />
             )}

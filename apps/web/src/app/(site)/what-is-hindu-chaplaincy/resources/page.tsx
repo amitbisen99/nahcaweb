@@ -10,6 +10,31 @@ function ExternalLinkIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function GlobeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9Z" />
+    </svg>
+  );
+}
+
+function YouTubeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M22 8.4c0-2-1.6-3.6-3.6-3.6C15.9 4.5 12 4.5 12 4.5s-3.9 0-6.4.3C3.6 4.8 2 6.4 2 8.4v7.2c0 2 1.6 3.6 3.6 3.6 2.5.3 6.4.3 6.4.3s3.9 0 6.4-.3c2-.1 3.6-1.7 3.6-3.6V8.4ZM9.8 15.3V8.7l6 3.3-6 3.3Z" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 interface ResourceLink {
   label: string;
   url: string;
@@ -48,10 +73,12 @@ const RESOURCES: Resource[] = [
   {
     title: "Hinduism and Chaplaincy: Relating Core Concepts to Spiritual Care",
     meta: "Dr. Asha Shipman · Convergence Magazine · May 2020",
+    url: "https://drive.google.com/file/d/1bD10osc0LtswdmCzErogXa6mqIgbjXq5/view?usp=sharing",
   },
   {
     title: "A Room with a View: Accommodating Hindu Religious Practice on a College Campus",
     meta: "Vineet Chander · Journal of College and Character, Vol. 14, Issue 2 · May 2013",
+    url: "https://drive.google.com/file/d/1VsW5uF1FttmwlfitOyFGE8qWGE_uld3m/view?usp=sharing",
   },
   {
     title: "Hindu Chaplaincy in US Higher Education",
@@ -123,14 +150,14 @@ export default function UsefulResourcesPage() {
 
       <section className="bg-white py-16">
         <Container>
-          <div className="max-w-2xl">
-            <p className="text-ink/70">
+          <div>
+            <p className="text-black">
               Hindu chaplaincy is a nascent but growing field in North America. Critical to
               NAHCA&apos;s mission is to provide resources on Hindu spiritual caregiving for use
               by spiritual providers and institutions whose mission includes support for Hindu
               care recipients.
             </p>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               Many of the resources listed on this page offer the basics: what Hindu spiritual
               caregiving is, who it is for, and why it is important. Also included are links to
               Board members&apos; professional websites as examples of the scope and breadth of
@@ -142,12 +169,16 @@ export default function UsefulResourcesPage() {
             {RESOURCES.map((resource) => (
               <div
                 key={resource.title}
-                className="rounded-xl border border-ink/10 bg-sand/30 p-6 transition-colors hover:border-brand/40"
+                className="group relative rounded-xl border border-ink/10 bg-sand/30 p-6 pr-56 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg"
               >
+                <ArrowRightIcon
+                  strokeWidth={1}
+                  className="pointer-events-none absolute right-6 top-1/2 h-10 w-50 -translate-y-1/2 text-brand opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
                 <h2 className="font-heading text-lg font-medium text-heading">{resource.title}</h2>
-                <p className="mt-1.5 text-sm text-ink/60">{resource.meta}</p>
+                <p className="mt-1.5 text-sm text-black">{resource.meta}</p>
                 {resource.description && (
-                  <p className="mt-3 text-sm leading-relaxed text-ink/70">{resource.description}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-black">{resource.description}</p>
                 )}
 
                 {resource.url && (
@@ -170,7 +201,7 @@ export default function UsefulResourcesPage() {
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-sm text-ink/70 hover:text-brand"
+                        className="inline-flex items-center gap-1.5 text-sm text-black hover:text-brand"
                       >
                         <ExternalLinkIcon className="h-3 w-3 flex-none" />
                         {link.label}
@@ -182,7 +213,7 @@ export default function UsefulResourcesPage() {
             ))}
           </div>
 
-          <div className="mt-16 max-w-2xl border-t border-ink/10 pt-10">
+          <div className="mt-16 border-t border-ink/10 pt-10">
             <h2 className="font-heading text-2xl font-medium text-heading">
               NAHCA Board Members&apos; Websites &amp; Social Media
             </h2>
@@ -194,19 +225,24 @@ export default function UsefulResourcesPage() {
                 <h3 className="font-heading text-base font-medium text-heading">
                   {item.institution}
                 </h3>
-                <div className="mt-2.5 flex flex-col gap-1.5">
-                  {item.links.map((link) => (
-                    <a
-                      key={link.url}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-dark"
-                    >
-                      <ExternalLinkIcon className="h-3 w-3 flex-none" />
-                      {link.label}
-                    </a>
-                  ))}
+                <div className="mt-3 flex items-center gap-2">
+                  {item.links.map((link) => {
+                    const isYouTube = link.url.includes("youtube.com");
+                    const LinkIcon = isYouTube ? YouTubeIcon : GlobeIcon;
+                    return (
+                      <a
+                        key={link.url}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={link.label}
+                        title={link.label}
+                        className="flex h-9 w-9 flex-none items-center justify-center rounded-full border border-ink/10 text-brand transition-colors hover:border-brand hover:bg-sand"
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             ))}

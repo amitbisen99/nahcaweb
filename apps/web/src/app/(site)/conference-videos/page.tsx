@@ -5,6 +5,7 @@ export default function ConferenceVideosPage() {
     <PagePlaceholder
       title="Conference Videos"
       description="Uploadable video library organized by year and category."
+      image="/events/mysore-green-hotel.jpg"
     />
   );
 }

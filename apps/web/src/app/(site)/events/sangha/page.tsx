@@ -14,13 +14,13 @@ export default function SanghaPage() {
 
       <section className="bg-white">
         <Container>
-          <div className="max-w-2xl py-16">
-            <p className="text-ink/70">
+          <div className="py-16">
+            <p className="text-black">
               Namaste! Thank you for your interest in NAHCA professional development
               programming. Spring 2026 programming has ended; we will post programming for
               Fall 2026 beginning in August.
             </p>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               Sign up for our newsletter to get timely updates.{" "}
               <a
                 href={NEWSLETTER_SIGNUP_URL}
@@ -36,22 +36,22 @@ export default function SanghaPage() {
             <h2 className="mt-10 font-heading text-2xl font-medium text-heading">
               Join Our Monthly NAHCA Sangha
             </h2>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               We are pleased to announce the NAHCA Sangha, a monthly gathering specifically
               designed for Hindu chaplains and Hindu chaplaincy students. This supportive
               professional space is dedicated to addressing contemporary challenges in
               spiritual caregiving and enhancing our approaches to providing care.
             </p>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               Each meeting will feature monthly prompts to guide free-flowing, meaningful
               conversations; the hour will fly by!
             </p>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               The gatherings will be convened by Priya Amaresh, Hindu Chaplain at Duke
               University and NAHCA Board Co-PR Chair, and Asha Shipman, Director of Hindu Life
               at Yale University and NAHCA Board Chair.
             </p>
-            <p className="mt-4 text-ink/70">
+            <p className="mt-4 text-black">
               After registering, participants will receive a virtual meeting link.
             </p>
 
@@ -65,7 +65,7 @@ export default function SanghaPage() {
 
             <div className="mt-4">
               <h4 className="font-semibold text-heading">NAHCA Members</h4>
-              <p className="mt-2 text-ink/70">
+              <p className="mt-2 text-black">
                 Free access. Email{" "}
                 <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-heading hover:text-heading/70">
                   NAHCA108@gmail.com
@@ -73,7 +73,7 @@ export default function SanghaPage() {
                 with the subject line &ldquo;2024 NAHCA Circle&rdquo; to request your free code.
                 Code will change for next iteration.
               </p>
-              <p className="mt-2 text-ink/70">
+              <p className="mt-2 text-black">
                 <a
                   href={MEMBERSHIP_RENEWAL_URL}
                   target="_blank"
@@ -87,7 +87,7 @@ export default function SanghaPage() {
 
             <div className="mt-6">
               <h4 className="font-semibold text-heading">Non Members</h4>
-              <p className="mt-2 text-ink/70">
+              <p className="mt-2 text-black">
                 The first two meetings are complimentary. For subsequent meetings, a suggested
                 donation of $10 per meeting is appreciated. Email{" "}
                 <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-heading hover:text-heading/70">
@@ -97,13 +97,13 @@ export default function SanghaPage() {
               </p>
             </div>
 
-            <p className="mt-10 text-ink/70">
+            <p className="mt-10 text-black">
               Whether you are seeking to combat burnout, explore self-care, create meaningful
               spaces, or gather with like-minded professionals, our NAHCA Sangha offers an
               invaluable opportunity for growth and community support. We warmly welcome you to
               join us in these enriching sessions.
             </p>
-            <p className="mt-4 text-sm text-ink/60">
+            <p className="mt-4 text-sm text-black">
               For further information and registration, please contact us at{" "}
               <a href="mailto:NAHCA108@gmail.com" className="font-semibold text-heading hover:text-heading/70">
                 NAHCA108@gmail.com

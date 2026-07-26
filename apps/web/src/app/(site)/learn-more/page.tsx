@@ -5,6 +5,7 @@ export default function LearnMorePage() {
     <PagePlaceholder
       title="Learn More"
       description="Articles, Podcasts, Conference Presentations, Referral Websites, and the Code of Ethics."
+      image="/brand/hero-temple.jpg"
     />
   );
 }

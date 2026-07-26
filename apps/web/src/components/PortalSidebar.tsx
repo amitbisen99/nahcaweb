@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 
 function linkClasses(active: boolean) {
   return `whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition-colors lg:whitespace-normal ${
-    active ? "bg-brand text-white" : "text-ink/70 hover:bg-sand hover:text-ink"
+    active ? "bg-brand text-white" : "text-black hover:bg-sand hover:text-ink"
   }`;
 }
 
