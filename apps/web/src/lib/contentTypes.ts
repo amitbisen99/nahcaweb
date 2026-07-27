@@ -14,7 +14,17 @@ export interface SelectOption {
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "textarea" | "richtext" | "date" | "time" | "number" | "checkbox" | "select" | "file";
+  type:
+    | "text"
+    | "textarea"
+    | "richtext"
+    | "date"
+    | "time"
+    | "number"
+    | "checkbox"
+    | "select"
+    | "file"
+    | "speakers";
   required?: boolean;
   options?: (string | SelectOption)[];
   helpText?: string;
@@ -40,7 +50,23 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "time", label: "Time", type: "time" },
       { name: "description", label: "Description", type: "richtext" },
       { name: "registrationLink", label: "Registration Link", type: "text" },
-      { name: "featuredImageUrl", label: "Featured Image", type: "file" },
+      {
+        name: "featuredImageUrl",
+        label: "Featured Image",
+        type: "file",
+        helpText: "Recommended size: 600 × 300px.",
+      },
+      { name: "speakers", label: "Speakers", type: "speakers" },
+      {
+        name: "access",
+        label: "Visibility",
+        type: "select",
+        required: true,
+        options: [
+          { value: "open", label: "Open (visible on the website)" },
+          { value: "members_only", label: "Members Only (visible in the member portal)" },
+        ],
+      },
       { name: "published", label: "Published", type: "checkbox" },
     ],
   },
@@ -53,12 +79,12 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "title", label: "Title", type: "text", required: true },
       { name: "description", label: "Description", type: "richtext" },
       { name: "zoomOrYoutubeLink", label: "Zoom / YouTube Link", type: "text" },
-      { name: "speakerInfo", label: "Speaker Info", type: "richtext" },
+      { name: "speakers", label: "Speakers", type: "speakers" },
       {
         name: "featuredImageUrl",
         label: "Featured Image",
         type: "file",
-        helpText: "Recommended size: 800 × 800px (square) — the image is displayed as a square card.",
+        helpText: "Shown as a square card on the webinars list, and a 600 × 300px banner on the webinar's own page.",
       },
       {
         name: "access",

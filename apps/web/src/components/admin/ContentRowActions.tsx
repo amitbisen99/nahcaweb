@@ -15,6 +15,16 @@ function formatValue(value: unknown, type: string): string {
   return String(value);
 }
 
+interface SpeakerValue {
+  name: string;
+  title?: string | null;
+  photoUrl?: string | null;
+}
+
+function isSpeakerArray(value: unknown): value is SpeakerValue[] {
+  return Array.isArray(value) && value.length > 0;
+}
+
 export function ContentRowActions({
   type,
   item,
@@ -112,7 +122,10 @@ export function ContentRowActions({
             <dl className="mt-6 flex flex-col gap-5">
               {detailFields.map((field) => {
                 const value = item[field.name];
-                if (value === null || value === undefined || value === "") return null;
+                if (field.type === "speakers" && !isSpeakerArray(value)) return null;
+                if (field.type !== "speakers" && (value === null || value === undefined || value === "")) {
+                  return null;
+                }
 
                 return (
                   <div key={field.name}>
@@ -120,7 +133,29 @@ export function ContentRowActions({
                       {field.label}
                     </dt>
                     <dd className="mt-1.5 text-base leading-relaxed text-black">
-                      {field.type === "file" && typeof value === "string" ? (
+                      {field.type === "speakers" && isSpeakerArray(value) ? (
+                        <div className="flex flex-col gap-2">
+                          {value.map((speaker, index) => (
+                            <div key={index} className="flex items-center gap-2.5">
+                              {speaker.photoUrl ? (
+                                <img
+                                  src={`${process.env.NEXT_PUBLIC_API_URL}${speaker.photoUrl}`}
+                                  alt=""
+                                  className="h-9 w-9 rounded-full border border-ink/10 object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sand text-xs text-black/50">
+                                  {speaker.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span>
+                                {speaker.name}
+                                {speaker.title ? ` — ${speaker.title}` : ""}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : field.type === "file" && typeof value === "string" ? (
                         isImageUrl(value) ? (
                           <img
                             src={`${process.env.NEXT_PUBLIC_API_URL}${value}`}

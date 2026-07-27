@@ -1,6 +1,14 @@
 import Image from "next/image";
 import { EventBanner } from "@/components/EventBanner";
 import { Container } from "@/components/Container";
+import { ArticleLayout, PullQuote, SectionHeading } from "@/components/ArticleKit";
+import { CompassIcon, ShieldIcon } from "@/components/icons";
+
+const TOC = [
+  { id: "approach", label: "Our Approach" },
+  { id: "commitments", label: "Our Commitments" },
+  { id: "safe-space", label: "Maintaining This Space" },
+];
 
 function OmIcon({ className }: { className?: string }) {
   return (
@@ -35,11 +43,11 @@ export default function CodeOfEthicsPage() {
 
       <section className="bg-white py-16">
         <Container>
-          <div>
-            <span className="font-heading text-xs font-semibold uppercase tracking-widest text-brand">
-              North American Hindu Chaplains Association
-            </span>
-            <p className="mt-5 text-black">
+          <ArticleLayout toc={TOC}>
+            <SectionHeading id="approach" icon={<CompassIcon className="h-4 w-4" />}>
+              Our Approach
+            </SectionHeading>
+            <p className="mt-3 text-black">
               NAHCA seeks to support and encourage the professional and voluntary pursuits of
               chaplaincy and pastoral care inspired and informed by Hindu spiritual teachings and
               practices per the needs of contemporary society.
@@ -52,34 +60,39 @@ export default function CodeOfEthicsPage() {
               NAHCA.
             </p>
 
-            <div className="mt-10 flex items-center justify-between gap-3">
-              <h2 className="font-heading text-2xl font-medium text-heading">
-                By participating in this space, we ask for your commitment to:
-              </h2>
-              <Image src="/brand/logo.png" alt="" width={36} height={36} className="flex-none" />
+            <div id="commitments" className="mt-14 scroll-mt-28">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-heading text-2xl font-medium text-heading">
+                  By participating in this space, we ask for your commitment to:
+                </h2>
+                <Image src="/brand/logo.png" alt="" width={36} height={36} className="flex-none" />
+              </div>
+
+              <div className="mt-6 rounded-xl border border-ink/10 bg-sand/30">
+                {COMMITMENTS.map((item) => (
+                  <div key={item.title} className="flex gap-4 p-6">
+                    <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-forest text-white">
+                      <OmIcon className="text-lg" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading text-lg font-medium text-heading">{item.title}</h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-black">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-6 rounded-xl border border-ink/10 bg-sand/30">
-              {COMMITMENTS.map((item) => (
-                <div key={item.title} className="flex gap-4 p-6">
-                  <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-forest text-white">
-                    <OmIcon className="text-lg" />
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-lg font-medium text-heading">{item.title}</h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-black">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-10 text-black">
+            <SectionHeading id="safe-space" icon={<ShieldIcon className="h-4 w-4" />}>
+              Maintaining This Space
+            </SectionHeading>
+            <PullQuote>
               Your commitment to abide by and maintain the integrity of these principles will
               support NAHCA&apos;s intention to maintain a safe space during our programming.
-            </p>
-          </div>
+            </PullQuote>
+          </ArticleLayout>
         </Container>
       </section>
     </>

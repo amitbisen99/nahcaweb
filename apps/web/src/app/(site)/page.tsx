@@ -1,35 +1,40 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
-import { HeroSlider } from "@/components/HeroSlider";
+import { Hero } from "@/components/Hero";
+import { TrustStrip } from "@/components/TrustStrip";
 import { WhatIsNahcaCards } from "@/components/WhatIsNahcaCards";
 import { VideoThumbnail } from "@/components/VideoThumbnail";
+import { Reveal } from "@/components/Reveal";
 import { ChevronIcon, DiamondIcon } from "@/components/icons";
 
 export default function Home() {
   return (
     <>
-      <HeroSlider />
+      <Hero />
+      <TrustStrip />
 
       {/* What is NAHCA */}
       <section className="border-t-4 border-brand bg-white py-20">
         <Container>
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
-              <DiamondIcon className="h-3 w-3" />
-              About NAHCA
-            </span>
-            <h2 className="mt-3 font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
-            <p className="mt-5 text-center text-black">
-              NAHCA offers a sacred space to connect with current and aspiring spiritual care-givers
-              working in higher education, healthcare, corrections, military and community settings.
-            </p>
-            <p className="mt-4 text-center text-black">
-              We hold deep value for the strength and beauty of being in community together — a space
-              for learning, sharing, laughing, and empathizing about the intricacies, joys, and rough
-              edges of this work and this time.
-            </p>
-          </div>
+          <Reveal>
+            <div className="mx-auto max-w-2xl text-center">
+              <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+                <DiamondIcon className="h-3 w-3" />
+                About NAHCA
+              </span>
+              <h2 className="mt-3 font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
+              <p className="mt-5 text-center text-black">
+                NAHCA offers a sacred space to connect with current and aspiring spiritual care-givers
+                working in higher education, healthcare, corrections, military and community settings.
+              </p>
+              <p className="mt-4 text-center text-black">
+                We hold deep value for the strength and beauty of being in community together — a space
+                for learning, sharing, laughing, and empathizing about the intricacies, joys, and rough
+                edges of this work and this time.
+              </p>
+            </div>
+          </Reveal>
 
           <WhatIsNahcaCards />
         </Container>
@@ -42,7 +47,7 @@ export default function Home() {
             <VideoThumbnail image="/brand/PriyaAmareshthumb.png" alt="Priya Amaresh" />
           </div>
 
-          <div className="flex flex-col justify-center bg-[#F1F9F5] px-6 py-16 sm:px-10 lg:px-16">
+          <Reveal className="flex flex-col justify-center bg-[#F1F9F5] px-6 py-16 sm:px-10 lg:px-16">
             <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
               <DiamondIcon className="h-3 w-3" />
               Why you need a Hindu chaplain
@@ -84,28 +89,28 @@ export default function Home() {
                 <ChevronIcon className="h-3.5 w-3.5" />
               </Link>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Donate CTA */}
       <section className="bg-navy py-16">
         <Container>
-          <div className="flex flex-col items-center gap-5 text-center text-white">
+          <Reveal className="flex flex-col items-center gap-5 text-center text-white">
             <h2 className="font-heading text-3xl font-medium">Support the Mission</h2>
             <p className="max-w-2xl text-center text-white/90">
               Your gift helps NAHCA equip and endorse Hindu chaplains serving communities across North
               America — in hospitals, universities, the military, and beyond.
             </p>
             <Button href="/donate">Donate Now</Button>
-          </div>
+          </Reveal>
         </Container>
       </section>
 
       {/* Contact + Newsletter */}
       <section className="bg-white pb-16">
         <Container>
-          <div className="grid gap-10 border-t border-black/10 pt-16 sm:grid-cols-2">
+          <Reveal className="grid gap-10 border-t border-black/10 pt-16 sm:grid-cols-2">
             <div className="text-center sm:text-left">
               <h2 className="font-heading text-xl font-medium text-heading">NAHCA</h2>
               <p className="mt-3 text-center text-sm text-black sm:text-left">North American Hindu Chaplains Association.</p>
@@ -128,7 +133,7 @@ export default function Home() {
                 </Button>
               </form>
             </div>
-          </div>
+          </Reveal>
         </Container>
       </section>
     </>

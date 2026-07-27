@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
+import { SpeakerCards } from "@/components/SpeakerCards";
 import { auth } from "@/auth";
 import { getOpenWebinar } from "@/lib/cms";
 
@@ -24,6 +25,15 @@ export default async function WebinarDetailPage({
           </Link>
 
           <div className="mt-6">
+            {webinar.featuredImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element -- uploaded file from an arbitrary host, not in next.config.js image patterns
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL}${webinar.featuredImageUrl}`}
+                alt=""
+                className="mb-6 aspect-[2/1] w-full max-w-[600px] rounded-xl border border-ink/10 object-cover"
+              />
+            )}
+
             {webinar.access === "members_only" && (
               <span className="mb-2 inline-block w-fit rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand-dark">
                 Members Only
@@ -38,9 +48,13 @@ export default async function WebinarDetailPage({
               />
             )}
 
+            {webinar.speakers && webinar.speakers.length > 0 && (
+              <SpeakerCards speakers={webinar.speakers} />
+            )}
+
             {webinar.speakerInfo && (
               <div
-                className="mt-6 border-t border-ink/10 pt-6 text-sm leading-relaxed text-black [&_a]:text-brand [&_a]:underline"
+                className="mt-6 text-sm leading-relaxed text-black [&_a]:text-brand [&_a]:underline"
                 dangerouslySetInnerHTML={{ __html: webinar.speakerInfo }}
               />
             )}

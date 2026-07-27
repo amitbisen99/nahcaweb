@@ -154,18 +154,21 @@ model Receipt {
 // --- Content management (replaces the retired Strapi CMS) ---
 
 model Event {
-  id               Int      @id @default(autoincrement())
+  id               Int           @id @default(autoincrement())
   title            String
   date             DateTime
   time             String?
-  description      String?  @db.Text
+  description      String?       @db.Text
   registrationLink String?
   featuredImageUrl String?
-  published        Boolean  @default(false)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  speakers         Json?
+  access           WebinarAccess @default(open)
+  published        Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@index([published])
+  @@index([access])
 }
 
 model Webinar {
@@ -175,6 +178,7 @@ model Webinar {
   zoomOrYoutubeLink String?
   priceCents        Int?
   speakerInfo       String?       @db.Text
+  speakers          Json?
   featuredImageUrl  String?
   access            WebinarAccess @default(open)
   published         Boolean       @default(false)

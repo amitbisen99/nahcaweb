@@ -61,7 +61,15 @@ export function HeaderChrome({
 
   const transparent = !scrolled;
   const logoSize = transparent ? 80 : 48;
-  const chromeTextColor = transparent ? "text-white" : "text-black";
+
+  // Event/webinar detail pages have no banner image behind the transparent
+  // (pre-scroll) header — white nav text would be invisible against the
+  // plain white page background, so use black there instead. Once scrolled,
+  // the header goes solid white same as every other page.
+  const noBannerDetailPage = /^\/events\/\d+$/.test(pathname) || /^\/events\/webinars\/\d+$/.test(pathname);
+  const navOnLight = transparent && noBannerDetailPage;
+
+  const chromeTextColor = transparent ? (navOnLight ? "text-black" : "text-white") : "text-black";
 
   return (
     <header
@@ -104,7 +112,11 @@ export function HeaderChrome({
                     onClick={() => setOpenMenu(null)}
                     onFocus={() => item.children && setOpenMenu(item.label)}
                     className={`relative block py-2 text-sm font-medium transition-colors duration-300 ${
-                      transparent ? "text-white hover:text-white/80" : "text-brand hover:text-brand-dark"
+                      transparent
+                        ? navOnLight
+                          ? "text-black hover:text-black/70"
+                          : "text-white hover:text-white/80"
+                        : "text-brand hover:text-brand-dark"
                     }`}
                   >
                     {item.label}
@@ -161,7 +173,7 @@ export function HeaderChrome({
               isAdmin={isAdmin}
               isLoggedIn={isLoggedIn}
               signOutAction={signOutAction}
-              transparent={transparent}
+              transparent={transparent && !navOnLight}
             />
           </div>
         </div>

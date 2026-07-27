@@ -5,25 +5,26 @@ import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { speakersSchema } from "../lib/speakers";
 
-// Webinars have a visibility rule the other content types don't: "open" ones
-// are public, "members_only" ones require any logged-in account (not just
-// admin) — so this doesn't fit the generic createContentRouter factory,
-// which only distinguishes admin vs anonymous.
-export const webinarsRouter = Router();
+// Events now have the same open/members_only visibility rule as Webinars, so
+// this uses the same bespoke-router pattern instead of the generic
+// createContentRouter factory (which only distinguishes admin vs anonymous).
+export const eventsRouter = Router();
 
-const webinarSchema = z.object({
+const dateInput = z.coerce.date();
+
+const eventSchema = z.object({
   title: z.string().min(1),
+  date: dateInput,
+  time: z.string().optional(),
   description: z.string().optional(),
-  zoomOrYoutubeLink: z.string().optional(),
-  priceCents: z.number().int().optional(),
-  speakerInfo: z.string().optional(),
-  speakers: speakersSchema,
+  registrationLink: z.string().optional(),
   featuredImageUrl: z.string().nullable().optional(),
+  speakers: speakersSchema,
   access: z.enum(["open", "members_only"]).optional(),
   published: z.boolean().optional(),
 });
 
-webinarsRouter.get(
+eventsRouter.get(
   "/",
   optionalAuth,
   asyncHandler(async (req, res) => {
@@ -32,19 +33,19 @@ webinarsRouter.get(
 
     const where = isAdmin ? undefined : isMember ? { published: true } : { published: true, access: "open" as const };
 
-    const items = await prisma.webinar.findMany({ where, orderBy: { createdAt: "desc" } });
+    const items = await prisma.event.findMany({ where, orderBy: { date: "asc" } });
     res.json({ items });
   })
 );
 
-webinarsRouter.get(
+eventsRouter.get(
   "/:id",
   optionalAuth,
   asyncHandler(async (req, res) => {
     const isAdmin = req.auth?.role === "admin";
     const isMember = Boolean(req.auth);
 
-    const item = await prisma.webinar.findUnique({ where: { id: Number(req.params.id) } });
+    const item = await prisma.event.findUnique({ where: { id: Number(req.params.id) } });
     if (!item) return res.status(404).json({ error: "Not found" });
     if (!isAdmin && !item.published) return res.status(404).json({ error: "Not found" });
     if (!isAdmin && !isMember && item.access !== "open") return res.status(404).json({ error: "Not found" });
@@ -53,36 +54,36 @@ webinarsRouter.get(
   })
 );
 
-webinarsRouter.post(
+eventsRouter.post(
   "/",
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const parsed = webinarSchema.safeParse(req.body);
+    const parsed = eventSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-    const item = await prisma.webinar.create({ data: parsed.data });
+    const item = await prisma.event.create({ data: parsed.data });
     res.status(201).json({ item });
   })
 );
 
-webinarsRouter.put(
+eventsRouter.put(
   "/:id",
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const parsed = webinarSchema.partial().safeParse(req.body);
+    const parsed = eventSchema.partial().safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-    const item = await prisma.webinar.update({ where: { id: Number(req.params.id) }, data: parsed.data });
+    const item = await prisma.event.update({ where: { id: Number(req.params.id) }, data: parsed.data });
     res.json({ item });
   })
 );
 
-webinarsRouter.delete(
+eventsRouter.delete(
   "/:id",
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    await prisma.webinar.delete({ where: { id: Number(req.params.id) } });
+    await prisma.event.delete({ where: { id: Number(req.params.id) } });
     res.status(204).send();
   })
 );

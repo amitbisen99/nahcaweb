@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { AddToCalendar } from "@/components/AddToCalendar";
+import { SpeakerCards } from "@/components/SpeakerCards";
+import { auth } from "@/auth";
 import { getEvent } from "@/lib/cms";
 
 function formatDate(date: string): string {
@@ -14,7 +16,8 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = await getEvent(id);
+  const session = await auth();
+  const event = await getEvent(id, session?.apiToken);
   if (!event) notFound();
 
   return (
@@ -30,10 +33,15 @@ export default async function EventDetailPage({
               <img
                 src={`${process.env.NEXT_PUBLIC_API_URL}${event.featuredImageUrl}`}
                 alt=""
-                className="mb-6 h-64 w-full rounded-xl border border-ink/10 object-cover"
+                className="mb-6 aspect-[2/1] w-full max-w-[600px] rounded-xl border border-ink/10 object-cover"
               />
             )}
 
+            {event.access === "members_only" && (
+              <span className="mb-2 inline-block w-fit rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand-dark">
+                Members Only
+              </span>
+            )}
             <p className="text-sm text-black">
               {formatDate(event.date)} {event.time ? `· ${event.time}` : ""}
             </p>
@@ -44,6 +52,10 @@ export default async function EventDetailPage({
                 className="mt-6 text-base leading-relaxed text-black [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{ __html: event.description }}
               />
+            )}
+
+            {event.speakers && event.speakers.length > 0 && (
+              <SpeakerCards speakers={event.speakers} />
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

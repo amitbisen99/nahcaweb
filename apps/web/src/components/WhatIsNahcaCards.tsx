@@ -1,5 +1,9 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import { Button } from "./Button";
+import { RevealGroup, RevealItem } from "./Reveal";
 import { ChevronIcon, DiamondIcon } from "./icons";
 
 type Card = {
@@ -55,47 +59,83 @@ function ChevronList({ items }: { items: string[] }) {
 }
 
 export function WhatIsNahcaCards() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   return (
-    <div className="mt-12 grid gap-6 lg:grid-cols-3">
-      {CARDS.map((card) => (
-        <div
-          key={card.title}
-          className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-black/10"
-        >
-          <Image
-            src={card.image}
-            alt={card.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+    <RevealGroup className="mt-12 grid gap-6 lg:grid-cols-3">
+      {CARDS.map((card, index) => {
+        const isOpen = openIndex === index;
 
-          {/* Default state: title label over a bottom gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent opacity-100 transition-opacity duration-300 group-hover:opacity-0" />
-          <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 p-6 transition-opacity duration-300 group-hover:opacity-0">
-            <div className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-brand text-white">
-              <DiamondIcon className="h-5 w-5" />
-            </div>
-            <h3 className="font-heading text-lg font-semibold text-white">{card.title}</h3>
-          </div>
+        return (
+          <RevealItem
+            key={card.title}
+            role="button"
+            tabIndex={0}
+            aria-expanded={isOpen}
+            aria-label={`${card.title} — tap for details`}
+            onClick={() => setOpenIndex((cur) => (cur === index ? null : index))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setOpenIndex((cur) => (cur === index ? null : index));
+              }
+            }}
+            className="group relative aspect-[4/5] cursor-pointer overflow-hidden rounded-2xl border border-black/10"
+          >
+            <Image
+              src={card.image}
+              alt={card.title}
+              fill
+              className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isOpen ? "scale-105" : ""}`}
+            />
 
-          {/* Hover state: full description overlay */}
-          <div className="absolute inset-0 flex flex-col justify-center overflow-hidden bg-navy/95 p-5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <h3 className="font-heading text-[22px] font-semibold text-white">{card.title}</h3>
-            {card.lead && <p className="mt-1.5 text-[16px] leading-snug text-white/90">{card.lead}</p>}
-            <div className="mt-1.5">
-              <ChevronList items={card.items} />
-            </div>
-            {card.trailing && <p className="mt-1.5 text-[16px] leading-snug text-white/90">{card.trailing}</p>}
-            {card.cta && (
-              <div className="mt-2">
-                <Button href="/membership" className="!px-4 !py-1.5 !text-[13px]">
-                  Join Us!
-                </Button>
+            {/* Default state: title label over a bottom gradient */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent transition-opacity duration-300 group-hover:opacity-0 ${
+                isOpen ? "opacity-0" : "opacity-100"
+              }`}
+            />
+            <div
+              className={`absolute inset-x-0 bottom-0 flex items-center gap-3 p-6 transition-opacity duration-300 group-hover:opacity-0 ${
+                isOpen ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <div className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-brand text-white">
+                <DiamondIcon className="h-5 w-5" />
               </div>
+              <h3 className="font-heading text-lg font-semibold text-white">{card.title}</h3>
+            </div>
+
+            {/* Mobile-only tap hint — hover already communicates affordance on desktop */}
+            {!isOpen && (
+              <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-lg leading-none text-white backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-0 lg:hidden">
+                +
+              </span>
             )}
-          </div>
-        </div>
-      ))}
-    </div>
+
+            {/* Hover (desktop) / tap (mobile) state: full description overlay */}
+            <div
+              className={`absolute inset-0 flex flex-col justify-center overflow-hidden bg-navy/95 p-5 transition-opacity duration-300 group-hover:opacity-100 ${
+                isOpen ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <h3 className="font-heading text-[22px] font-semibold text-white">{card.title}</h3>
+              {card.lead && <p className="mt-1.5 text-[16px] leading-snug text-white/90">{card.lead}</p>}
+              <div className="mt-1.5">
+                <ChevronList items={card.items} />
+              </div>
+              {card.trailing && <p className="mt-1.5 text-[16px] leading-snug text-white/90">{card.trailing}</p>}
+              {card.cta && (
+                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                  <Button href="/membership" className="!px-4 !py-1.5 !text-[13px]">
+                    Join Us!
+                  </Button>
+                </div>
+              )}
+            </div>
+          </RevealItem>
+        );
+      })}
+    </RevealGroup>
   );
 }

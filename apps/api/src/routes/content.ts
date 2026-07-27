@@ -4,20 +4,6 @@ import { createContentRouter } from "../lib/contentRouter";
 
 const dateInput = z.coerce.date();
 
-export const eventsRouter = createContentRouter({
-  delegate: prisma.event,
-  schema: z.object({
-    title: z.string().min(1),
-    date: dateInput,
-    time: z.string().optional(),
-    description: z.string().optional(),
-    registrationLink: z.string().optional(),
-    featuredImageUrl: z.string().nullable().optional(),
-    published: z.boolean().optional(),
-  }),
-  orderBy: { date: "asc" },
-});
-
 export const articlesRouter = createContentRouter({
   delegate: prisma.article,
   schema: z.object({

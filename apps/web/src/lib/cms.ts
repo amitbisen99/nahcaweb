@@ -1,3 +1,9 @@
+export interface CmsSpeaker {
+  name: string;
+  title?: string | null;
+  photoUrl?: string | null;
+}
+
 export interface CmsEvent {
   id: number;
   title: string;
@@ -6,12 +12,18 @@ export interface CmsEvent {
   description: string | null;
   registrationLink: string | null;
   featuredImageUrl?: string | null;
+  speakers?: CmsSpeaker[] | null;
+  access: "open" | "members_only";
 }
 
-export async function getUpcomingEvents(limit = 3): Promise<CmsEvent[]> {
+// Events have the same per-visitor visibility as Webinars (open vs
+// members_only), so this must never go through the shared page/data cache —
+// pass the visitor's session token through and always fetch fresh.
+export async function getUpcomingEvents(limit = 3, token?: string): Promise<CmsEvent[]> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
-      next: { revalidate: 60 },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return [];
@@ -25,10 +37,11 @@ export async function getUpcomingEvents(limit = 3): Promise<CmsEvent[]> {
   }
 }
 
-export async function getEvent(id: string): Promise<CmsEvent | null> {
+export async function getEvent(id: string, token?: string): Promise<CmsEvent | null> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`, {
-      next: { revalidate: 60 },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return null;
@@ -45,6 +58,7 @@ export interface CmsWebinar {
   description: string | null;
   zoomOrYoutubeLink: string | null;
   speakerInfo: string | null;
+  speakers?: CmsSpeaker[] | null;
   featuredImageUrl: string | null;
   access: "open" | "members_only";
 }

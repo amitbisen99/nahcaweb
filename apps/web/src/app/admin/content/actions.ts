@@ -26,11 +26,39 @@ async function uploadFile(file: File, token: string): Promise<string | null> {
   return (data.url as string) ?? null;
 }
 
+async function buildSpeakers(fieldName: string, formData: FormData, token: string) {
+  const speakers: { name: string; title?: string; photoUrl: string | null }[] = [];
+
+  for (let i = 0; formData.has(`${fieldName}[${i}][name]`); i++) {
+    const name = ((formData.get(`${fieldName}[${i}][name]`) as string) ?? "").trim();
+    if (!name) continue;
+
+    const title = ((formData.get(`${fieldName}[${i}][title]`) as string) ?? "").trim();
+    const existingPhotoUrl = (formData.get(`${fieldName}[${i}][existingPhotoUrl]`) as string) || null;
+    const photoFile = formData.get(`${fieldName}[${i}][photo]`) as File | null;
+
+    let photoUrl = existingPhotoUrl;
+    if (photoFile && photoFile.size > 0) {
+      const uploaded = await uploadFile(photoFile, token);
+      if (uploaded) photoUrl = uploaded;
+    }
+
+    speakers.push({ name, title: title || undefined, photoUrl });
+  }
+
+  return speakers;
+}
+
 async function buildPayload(type: ContentTypeKey, formData: FormData, token: string) {
   const config = CONTENT_TYPES[type];
   const payload: Record<string, unknown> = {};
 
   for (const field of config.fields) {
+    if (field.type === "speakers") {
+      payload[field.name] = await buildSpeakers(field.name, formData, token);
+      continue;
+    }
+
     if (field.type === "file") {
       const file = formData.get(field.name) as File | null;
       if (file && file.size > 0) {

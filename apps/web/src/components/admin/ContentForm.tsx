@@ -3,6 +3,7 @@ import { Button } from "@/components/Button";
 import { ContentFileField } from "./ContentFileField";
 import { TimeField } from "./TimeField";
 import { RichTextField } from "./RichTextField";
+import { SpeakersField } from "./SpeakersField";
 
 function dateInputValue(value: unknown): string {
   if (!value) return "";
@@ -41,6 +42,17 @@ export function ContentForm({
               label={field.label}
               helpText={field.helpText}
               currentValue={typeof currentValue === "string" ? currentValue : null}
+            />
+          );
+        }
+
+        if (field.type === "speakers") {
+          return (
+            <SpeakersField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              currentValue={currentValue}
             />
           );
         }

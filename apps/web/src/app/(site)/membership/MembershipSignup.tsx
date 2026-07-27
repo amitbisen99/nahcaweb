@@ -2,6 +2,7 @@
 
 import { FormEvent, ReactNode, SVGProps, useMemo, useState } from "react";
 import { ApiMembershipPlan } from "@/lib/api";
+import { RevealGroup, RevealItem } from "@/components/Reveal";
 
 // The Conference plan will be featured on its own page later — keep all of
 // its data, admin editing, and signup-modal support intact, just hide the
@@ -167,9 +168,9 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
 
   return (
     <>
-      <div className="mt-14 grid gap-6 lg:grid-cols-3">
+      <RevealGroup className="mt-14 grid gap-6 lg:grid-cols-3">
         {mainTiers.map((tier) => (
-          <div
+          <RevealItem
             key={tier.type}
             className={`relative flex flex-col rounded-xl border p-7 ${
               tier.highlight ? "border-brand bg-white shadow-lg" : "border-ink/10 bg-white"
@@ -194,9 +195,9 @@ export function MembershipSignup({ plans }: { plans: ApiMembershipPlan[] }) {
                 Join Now
               </button>
             </div>
-          </div>
+          </RevealItem>
         ))}
-      </div>
+      </RevealGroup>
 
       {SHOW_CONFERENCE_PLAN && conferenceTier && (
         <div className="mt-16">
