@@ -54,6 +54,14 @@ export function FlagIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function HeartIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12 20.5s-7.5-4.6-10.1-9.1C.4 8.6 1.6 5 5 4.1c2-.5 3.9.3 5 1.9 1.1-1.6 3-2.4 5-1.9 3.4.9 4.6 4.5 3.1 7.3-2.6 4.5-10.1 9.1-10.1 9.1z" />
+    </svg>
+  );
+}
+
 export function ShieldIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>

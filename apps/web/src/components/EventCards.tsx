@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import type { CmsEvent } from "@/lib/cms";
 import { AddToCalendar } from "./AddToCalendar";
 import { SpeakerAvatarStack } from "./SpeakerCards";
@@ -31,6 +34,8 @@ function dayLabel(date: string): string {
 }
 
 export function EventCards({ events }: { events: CmsEvent[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   return (
     <RevealGroup className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {events.map((event, index) => {
@@ -38,17 +43,29 @@ export function EventCards({ events }: { events: CmsEvent[] }) {
           ? `${process.env.NEXT_PUBLIC_API_URL}${event.featuredImageUrl}`
           : CARD_IMAGES[index % CARD_IMAGES.length];
         const speakers = event.speakers ?? [];
+        const isOpen = openIndex === index;
 
         return (
           <RevealItem
             key={event.id}
-            className="group relative aspect-square overflow-hidden rounded-2xl border border-black/10"
+            role="button"
+            tabIndex={0}
+            aria-expanded={isOpen}
+            aria-label={`${event.title} — tap for details`}
+            onClick={() => setOpenIndex((cur) => (cur === index ? null : index))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setOpenIndex((cur) => (cur === index ? null : index));
+              }
+            }}
+            className="group relative aspect-square cursor-pointer overflow-hidden rounded-2xl border border-black/10"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- may be an uploaded file from an arbitrary host, not in next.config.js image patterns */}
             <img
               src={imageSrc}
               alt={event.title}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className={`absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOpen ? "scale-105" : ""}`}
             />
 
             <div className="absolute left-4 top-4 z-10 flex h-12 w-12 flex-none flex-col items-center justify-center rounded-lg bg-white/95 text-heading shadow">
@@ -65,14 +82,27 @@ export function EventCards({ events }: { events: CmsEvent[] }) {
             )}
 
             {/* Default state: title + speaker avatars over bottom gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent opacity-100 transition-opacity duration-300 group-hover:opacity-0" />
-            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-6 transition-opacity duration-300 group-hover:opacity-0">
+            <div
+              className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent transition-opacity duration-300 group-hover:opacity-0 ${isOpen ? "opacity-0" : "opacity-100"}`}
+            />
+            <div
+              className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-6 transition-opacity duration-300 group-hover:opacity-0 ${isOpen ? "opacity-0" : "opacity-100"}`}
+            >
               <h3 className="font-heading text-lg font-semibold text-white">{event.title}</h3>
               {speakers.length > 0 && <SpeakerAvatarStack speakers={speakers} />}
             </div>
 
-            {/* Hover state: date/time + excerpt + actions */}
-            <div className="absolute inset-0 flex flex-col justify-center bg-navy/95 p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            {/* Mobile-only tap hint — hover already communicates affordance on desktop */}
+            {!isOpen && (
+              <span className="absolute right-4 top-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-lg leading-none text-white backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-0 lg:hidden">
+                +
+              </span>
+            )}
+
+            {/* Hover (desktop) / tap (mobile) state: date/time + excerpt + actions */}
+            <div
+              className={`absolute inset-0 flex flex-col justify-center overflow-hidden bg-navy/95 p-6 transition-opacity duration-300 group-hover:opacity-100 ${isOpen ? "opacity-100" : "opacity-0"}`}
+            >
               <h3 className="font-heading text-[20px] font-semibold text-white">{event.title}</h3>
               <p className="mt-1 text-[13px] font-medium text-white/70">
                 {formatDate(event.date)}
@@ -88,7 +118,10 @@ export function EventCards({ events }: { events: CmsEvent[] }) {
                   <SpeakerAvatarStack speakers={speakers} />
                 </div>
               )}
-              <div className="mt-4 flex flex-wrap items-center gap-4">
+              <div
+                className="mt-4 flex flex-wrap items-center gap-4"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Link
                   href={`/events/${event.id}`}
                   className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-brand hover:text-white"

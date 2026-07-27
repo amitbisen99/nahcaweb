@@ -8,6 +8,7 @@ import { Container } from "./Container";
 import { Button } from "./Button";
 import { MobileNav } from "./MobileNav";
 import { NAV } from "@/lib/nav";
+import { HeartIcon } from "./icons";
 
 function UserIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -60,13 +61,17 @@ export function HeaderChrome({
   }, [pathname]);
 
   const transparent = !scrolled;
-  const logoSize = transparent ? 80 : 48;
 
-  // Event/webinar detail pages have no banner image behind the transparent
-  // (pre-scroll) header — white nav text would be invisible against the
-  // plain white page background, so use black there instead. Once scrolled,
-  // the header goes solid white same as every other page.
-  const noBannerDetailPage = /^\/events\/\d+$/.test(pathname) || /^\/events\/webinars\/\d+$/.test(pathname);
+  // Event/webinar detail pages, login, and the member portal have no banner
+  // image behind the transparent (pre-scroll) header — white nav text would
+  // be invisible against the plain white page background, so use black there
+  // instead. Once scrolled, the header goes solid white same as every other
+  // page.
+  const noBannerDetailPage =
+    /^\/events\/\d+$/.test(pathname) ||
+    /^\/events\/webinars\/\d+$/.test(pathname) ||
+    pathname === "/login" ||
+    pathname.startsWith("/portal");
   const navOnLight = transparent && noBannerDetailPage;
 
   const chromeTextColor = transparent ? (navOnLight ? "text-black" : "text-white") : "text-black";
@@ -80,14 +85,13 @@ export function HeaderChrome({
       <Container>
         <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
           <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/brand/logo.png"
-              alt="NAHCA logo"
-              width={logoSize}
-              height={logoSize}
-              priority
-              className="transition-[width,height] duration-300"
-            />
+            <div
+              className={`relative flex-none transition-[width,height] duration-300 ${
+                transparent ? "h-10 w-10 lg:h-20 lg:w-20" : "h-9 w-9 lg:h-12 lg:w-12"
+              }`}
+            >
+              <Image src="/brand/logo.png" alt="NAHCA logo" fill priority className="object-contain" />
+            </div>
             <span className={`font-heading text-lg font-semibold transition-colors duration-300 ${chromeTextColor}`}>
               NAHCA
             </span>
@@ -165,7 +169,16 @@ export function HeaderChrome({
               <UserIcon className="h-5 w-5" />
             </Link>
 
-            <Button href="/donate" className="!px-5 !py-2">
+            <Link
+              href="/donate"
+              aria-label="Donate"
+              title="Donate"
+              className={`flex h-9 w-9 flex-none items-center justify-center rounded-full transition-colors duration-300 hover:text-brand lg:hidden ${chromeTextColor}`}
+            >
+              <HeartIcon className="h-5 w-5" />
+            </Link>
+
+            <Button href="/donate" className="!hidden !px-5 !py-2 lg:!inline-flex">
               Donate
             </Button>
 
