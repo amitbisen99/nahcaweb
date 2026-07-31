@@ -47,9 +47,10 @@ export function UpcomingEventsSnippet({ events }: { events: CmsEvent[] }) {
 
               <Link
                 href={`/events/${event.id}`}
+                aria-label={`View details for ${event.title}`}
                 className="flex-none text-sm font-semibold text-brand hover:text-brand-dark"
               >
-                Details →
+                <span className="hidden sm:inline">Details </span>→
               </Link>
             </li>
           ))}
