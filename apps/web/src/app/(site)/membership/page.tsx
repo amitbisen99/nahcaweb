@@ -48,11 +48,11 @@ export default async function MembershipPage({
       <section className="bg-white py-20">
         <Container>
           <div>
-            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
               <DiamondIcon className="h-3 w-3" />
               Join Us
             </span>
-            <h2 className="mt-3 font-heading text-4xl font-bold text-heading">
+            <h2 className="mt-3 font-heading text-[36px] font-bold text-heading">
               Become a NAHCA Member
             </h2>
 
@@ -81,7 +81,7 @@ export default async function MembershipPage({
               ...and eager to learn about spiritual care from a Hindu lens? Then join us!
             </p>
 
-            <div className="mt-8 flex items-center gap-4 rounded-xl border border-ink/10 bg-sand/40 p-6">
+            <div className="mt-8 flex items-center gap-4 rounded-xl border border-ink/10 p-6">
               <Image
                 src="/brand/BinduGupta.jpeg"
                 alt="Bindu Gupta"

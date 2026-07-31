@@ -52,11 +52,11 @@ function PlanTooltip({ text }: { text: string }) {
       <button
         type="button"
         aria-label="Plan information"
-        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/20 bg-white text-black transition-colors hover:border-brand hover:text-brand"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-forest text-white shadow-md transition-colors hover:text-black"
       >
-        <InfoIcon className="h-3.5 w-3.5" />
+        <InfoIcon className="h-4 w-4" />
       </button>
-      <span className="pointer-events-none absolute right-0 top-8 w-56 rounded-lg bg-navy p-3 text-xs leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100">
+      <span className="pointer-events-none absolute right-0 top-9 w-56 rounded-lg bg-navy p-3 text-xs leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100">
         {text}
       </span>
     </span>

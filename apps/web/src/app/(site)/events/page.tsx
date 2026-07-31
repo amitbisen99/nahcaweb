@@ -39,10 +39,10 @@ export default async function EventsPage() {
       </Container>
       </div>
 
-      <div className="bg-sand/30 py-16">
+      <div className="py-16">
         <Container>
           <Reveal className="text-center">
-            <span className="font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+            <span className="font-heading text-xs font-semibold uppercase tracking-widest text-forest">
               Feedback
             </span>
             <h2 className="mt-3 font-heading text-3xl font-bold text-heading">

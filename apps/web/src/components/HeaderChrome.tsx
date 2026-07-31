@@ -8,7 +8,7 @@ import { Container } from "./Container";
 import { Button } from "./Button";
 import { MobileNav } from "./MobileNav";
 import { NAV } from "@/lib/nav";
-import { HeartIcon } from "./icons";
+import { GiftIcon } from "./icons";
 
 function UserIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -175,7 +175,7 @@ export function HeaderChrome({
               title="Donate"
               className={`flex h-9 w-9 flex-none items-center justify-center rounded-full transition-colors duration-300 hover:text-brand lg:hidden ${chromeTextColor}`}
             >
-              <HeartIcon className="h-5 w-5" />
+              <GiftIcon className="h-5 w-5" />
             </Link>
 
             <Button href="/donate" className="!hidden !px-5 !py-2 lg:!inline-flex">

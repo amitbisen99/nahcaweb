@@ -7,7 +7,11 @@ export interface TocItem {
   label: string;
 }
 
-export function ArticleLayout({ toc, children }: { toc: TocItem[]; children: ReactNode }) {
+export function ArticleLayout({ toc, children }: { toc?: TocItem[]; children: ReactNode }) {
+  if (!toc || toc.length === 0) {
+    return <div className="min-w-0">{children}</div>;
+  }
+
   return (
     <div className="grid gap-12 lg:grid-cols-[1fr_220px]">
       <div className="min-w-0">{children}</div>
@@ -106,7 +110,7 @@ export function SectionHeading({
 
 export function PullQuote({ children }: { children: ReactNode }) {
   return (
-    <blockquote className="my-10 border-l-4 border-brand bg-sand/30 py-6 pl-6 pr-4 font-heading text-xl leading-snug text-heading sm:text-2xl">
+    <blockquote className="my-10 border-l-4 border-brand py-6 pl-6 pr-4 font-heading text-xl leading-snug text-heading sm:text-2xl">
       {children}
     </blockquote>
   );

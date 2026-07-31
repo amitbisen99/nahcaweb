@@ -146,7 +146,7 @@ const BOARD_LINKS: BoardLink[] = [
 export default function UsefulResourcesPage() {
   return (
     <>
-      <EventBanner title="Useful Resources" image="/chaplaincy/colorful-palm-leaf-books.jpg" />
+      <EventBanner title="Hindu Spiritual Care Resources" image="/chaplaincy/colorful-palm-leaf-books.jpg" />
 
       <section className="bg-white py-16">
         <Container>
@@ -169,7 +169,7 @@ export default function UsefulResourcesPage() {
             {RESOURCES.map((resource) => (
               <div
                 key={resource.title}
-                className="group relative rounded-xl border border-ink/10 bg-sand/30 p-6 pr-56 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg"
+                className="group relative rounded-xl border border-ink/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg lg:pr-56"
               >
                 <ArrowRightIcon
                   strokeWidth={1}

@@ -53,7 +53,7 @@ export default function HealthcarePage() {
               distress.
             </p>
 
-            <div className="mt-10 rounded-xl border border-ink/10 bg-sand/30 p-6 sm:p-8">
+            <div className="mt-10 rounded-xl border border-ink/10 p-6 sm:p-8">
               <h2 className="font-heading text-2xl font-medium text-heading">
                 The Spiritual Assessment
               </h2>
@@ -85,7 +85,7 @@ export default function HealthcarePage() {
               Pastoral Education (ACPE).
             </p>
 
-            <div className="mt-8 rounded-xl border border-ink/10 bg-sand/30 p-6">
+            <div className="mt-8 rounded-xl border border-ink/10 p-6">
               <h3 className="font-heading text-lg font-medium text-heading">
                 NAHCA Healthcare Forum
               </h3>

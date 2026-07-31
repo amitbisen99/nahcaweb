@@ -62,7 +62,7 @@ export default function OrganizationalPartnersPage() {
       <section className="bg-white py-20">
       <Container>
         <div>
-          <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+          <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
             <DiamondIcon className="h-3 w-3" />
             About Us
           </span>

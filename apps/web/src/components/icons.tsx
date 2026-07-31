@@ -54,10 +54,14 @@ export function FlagIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function HeartIcon(props: SVGProps<SVGSVGElement>) {
+export function GiftIcon(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12 20.5s-7.5-4.6-10.1-9.1C.4 8.6 1.6 5 5 4.1c2-.5 3.9.3 5 1.9 1.1-1.6 3-2.4 5-1.9 3.4.9 4.6 4.5 3.1 7.3-2.6 4.5-10.1 9.1-10.1 9.1z" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <rect x="4.5" y="12" width="15" height="9" rx="1" />
+      <path d="M12 8v13" />
+      <path d="M12 8c-1.2-3-4-4.3-5.6-3.1C5 6 5.6 8 8 8h4Z" />
+      <path d="M12 8c1.2-3 4-4.3 5.6-3.1C19 6 18.4 8 16 8h-4Z" />
     </svg>
   );
 }

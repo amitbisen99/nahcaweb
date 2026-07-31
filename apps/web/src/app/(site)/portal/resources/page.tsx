@@ -11,10 +11,10 @@ export default function PortalResourcesPage() {
           Browse our public resource library while member-exclusive downloads are being added here.
         </p>
         <Link
-          href="/what-is-hindu-chaplaincy/resources"
+          href="/about/resources"
           className="mt-3 inline-block text-sm font-semibold text-brand hover:text-brand-dark"
         >
-          Visit Useful Resources →
+          Visit Hindu Spiritual Care Resources →
         </Link>
       </div>
     </div>

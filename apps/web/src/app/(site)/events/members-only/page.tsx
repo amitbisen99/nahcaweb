@@ -54,7 +54,7 @@ export default function MembersOnlyPage() {
               {MEETING_DATES.map((meeting) => (
                 <div
                   key={meeting.month}
-                  className="flex items-center gap-4 rounded-lg border border-ink/10 bg-sand/50 px-4 py-3"
+                  className="flex items-center gap-4 rounded-lg border border-ink/10 px-4 py-3"
                 >
                   <div className="flex h-14 w-14 flex-none flex-col items-center justify-center rounded-lg bg-forest text-white">
                     <span className="text-[10px] font-semibold uppercase tracking-wide">

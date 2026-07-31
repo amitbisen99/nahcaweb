@@ -52,7 +52,7 @@ export default function WhatIsHinduChaplaincyPage() {
             </p>
 
             <div className="mt-6 flex flex-col gap-4">
-              <div className="flex flex-col gap-4 rounded-xl border-2 border-brand bg-sand/30 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-4 rounded-xl border-2 border-brand p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-heading text-lg font-medium text-heading">
                     Defining Hindu Chaplaincy
@@ -71,7 +71,7 @@ export default function WhatIsHinduChaplaincyPage() {
                 </Button>
               </div>
 
-              <div className="flex flex-col gap-4 rounded-xl border-2 border-brand bg-sand/30 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-4 rounded-xl border-2 border-brand p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-heading text-lg font-medium text-heading">
                     Hindu Chaplain: Requisite Qualifications

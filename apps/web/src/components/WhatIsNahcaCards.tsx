@@ -11,14 +11,13 @@ type Card = {
   title: string;
   lead?: string;
   items: string[];
-  trailing?: string;
   cta?: boolean;
 };
 
 const CARDS: Card[] = [
   {
     image: "/chaplaincy/puja.jpg",
-    title: "Endorsement & Certification",
+    title: "Endorsement",
     items: [
       "We are an endorsing body for Hindu candidates applying to become Board Certified Chaplains through APC and to become Certified Educator Candidates through ACPE",
       "We offer endorsement and mentorship for Hindu spiritual care professionals in higher education",
@@ -27,7 +26,7 @@ const CARDS: Card[] = [
   },
   {
     image: "/chaplaincy/colorful-palm-leaf-books.jpg",
-    title: "Education & Field Partnerships",
+    title: "Educational & Field Partnerships",
     items: [
       "We are an accredited Field Education Site for Harvard & Yale Divinity School M.Div students",
       "We cultivate important partnerships with professional chaplaincy and spiritual care organizations",
@@ -38,9 +37,12 @@ const CARDS: Card[] = [
     image: "/chaplaincy/lotus-flower-candle-holder.webp",
     title: "Professional Development",
     lead: "Our unique professional development programs offer opportunities to",
-    items: ["Network", "Share ideas and resources", "Learn and lead"],
-    trailing:
+    items: [
+      "Network",
+      "Share ideas and resources",
+      "Learn and lead",
       "Our newsletters keep you updated on what's current in the field as well as employment and educational opportunities",
+    ],
     cta: true,
   },
 ];
@@ -124,7 +126,6 @@ export function WhatIsNahcaCards() {
               <div className="mt-1.5">
                 <ChevronList items={card.items} />
               </div>
-              {card.trailing && <p className="mt-1.5 text-[16px] leading-snug text-white/90">{card.trailing}</p>}
               {card.cta && (
                 <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                   <Button href="/membership" className="!px-4 !py-1.5 !text-[13px]">

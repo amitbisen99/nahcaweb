@@ -22,11 +22,11 @@ export default async function AboutPage() {
       <section id="board" className="bg-white py-20">
         <Container>
           <div>
-            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
               <DiamondIcon className="h-3 w-3" />
               About Us
             </span>
-            <h2 className="mt-3 font-heading text-4xl font-bold text-heading">2026-2029 NAHCA Board</h2>
+            <h2 className="mt-3 font-heading text-[36px] font-bold text-heading">2026-2029 NAHCA Board</h2>
             <p className="mt-4 text-black">
               Meet the volunteer leaders who guide NAHCA&apos;s mission to support Hindu chaplains and
               the communities they serve.

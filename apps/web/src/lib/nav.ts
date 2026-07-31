@@ -16,8 +16,6 @@ export const NAV: NavItem[] = [
     label: "What Is Hindu Chaplaincy?",
     href: "/what-is-hindu-chaplaincy",
     children: [
-      { label: "Code of Ethics", href: "/what-is-hindu-chaplaincy/code-of-ethics" },
-      { label: "Useful Resources", href: "/what-is-hindu-chaplaincy/resources" },
       { label: "Higher Education", href: "/what-is-hindu-chaplaincy/higher-education" },
       { label: "Healthcare", href: "/what-is-hindu-chaplaincy/healthcare" },
       { label: "Community", href: "/what-is-hindu-chaplaincy/community" },
@@ -28,7 +26,9 @@ export const NAV: NavItem[] = [
     href: "/about",
     children: [
       { label: "NAHCA Board", href: "/about#board" },
+      { label: "Hindu Spiritual Care Resources", href: "/about/resources" },
       { label: "Organizational Partners", href: "/organizational-partners" },
+      { label: "NAHCA Code of Ethics", href: "/about/code-of-ethics" },
     ],
   },
   {

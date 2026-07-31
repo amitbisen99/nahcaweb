@@ -4,11 +4,17 @@ import { Button } from "@/components/Button";
 import { Hero } from "@/components/Hero";
 import { TrustStrip } from "@/components/TrustStrip";
 import { WhatIsNahcaCards } from "@/components/WhatIsNahcaCards";
+import { UpcomingEventsSnippet } from "@/components/UpcomingEventsSnippet";
 import { VideoThumbnail } from "@/components/VideoThumbnail";
 import { Reveal } from "@/components/Reveal";
 import { ChevronIcon, DiamondIcon } from "@/components/icons";
+import { auth } from "@/auth";
+import { getUpcomingEvents } from "@/lib/cms";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+  const upcomingEvents = await getUpcomingEvents(2, session?.apiToken);
+
   return (
     <>
       <Hero />
@@ -18,21 +24,25 @@ export default function Home() {
       <section className="border-t-4 border-brand bg-white py-20">
         <Container>
           <Reveal>
-            <div className="mx-auto max-w-2xl text-center">
-              <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
-                <DiamondIcon className="h-3 w-3" />
-                About NAHCA
-              </span>
-              <h2 className="mt-3 font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
-              <p className="mt-5 text-center text-black">
-                NAHCA offers a sacred space to connect with current and aspiring spiritual care-givers
-                working in higher education, healthcare, corrections, military and community settings.
-              </p>
-              <p className="mt-4 text-center text-black">
-                We hold deep value for the strength and beauty of being in community together — a space
-                for learning, sharing, laughing, and empathizing about the intricacies, joys, and rough
-                edges of this work and this time.
-              </p>
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+              <div>
+                <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
+                  <DiamondIcon className="h-3 w-3" />
+                  About NAHCA
+                </span>
+                <h2 className="mt-3 font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
+                <p className="mt-5 text-black">
+                  NAHCA offers a sacred space to connect with current and aspiring spiritual care-givers
+                  working in higher education, healthcare, corrections, military and community settings.
+                </p>
+                <p className="mt-4 text-black">
+                  We hold deep value for the strength and beauty of being in community together — a space
+                  for learning, sharing, laughing, and empathizing about the intricacies, joys, and rough
+                  edges of this work and this time.
+                </p>
+              </div>
+
+              <UpcomingEventsSnippet events={upcomingEvents} />
             </div>
           </Reveal>
 
@@ -47,8 +57,8 @@ export default function Home() {
             <VideoThumbnail image="/brand/PriyaAmareshthumb.png" alt="Priya Amaresh" />
           </div>
 
-          <Reveal className="flex flex-col justify-center bg-[#F1F9F5] px-6 py-16 sm:px-10 lg:px-16">
-            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-brand">
+          <Reveal className="flex flex-col justify-center px-6 py-16 sm:px-10 lg:px-16">
+            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
               <DiamondIcon className="h-3 w-3" />
               Why you need a Hindu chaplain
             </span>
@@ -94,7 +104,7 @@ export default function Home() {
       </section>
 
       {/* Donate CTA */}
-      <section className="bg-navy py-16">
+      <section className="bg-forest py-16">
         <Container>
           <Reveal className="flex flex-col items-center gap-5 text-center text-white">
             <h2 className="font-heading text-3xl font-medium">Support the Mission</h2>
