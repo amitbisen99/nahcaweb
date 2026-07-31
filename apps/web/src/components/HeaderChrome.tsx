@@ -74,6 +74,7 @@ export function HeaderChrome({
   const navOnLight = transparent && noBannerDetailPage;
 
   const chromeTextColor = transparent ? (navOnLight ? "text-black" : "text-white") : "text-black";
+  const donateIconSrc = chromeTextColor === "text-black" ? "/brand/donate-icon1.png" : "/brand/donate-icon.png";
 
   return (
     <header
@@ -174,7 +175,7 @@ export function HeaderChrome({
               title="Donate"
               className="flex h-9 w-9 flex-none items-center justify-center rounded-full lg:hidden"
             >
-              <Image src="/brand/donate-icon.png" alt="" width={20} height={20} className="h-5 w-5" />
+              <Image src={donateIconSrc} alt="" width={20} height={20} className="h-5 w-5" />
             </Link>
 
             <Button href="/donate" className="!hidden !px-5 !py-2 lg:!inline-flex">
