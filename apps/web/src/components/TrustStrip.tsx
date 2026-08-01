@@ -12,7 +12,7 @@ export function TrustStrip() {
   return (
     <div className="bg-navy py-5">
       <Container>
-        <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center">
+        <ul className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST_ITEMS.map((item) => (
             <li
               key={item}

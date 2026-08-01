@@ -7,7 +7,7 @@ import { WhatIsNahcaCards } from "@/components/WhatIsNahcaCards";
 import { UpcomingEventsSnippet } from "@/components/UpcomingEventsSnippet";
 import { VideoThumbnail } from "@/components/VideoThumbnail";
 import { Reveal } from "@/components/Reveal";
-import { ChevronIcon, DiamondIcon } from "@/components/icons";
+import { ChevronIcon } from "@/components/icons";
 import { auth } from "@/auth";
 import { getUpcomingEvents } from "@/lib/cms";
 
@@ -26,11 +26,7 @@ export default async function Home() {
           <Reveal>
             <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
               <div>
-                <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
-                  <DiamondIcon className="h-3 w-3" />
-                  About NAHCA
-                </span>
-                <h2 className="mt-3 font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
+                <h2 className="font-heading text-4xl font-bold text-heading">What is NAHCA</h2>
                 <p className="mt-5 text-black">
                   NAHCA offers a sacred space to connect with current and aspiring spiritual care-givers
                   working in higher education, healthcare, corrections, military and community settings.
@@ -54,15 +50,11 @@ export default async function Home() {
       <section>
         <div className="grid lg:grid-cols-2">
           <div className="relative min-h-[420px] overflow-hidden lg:min-h-[560px]">
-            <VideoThumbnail image="/brand/PriyaAmareshthumb.png" alt="Priya Amaresh" />
+            <VideoThumbnail image="/brand/PriyaAmareshthumb.jpeg" alt="Priya Amaresh" />
           </div>
 
           <Reveal className="flex flex-col justify-center px-6 py-16 sm:px-10 lg:px-16">
-            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
-              <DiamondIcon className="h-3 w-3" />
-              Why you need a Hindu chaplain
-            </span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-heading">
+            <h2 className="font-heading text-3xl font-bold text-heading">
               What a Hindu chaplain brings to your organization
             </h2>
             <p className="mt-4 text-black">

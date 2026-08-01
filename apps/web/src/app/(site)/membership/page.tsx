@@ -5,14 +5,6 @@ import { EventBanner } from "@/components/EventBanner";
 import { getMembershipPlans } from "@/lib/api";
 import { MembershipSignup } from "./MembershipSignup";
 
-function DiamondIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12 2l5 10-5 10-5-10z" />
-    </svg>
-  );
-}
-
 function ChevronIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -48,11 +40,7 @@ export default async function MembershipPage({
       <section className="bg-white py-20">
         <Container>
           <div>
-            <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
-              <DiamondIcon className="h-3 w-3" />
-              Join Us
-            </span>
-            <h2 className="mt-3 font-heading text-[36px] font-bold text-heading">
+            <h2 className="font-heading text-[36px] font-bold text-heading">
               Become a NAHCA Member
             </h2>
 
@@ -81,18 +69,31 @@ export default async function MembershipPage({
               ...and eager to learn about spiritual care from a Hindu lens? Then join us!
             </p>
 
-            <div className="mt-8 flex items-center gap-4 rounded-xl border border-ink/10 p-6">
-              <Image
-                src="/brand/BinduGupta.jpeg"
-                alt="Bindu Gupta"
-                width={56}
-                height={56}
-                className="h-14 w-14 flex-none rounded-full object-cover"
-              />
-              <p className="text-black">
-                Hello! I am Bindu, your Membership Chair, and would like to share some benefits
-                of becoming a member of NAHCA.
-              </p>
+            <div className="mt-8 rounded-xl border border-ink/10 p-6">
+              <div className="flex items-center gap-4">
+                <Image
+                  src="/brand/BinduGupta.jpeg"
+                  alt="Bindu Gupta"
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 flex-none rounded-full object-cover"
+                />
+                <p className="text-black">
+                  Hello! I am Bindu, your Membership Chair, and would like to share some benefits
+                  of becoming a member of NAHCA.
+                </p>
+              </div>
+              <div className="mt-5">
+                <ChevronList
+                  items={[
+                    "Opportunities for professional development, mentoring & networking",
+                    "NAHCA webinar and conference fee discounts",
+                    "Opportunities to co-sponsor programming",
+                    "Access to specialized resources on Hindu spiritual care",
+                    "Support in pursuing professional credentialing",
+                  ]}
+                />
+              </div>
             </div>
           </div>
 

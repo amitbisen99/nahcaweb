@@ -42,10 +42,7 @@ export default async function EventsPage() {
       <div className="py-16">
         <Container>
           <Reveal className="text-center">
-            <span className="font-heading text-xs font-semibold uppercase tracking-widest text-forest">
-              Feedback
-            </span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-heading">
+            <h2 className="font-heading text-3xl font-bold text-heading">
               What People Are Saying
             </h2>
           </Reveal>

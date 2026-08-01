@@ -3,14 +3,6 @@ import { SVGProps } from "react";
 import { Container } from "@/components/Container";
 import { EventBanner } from "@/components/EventBanner";
 
-function DiamondIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12 2l5 10-5 10-5-10z" />
-    </svg>
-  );
-}
-
 function ChevronIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -62,11 +54,7 @@ export default function OrganizationalPartnersPage() {
       <section className="bg-white py-20">
       <Container>
         <div>
-          <span className="inline-flex items-center gap-2 font-heading text-xs font-semibold uppercase tracking-widest text-forest">
-            <DiamondIcon className="h-3 w-3" />
-            About Us
-          </span>
-          <p className="mt-4 text-black">
+          <p className="text-black">
             NAHCA collaborates with a growing network of organizations that support Hindu spiritual care
             and chaplaincy across North America.
           </p>
