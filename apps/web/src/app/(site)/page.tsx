@@ -96,7 +96,7 @@ export default async function Home() {
       </section>
 
       {/* Donate CTA */}
-      <section className="bg-forest py-16">
+      <section className="bg-navy py-16">
         <Container>
           <Reveal className="flex flex-col items-center gap-5 text-center text-white">
             <h2 className="font-heading text-3xl font-medium">Support the Mission</h2>

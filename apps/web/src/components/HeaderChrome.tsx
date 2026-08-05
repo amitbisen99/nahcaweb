@@ -61,25 +61,17 @@ export function HeaderChrome({
 
   const transparent = !scrolled;
 
-  // Event/webinar detail pages, login, and the member portal have no banner
-  // image behind the transparent (pre-scroll) header — white nav text would
-  // be invisible against the plain white page background, so use black there
-  // instead. Once scrolled, the header goes solid white same as every other
-  // page.
-  const noBannerDetailPage =
-    /^\/events\/\d+$/.test(pathname) ||
-    /^\/events\/webinars\/\d+$/.test(pathname) ||
-    pathname === "/login" ||
-    pathname.startsWith("/portal");
-  const navOnLight = transparent && noBannerDetailPage;
-
-  const chromeTextColor = transparent ? (navOnLight ? "text-black" : "text-white") : "text-black";
+  // Pre-scroll, the header floats over whatever the page renders behind it
+  // (hero video, a banner image, or — on pages with no banner — plain page
+  // background). A semi-transparent dark scrim keeps white nav text readable
+  // in every case, so it never needs a per-page light/dark exception.
+  const chromeTextColor = transparent ? "text-white" : "text-black";
   const donateIconSrc = chromeTextColor === "text-black" ? "/brand/donate-icon1.png" : "/brand/donate-icon.png";
 
   return (
     <header
       className={`sticky top-0 z-50 transition-colors duration-300 ${
-        transparent ? "bg-transparent" : "border-b border-ink/10 bg-white"
+        transparent ? "bg-black/25" : "border-b border-ink/10 bg-white"
       }`}
     >
       <Container>
@@ -116,11 +108,7 @@ export function HeaderChrome({
                     onClick={() => setOpenMenu(null)}
                     onFocus={() => item.children && setOpenMenu(item.label)}
                     className={`relative block py-2 text-sm font-medium transition-colors duration-300 ${
-                      transparent
-                        ? navOnLight
-                          ? "text-black hover:text-black/70"
-                          : "text-white hover:text-white/80"
-                        : "text-brand hover:text-brand-dark"
+                      transparent ? "text-white hover:text-white/80" : "text-brand hover:text-brand-dark"
                     }`}
                   >
                     {item.label}
@@ -186,7 +174,7 @@ export function HeaderChrome({
               isAdmin={isAdmin}
               isLoggedIn={isLoggedIn}
               signOutAction={signOutAction}
-              transparent={transparent && !navOnLight}
+              transparent={transparent}
             />
           </div>
         </div>
