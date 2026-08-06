@@ -21,7 +21,15 @@ function CloseIcon() {
   );
 }
 
-export function VideoThumbnail({ image, alt }: { image: string; alt: string }) {
+export function VideoThumbnail({
+  image,
+  alt,
+  caption,
+}: {
+  image: string;
+  alt: string;
+  caption?: { name: string; text: string };
+}) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -47,6 +55,13 @@ export function VideoThumbnail({ image, alt }: { image: string; alt: string }) {
             <PlayIcon className="h-12 w-12 translate-x-1" />
           </span>
         </button>
+
+        {caption && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-navy/30 px-5 py-4">
+            <p className="font-heading text-base font-semibold text-white">{caption.name}</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/85">{caption.text}</p>
+          </div>
+        )}
       </div>
 
       {open && (

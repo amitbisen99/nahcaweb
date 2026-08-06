@@ -87,7 +87,7 @@ const RESOURCES: Resource[] = [
   },
   {
     title: "Hindu Hospital Chaplain Tells Her Covid Story",
-    meta: "Shama Mehta · Hinduism Today Magazine · Special Feature: Life Under Lockdown, New York to New Delhi · Oct/Nov/Dec 2020",
+    meta: "Shama Mehta · Hinduism Today Magazine · Special Feature: Life Under Lockdown, New York to New Delhi · Oct/Nov/Dec 2020. Scroll down the web page to read the article.",
     url: "https://www.hinduismtoday.com/magazine/oct-nov-dec-2020/special-feature-life-under-lockdown-new-york-to-new-delhi/",
   },
   {
@@ -95,7 +95,7 @@ const RESOURCES: Resource[] = [
     meta: "Hindu American Foundation · 2020",
     description:
       "Suhag Shukla speaks with Dr. Brahmachari Sharan, Director of Dharmic Life and campus ministry at Georgetown, about applying ancient Hindu spiritual teachings to contemporary social challenges.",
-    url: "https://www.hinduamerican.org/the-feed/podcasts/thats-so-hindu-podcast",
+    url: "https://podcasts.apple.com/in/podcast/brahmachari-sharan-says-hindus-need-to-focus-on-understanding/id1494372037?i=1000478463864",
   },
   {
     title: "Chaplaincy Innovation Lab Podcast — Interview on Hindu Chaplaincy",
@@ -105,7 +105,7 @@ const RESOURCES: Resource[] = [
   {
     title: "A Glimpse into Hindu Practices and Spiritual Care in the Season of Pandemic",
     meta: "Dr. Asha Shipman · Convergence on Campus Blog · March 24, 2021",
-    url: "https://docs.google.com/document/d/1H3Yg2otZ-TG7wm8mbKSaEgouXKmf-TSL/edit?usp=drive_link&ouid=115543048220244866596&rtpof=true&sd=true",
+    url: "https://drive.google.com/file/d/1JH8QW0RcTROD2ubOMmZqssSL_QpN9DG3/view",
   },
 ];
 

@@ -69,7 +69,7 @@ export default async function MembershipPage({
               ...and eager to learn about spiritual care from a Hindu lens? Then join us!
             </p>
 
-            <div className="mt-8 rounded-xl border border-ink/10 p-6">
+            <div className="mt-8 rounded-xl border border-ink/10 bg-sand p-6">
               <div className="flex items-center gap-4">
                 <Image
                   src="/brand/BinduGupta.jpeg"

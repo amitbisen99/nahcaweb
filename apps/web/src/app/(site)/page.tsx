@@ -50,7 +50,14 @@ export default async function Home() {
       <section>
         <div className="grid lg:grid-cols-2">
           <div className="relative min-h-[420px] overflow-hidden lg:min-h-[560px]">
-            <VideoThumbnail image="/brand/PriyaAmareshthumb.jpeg" alt="Priya Amaresh" />
+            <VideoThumbnail
+              image="/brand/PriyaAmareshthumb.jpeg"
+              alt="Priya Amaresh"
+              caption={{
+                name: "Priya Amaresh",
+                text: "Appointed in 2022, Priya is honored to serve as the Hindu chaplain at Duke University. Her experience has been extraordinary, as it offers a constant learning opportunity to delve into the vastness of Hindu religion and culture.",
+              }}
+            />
           </div>
 
           <Reveal className="flex flex-col justify-center px-6 py-16 sm:px-10 lg:px-16">
