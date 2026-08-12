@@ -8,8 +8,10 @@ export default async function AdminDashboardPage() {
   const session = await auth();
   const token = session?.apiToken ?? "";
 
-  const [memberships, contentCounts] = await Promise.all([
-    getAllMemberships(token),
+  // pageSize: 1 — only the `total` count is needed here, not the rows.
+  const [allMemberships, activeMemberships, contentCounts] = await Promise.all([
+    getAllMemberships(token, { pageSize: 1 }),
+    getAllMemberships(token, { pageSize: 1, status: "active" }),
     Promise.all(
       Object.values(CONTENT_TYPES).map(async (config) => {
         const items = await listContent(config.key, token);
@@ -18,7 +20,8 @@ export default async function AdminDashboardPage() {
     ),
   ]);
 
-  const activeMembers = memberships.filter((m) => m.status === "active").length;
+  const totalMembers = allMemberships.total;
+  const activeMembers = activeMemberships.total;
   const totalContentItems = contentCounts.reduce((sum, n) => sum + n, 0);
 
   return (
@@ -32,7 +35,7 @@ export default async function AdminDashboardPage() {
           className="rounded-xl border border-ink/10 bg-white p-6 transition-colors hover:border-brand/40"
         >
           <p className="text-sm font-medium text-black">Total Members</p>
-          <p className="mt-1 font-heading text-3xl font-bold text-heading">{memberships.length}</p>
+          <p className="mt-1 font-heading text-3xl font-bold text-heading">{totalMembers}</p>
         </Link>
         <Link
           href="/admin/members"

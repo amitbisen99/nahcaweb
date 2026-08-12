@@ -63,6 +63,10 @@ model User {
   passwordHash String
   name         String
   role         Role         @default(member)
+  // Admin-controlled login gate — set false to block sign-in without
+  // deleting the account or its purchase history. Checked at login only
+  // (doesn't invalidate an already-issued JWT mid-session).
+  isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
   memberships  Membership[]
   payments     Payment[]

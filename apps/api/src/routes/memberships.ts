@@ -147,21 +147,40 @@ membershipsRouter.get(
   })
 );
 
+const DEFAULT_PAGE_SIZE = 10;
+
 membershipsRouter.get(
   "/",
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const memberships = await prisma.membership.findMany({
-      include: { user: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-    });
-    res.json({ memberships });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
+    const statusFilter = ["active", "expired", "pending"].includes(req.query.status as string)
+      ? (req.query.status as "active" | "expired" | "pending")
+      : undefined;
+    const where = statusFilter ? { status: statusFilter } : {};
+
+    const [memberships, total] = await Promise.all([
+      prisma.membership.findMany({
+        where,
+        include: { user: { select: { id: true, name: true, email: true, isActive: true } } },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.membership.count({ where }),
+    ]);
+
+    res.json({ memberships, total, page, pageSize });
   })
 );
 
-// Single-membership detail for the admin "view/update profile" page —
-// includes the full MemberProfile questionnaire captured at signup.
+// Single-membership detail for the admin "view member" page — includes the
+// full MemberProfile questionnaire captured at signup. View-only: admins
+// can see this data and toggle the member's active status (see PATCH
+// /:id/active below), but cannot edit the questionnaire itself — only the
+// member can, from their own /portal/profile.
 membershipsRouter.get(
   "/:id",
   requireAuth,
@@ -180,20 +199,21 @@ membershipsRouter.get(
   })
 );
 
-const adminProfileUpdateSchema = z.object({
-  name: z.string().min(1).optional(),
-  profile: memberProfileSchema.optional(),
+const setActiveSchema = z.object({
+  isActive: z.boolean(),
 });
 
+// Blocks/unblocks the member's ability to log in (see User.isActive and the
+// check in POST /auth/login) without deleting their account or history.
 membershipsRouter.patch(
-  "/:id/profile",
+  "/:id/active",
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid membership id" });
 
-    const parsed = adminProfileUpdateSchema.safeParse(req.body);
+    const parsed = setActiveSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
@@ -201,17 +221,14 @@ membershipsRouter.patch(
     const membership = await prisma.membership.findUnique({ where: { id } });
     if (!membership) return res.status(404).json({ error: "Membership not found" });
 
-    if (parsed.data.name) {
-      await prisma.user.update({ where: { id: membership.userId }, data: { name: parsed.data.name } });
+    if (membership.userId === req.auth!.userId) {
+      return res.status(400).json({ error: "You cannot deactivate your own account." });
     }
 
-    if (parsed.data.profile) {
-      await prisma.memberProfile.upsert({
-        where: { userId: membership.userId },
-        update: parsed.data.profile,
-        create: { userId: membership.userId, ...parsed.data.profile },
-      });
-    }
+    await prisma.user.update({
+      where: { id: membership.userId },
+      data: { isActive: parsed.data.isActive },
+    });
 
     const updated = await prisma.membership.findUnique({
       where: { id },

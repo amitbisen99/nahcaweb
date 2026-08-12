@@ -11,12 +11,7 @@ async function requireAdminToken() {
   return session.apiToken;
 }
 
-export interface MemberProfileUpdatePayload {
-  name?: string;
-  profile?: Record<string, unknown>;
-}
-
-export interface UpdateMemberProfileState {
+export interface UpdateMemberActiveState {
   error?: string;
   success?: boolean;
 }
@@ -34,21 +29,23 @@ function extractErrorMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function updateMemberProfile(
+// Toggles whether the member can log in — doesn't touch their profile data
+// or purchase history. See User.isActive / POST /auth/login on the API.
+export async function updateMemberActiveStatus(
   membershipId: number,
-  payload: MemberProfileUpdatePayload
-): Promise<UpdateMemberProfileState> {
+  isActive: boolean
+): Promise<UpdateMemberActiveState> {
   const token = await requireAdminToken();
 
-  const res = await fetch(`${process.env.API_URL}/memberships/${membershipId}/profile`, {
+  const res = await fetch(`${process.env.API_URL}/memberships/${membershipId}/active`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ isActive }),
   });
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    return { error: extractErrorMessage(data, "Failed to update this member's profile.") };
+    return { error: extractErrorMessage(data, "Failed to update this member's status.") };
   }
 
   revalidatePath("/admin/members");

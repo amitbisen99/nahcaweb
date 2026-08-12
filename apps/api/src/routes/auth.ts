@@ -53,6 +53,10 @@ authRouter.post("/login", asyncHandler(async (req, res) => {
     return res.status(401).json({ error: "Invalid email or password" });
   }
 
+  if (!user.isActive) {
+    return res.status(403).json({ error: "This account has been deactivated. Contact NAHCA for help." });
+  }
+
   const token = signToken(user.id, user.role);
   res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 }));

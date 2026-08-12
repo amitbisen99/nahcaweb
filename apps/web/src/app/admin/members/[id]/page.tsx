@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getMembershipDetail } from "@/lib/adminApi";
-import { MemberProfileForm } from "@/components/admin/MemberProfileForm";
+import { MemberProfileView } from "@/components/admin/MemberProfileView";
+import { MemberActiveToggle } from "@/components/admin/MemberActiveToggle";
 
 const TIER_LABELS: Record<string, string> = {
   regular: "Regular",
@@ -30,8 +31,12 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
         {membership.user.email} · {TIER_LABELS[membership.type] ?? membership.type} membership
       </p>
 
+      <div className="mt-6">
+        <MemberActiveToggle membershipId={membership.id} initialActive={membership.user.isActive} />
+      </div>
+
       <div className="mt-8">
-        <MemberProfileForm membership={membership} />
+        <MemberProfileView membership={membership} />
       </div>
     </div>
   );

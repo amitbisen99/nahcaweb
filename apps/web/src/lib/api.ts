@@ -9,7 +9,14 @@ export interface ApiMembership {
 }
 
 export interface AdminMembership extends ApiMembership {
-  user: { id: number; name: string; email: string };
+  user: { id: number; name: string; email: string; isActive: boolean };
+}
+
+export interface PaginatedMemberships {
+  memberships: AdminMembership[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface ApiPayment {
@@ -143,9 +150,18 @@ export async function getMyMemberships(token: string): Promise<ApiMembership[]> 
   return data?.memberships ?? [];
 }
 
-export async function getAllMemberships(token: string): Promise<AdminMembership[]> {
-  const data = await apiFetch<{ memberships: AdminMembership[] }>("/memberships", token);
-  return data?.memberships ?? [];
+export async function getAllMemberships(
+  token: string,
+  opts: { page?: number; pageSize?: number; status?: ApiMembership["status"] } = {}
+): Promise<PaginatedMemberships> {
+  const page = opts.page ?? 1;
+  const pageSize = opts.pageSize ?? 10;
+  const statusParam = opts.status ? `&status=${opts.status}` : "";
+  const data = await apiFetch<PaginatedMemberships>(
+    `/memberships?page=${page}&pageSize=${pageSize}${statusParam}`,
+    token
+  );
+  return data ?? { memberships: [], total: 0, page, pageSize };
 }
 
 export async function getMyPayments(token: string): Promise<ApiPayment[]> {

@@ -145,6 +145,7 @@ export interface AdminMembershipDetail {
     id: number;
     name: string;
     email: string;
+    isActive: boolean;
     profile: AdminMemberProfile | null;
   };
 }
