@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin" },
   { label: "Members", href: "/admin/members" },
   { label: "Membership Plans", href: "/admin/membership-plans" },
+  { label: "Coupons", href: "/admin/coupons" },
 ];
 
 function linkClasses(active: boolean) {

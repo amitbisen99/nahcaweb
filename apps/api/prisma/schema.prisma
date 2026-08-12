@@ -27,6 +27,7 @@ enum MembershipStatus {
 
 enum CouponDiscountType {
   percent
+  fixed_amount
   complimentary
 }
 
@@ -65,6 +66,41 @@ model User {
   createdAt    DateTime     @default(now())
   memberships  Membership[]
   payments     Payment[]
+  profile      MemberProfile?
+}
+
+// Extended demographic/professional questionnaire collected on the
+// Regular/Student membership signup form (see the "Fields for collecting
+// member information" doc). Kept separate from User so the core auth model
+// stays lean — everything here is optional.
+model MemberProfile {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int      @unique
+  user                    User     @relation(fields: [userId], references: [id])
+  preferredPronouns       String?
+  mailingAddress          String?  @db.Text
+  phone                   String?
+  usesWhatsapp            Boolean?
+  whatsappContactOk       Boolean?
+  // string[] of selected traditions (see MEMBER_FORM_OPTIONS on the frontend)
+  religiousTraditions     Json?
+  religiousTraditionOther String?
+  // "chaplain" | "student"
+  primaryRole             String?
+  // { employerName, jobTitle, employmentType }[]
+  employment              Json?
+  hearAboutUs             String?
+  hearAboutUsOther        String?
+  // string[] of selected care contexts
+  careContexts            Json?
+  boardCertified          Boolean?
+  boardCertifiedOrg       String?
+  endorsed                Boolean?
+  endorsedBy              String?
+  // string[] of selected organization memberships
+  orgMemberships          Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 }
 
 model Membership {
@@ -114,13 +150,24 @@ model Donation {
 
 model Coupon {
   id            Int                @id @default(autoincrement())
+  name          String
   code          String             @unique
   discountType  CouponDiscountType
+  // Meaning depends on discountType: a 0-100 percentage for `percent`, cents
+  // for `fixed_amount`, unused for `complimentary`.
   discountValue Int
+  // Membership plan types this coupon can be applied to (MembershipType
+  // values, e.g. ["regular","student"]). Null/empty means "applies to all
+  // plans" — donation and conference-fee checkout don't consult this yet.
+  appliesTo     Json?
+  validFrom     DateTime?
+  validTill     DateTime?
   maxUses       Int?
   usedCount     Int                @default(0)
-  expiresAt     DateTime?
+  published     Boolean            @default(false)
   createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  payments      Payment[]
 }
 
 model Payment {
@@ -131,6 +178,8 @@ model Payment {
   donation     Donation?     @relation(fields: [donationId], references: [id])
   membershipId Int?          @unique
   membership   Membership?   @relation(fields: [membershipId], references: [id])
+  couponId     Int?
+  coupon       Coupon?       @relation(fields: [couponId], references: [id])
   type         PaymentType
   amountCents  Int
   stripeRef    String?
@@ -141,6 +190,7 @@ model Payment {
   @@index([userId])
   @@index([type])
   @@index([status])
+  @@index([couponId])
 }
 
 model Receipt {

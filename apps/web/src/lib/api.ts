@@ -31,6 +31,44 @@ export interface ApiNewsletter {
   createdAt: string;
 }
 
+// Mirrors apps/api/src/lib/memberProfile.ts's memberProfileSchema — the
+// questionnaire captured on the Regular/Student/Institutional signup form,
+// viewable/editable by the member themselves on /portal/profile.
+export interface ApiMemberProfileEmployment {
+  employerName: string;
+  jobTitle: string | null;
+  employmentType: "full_time" | "part_time" | "volunteer" | null;
+}
+
+export interface ApiMemberProfile {
+  preferredPronouns: string | null;
+  mailingAddress: string | null;
+  phone: string | null;
+  usesWhatsapp: boolean | null;
+  whatsappContactOk: boolean | null;
+  religiousTraditions: string[] | null;
+  religiousTraditionOther: string | null;
+  primaryRole: "chaplain" | "student" | null;
+  employment: ApiMemberProfileEmployment[] | null;
+  hearAboutUs: string | null;
+  hearAboutUsOther: string | null;
+  careContexts: string[] | null;
+  boardCertified: boolean | null;
+  boardCertifiedOrg: string | null;
+  endorsed: boolean | null;
+  endorsedBy: string | null;
+  orgMemberships: string[] | null;
+}
+
+export interface ApiUserWithProfile {
+  id: number;
+  email: string;
+  name: string;
+  role: "admin" | "member";
+  createdAt: string;
+  profile: ApiMemberProfile | null;
+}
+
 export interface ApiMembershipPlan {
   id: number;
   type: "regular" | "student" | "institutional" | "conference";
@@ -93,6 +131,11 @@ async function publicFetch<T>(path: string): Promise<T | null> {
     console.error(`publicFetch ${path} threw:`, err);
     return null;
   }
+}
+
+export async function getMyProfile(token: string): Promise<ApiUserWithProfile | null> {
+  const data = await apiFetch<{ user: ApiUserWithProfile }>("/auth/me", token);
+  return data?.user ?? null;
 }
 
 export async function getMyMemberships(token: string): Promise<ApiMembership[]> {

@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { getAllMemberships } from "@/lib/api";
+import { PencilIcon } from "@/components/admin/icons";
 
 const TIER_LABELS: Record<string, string> = {
   regular: "Regular",
@@ -40,6 +42,7 @@ export default async function MembersPage() {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Price</th>
                 <th className="px-4 py-3">Joined</th>
+                <th className="sticky right-0 bg-sand/40 px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -57,6 +60,16 @@ export default async function MembersPage() {
                   </td>
                   <td className="px-4 py-3 text-black">${(m.priceCents / 100).toFixed(2)}</td>
                   <td className="px-4 py-3 text-black">{new Date(m.createdAt).toDateString()}</td>
+                  <td className="sticky right-0 border-l border-ink/10 bg-white px-4 py-3">
+                    <Link
+                      href={`/admin/members/${m.id}`}
+                      aria-label="View/update profile"
+                      title="View/update profile"
+                      className="inline-flex text-black transition-colors hover:text-brand"
+                    >
+                      <PencilIcon className="h-[18px] w-[18px]" />
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -8,6 +8,7 @@ import { donationsRouter } from "./routes/donations";
 import { webhooksRouter } from "./routes/webhooks";
 import { membershipsRouter } from "./routes/memberships";
 import { membershipPlansRouter } from "./routes/membershipPlans";
+import { couponsRouter } from "./routes/coupons";
 import { paymentsRouter } from "./routes/payments";
 import { reportsRouter } from "./routes/reports";
 import { newsletterRouter } from "./routes/newsletter";
@@ -18,7 +19,7 @@ import { webinarsRouter } from "./routes/webinars";
 import { conferenceVideosRouter } from "./routes/conferenceVideos";
 import { asyncHandler } from "./lib/asyncHandler";
 import { paymentsBypassed } from "./lib/paymentsBypass";
-import { sendGridConfigured } from "./lib/mailer";
+import { brevoConfigured } from "./lib/mailer";
 
 // Surface crashes that happen outside the request/response cycle (bad
 // startup config, an unawaited rejected promise) instead of the process
@@ -60,7 +61,7 @@ app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 // Test endpoint: hit this after deploying to confirm the API process is up,
 // can actually reach the database, and see at a glance which optional
-// integrations (Stripe/SendGrid) are configured vs still using placeholders —
+// integrations (Stripe/Brevo) are configured vs still using placeholders —
 // the exact reason a request "isn't working" is often one of these.
 app.get(
   "/health",
@@ -68,7 +69,7 @@ app.get(
     const config = {
       paymentsBypass: paymentsBypassed(),
       stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY) && !process.env.STRIPE_SECRET_KEY?.includes("placeholder"),
-      sendgridConfigured: sendGridConfigured,
+      brevoConfigured,
     };
 
     try {
@@ -91,6 +92,7 @@ app.use("/auth", authRouter);
 app.use("/donations", donationsRouter);
 app.use("/memberships", membershipsRouter);
 app.use("/membership-plans", membershipPlansRouter);
+app.use("/coupons", couponsRouter);
 app.use("/payments", paymentsRouter);
 app.use("/reports", reportsRouter);
 app.use("/newsletter", newsletterRouter);

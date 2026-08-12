@@ -3,14 +3,22 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 
-export interface ProfileFormState {
-  error?: string;
-  success?: boolean;
+async function requireAdminToken() {
+  const session = await auth();
+  if (!session?.apiToken || session.user?.role !== "admin") {
+    throw new Error("Not authorized");
+  }
+  return session.apiToken;
 }
 
-export interface MyProfileUpdatePayload {
+export interface MemberProfileUpdatePayload {
   name?: string;
   profile?: Record<string, unknown>;
+}
+
+export interface UpdateMemberProfileState {
+  error?: string;
+  success?: boolean;
 }
 
 function extractErrorMessage(data: unknown, fallback: string): string {
@@ -26,21 +34,24 @@ function extractErrorMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function updateMyProfile(payload: MyProfileUpdatePayload): Promise<ProfileFormState> {
-  const session = await auth();
-  if (!session?.apiToken) return { error: "Not authenticated." };
+export async function updateMemberProfile(
+  membershipId: number,
+  payload: MemberProfileUpdatePayload
+): Promise<UpdateMemberProfileState> {
+  const token = await requireAdminToken();
 
-  const res = await fetch(`${process.env.API_URL}/auth/me`, {
+  const res = await fetch(`${process.env.API_URL}/memberships/${membershipId}/profile`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.apiToken}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    return { error: extractErrorMessage(data, "Failed to update your profile.") };
+    return { error: extractErrorMessage(data, "Failed to update this member's profile.") };
   }
 
-  revalidatePath("/portal/profile");
+  revalidatePath("/admin/members");
+  revalidatePath(`/admin/members/${membershipId}`);
   return { success: true };
 }

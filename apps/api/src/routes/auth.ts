@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "../prisma";
 import { asyncHandler } from "../lib/asyncHandler";
 import { requireAuth } from "../middleware/auth";
+import { memberProfileSchema } from "../lib/memberProfile";
 
 export const authRouter = Router();
 
@@ -60,14 +61,30 @@ authRouter.get(
   "/me",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const user = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth!.userId },
+      include: { profile: true },
+    });
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role, createdAt: user.createdAt } });
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        createdAt: user.createdAt,
+        profile: user.profile,
+      },
+    });
   })
 );
 
+// name/profile are both optional so this endpoint can be called to update
+// just the questionnaire (see MemberProfileForm.tsx in the member portal)
+// without also re-sending the name.
 const updateProfileSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1).optional(),
+  profile: memberProfileSchema.optional(),
 });
 
 authRouter.patch(
@@ -78,11 +95,26 @@ authRouter.patch(
     if (!parsed.success) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
-    const user = await prisma.user.update({
+
+    if (parsed.data.name) {
+      await prisma.user.update({ where: { id: req.auth!.userId }, data: { name: parsed.data.name } });
+    }
+
+    if (parsed.data.profile) {
+      await prisma.memberProfile.upsert({
+        where: { userId: req.auth!.userId },
+        update: parsed.data.profile,
+        create: { userId: req.auth!.userId, ...parsed.data.profile },
+      });
+    }
+
+    const user = await prisma.user.findUnique({
       where: { id: req.auth!.userId },
-      data: { name: parsed.data.name },
+      include: { profile: true },
     });
-    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    res.json({
+      user: { id: user!.id, email: user!.email, name: user!.name, role: user!.role, profile: user!.profile },
+    });
   })
 );
 

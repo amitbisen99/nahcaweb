@@ -8,11 +8,13 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { INSTITUTIONAL_MIN_STUDENTS, getMembershipPlan } from "../lib/membershipTiers";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
+import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
+import { memberProfileSchema } from "../lib/memberProfile";
 
 export const membershipsRouter = Router();
 
-// TODO(phase 2b): recurring billing (auto-renewal), coupon redemption, and
-// per-student assignment for institution-sponsored groups (Membership.groupId).
+// TODO(phase 2b): recurring billing (auto-renewal) and per-student assignment
+// for institution-sponsored groups (Membership.groupId).
 
 const membershipSignupSchema = z
   .object({
@@ -21,6 +23,8 @@ const membershipSignupSchema = z
     password: z.string().min(8),
     type: z.enum(["regular", "student", "institutional", "conference"]),
     studentCount: z.number().int().min(1).optional(),
+    couponCode: z.string().optional(),
+    profile: memberProfileSchema.optional(),
   })
   .refine((data) => data.type !== "institutional" || data.studentCount !== undefined, {
     message: "studentCount is required for institutional memberships",
@@ -34,7 +38,7 @@ membershipsRouter.post(
     if (!parsed.success) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
-    const { name, email, password, type, studentCount } = parsed.data;
+    const { name, email, password, type, studentCount, couponCode, profile } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -55,11 +59,25 @@ membershipsRouter.post(
       }
     }
 
-    const priceCents =
+    const basePriceCents =
       type === "institutional" ? (studentCount as number) * (plan.pricePerStudentCents ?? 0) : plan.priceCents;
+
+    let couponId: number | null = null;
+    let priceCents = basePriceCents;
+    if (couponCode) {
+      const result = await findValidCoupon(couponCode, type);
+      if (isCouponError(result)) return res.status(result.status).json({ error: result.message });
+      couponId = result.id;
+      priceCents = applyCouponDiscount(basePriceCents, result);
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({ data: { email, passwordHash, name } });
+
+    if (profile) {
+      await prisma.memberProfile.create({ data: { userId: user.id, ...profile } });
+    }
 
     const membership = await prisma.membership.create({
       data: { userId: user.id, type, status: "pending", priceCents },
@@ -69,6 +87,7 @@ membershipsRouter.post(
       data: {
         userId: user.id,
         membershipId: membership.id,
+        couponId,
         type: "membership",
         amountCents: priceCents,
         status: "pending",
@@ -77,6 +96,11 @@ membershipsRouter.post(
 
     if (paymentsBypassed()) {
       await activatePayment(payment.id, `bypass-${Date.now()}`);
+      return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/membership?status=success` });
+    }
+
+    if (priceCents === 0) {
+      await activatePayment(payment.id, `comp-${Date.now()}`);
       return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/membership?status=success` });
     }
 
@@ -133,5 +157,66 @@ membershipsRouter.get(
       orderBy: { createdAt: "desc" },
     });
     res.json({ memberships });
+  })
+);
+
+// Single-membership detail for the admin "view/update profile" page —
+// includes the full MemberProfile questionnaire captured at signup.
+membershipsRouter.get(
+  "/:id",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid membership id" });
+
+    const membership = await prisma.membership.findUnique({
+      where: { id },
+      include: { user: { include: { profile: true } } },
+    });
+    if (!membership) return res.status(404).json({ error: "Membership not found" });
+
+    res.json({ membership });
+  })
+);
+
+const adminProfileUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  profile: memberProfileSchema.optional(),
+});
+
+membershipsRouter.patch(
+  "/:id/profile",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid membership id" });
+
+    const parsed = adminProfileUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+
+    const membership = await prisma.membership.findUnique({ where: { id } });
+    if (!membership) return res.status(404).json({ error: "Membership not found" });
+
+    if (parsed.data.name) {
+      await prisma.user.update({ where: { id: membership.userId }, data: { name: parsed.data.name } });
+    }
+
+    if (parsed.data.profile) {
+      await prisma.memberProfile.upsert({
+        where: { userId: membership.userId },
+        update: parsed.data.profile,
+        create: { userId: membership.userId, ...parsed.data.profile },
+      });
+    }
+
+    const updated = await prisma.membership.findUnique({
+      where: { id },
+      include: { user: { include: { profile: true } } },
+    });
+    res.json({ membership: updated });
   })
 );

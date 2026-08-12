@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ApiMemberProfile } from "@/lib/api";
+import { AdminMembershipDetail } from "@/lib/adminApi";
 import {
   CARE_CONTEXTS,
   HEAR_ABOUT_OPTIONS,
@@ -21,7 +21,7 @@ import {
   inputClass,
   toggleInArray,
 } from "@/components/MemberProfileFormFields";
-import { updateMyProfile } from "./actions";
+import { updateMemberProfile } from "@/app/admin/members/actions";
 
 function toYesNo(value: boolean | null | undefined): "" | "yes" | "no" {
   if (value === true) return "yes";
@@ -35,18 +35,11 @@ function resolvePronounState(value: string | null | undefined): { selected: stri
   return { selected: "Something else", other: value };
 }
 
-export function ProfileForm({
-  name: initialName,
-  email,
-  profile,
-}: {
-  name: string;
-  email: string;
-  profile: ApiMemberProfile | null;
-}) {
+export function MemberProfileForm({ membership }: { membership: AdminMembershipDetail }) {
+  const profile = membership.user.profile;
   const initialPronouns = resolvePronounState(profile?.preferredPronouns ?? null);
 
-  const [name, setName] = useState(initialName);
+  const [name, setName] = useState(membership.user.name);
   const [preferredPronouns, setPreferredPronouns] = useState(initialPronouns.selected);
   const [preferredPronounsOther, setPreferredPronounsOther] = useState(initialPronouns.other);
   const [mailingAddress, setMailingAddress] = useState(profile?.mailingAddress ?? "");
@@ -96,12 +89,6 @@ export function ProfileForm({
     e.preventDefault();
     setError(null);
     setSaved(false);
-
-    if (!name.trim()) {
-      setError("Name is required.");
-      return;
-    }
-
     setSubmitting(true);
 
     const showsDivinityOther = HEAR_ABOUT_OTHER_TRIGGERS.includes(hearAboutUs);
@@ -136,7 +123,10 @@ export function ProfileForm({
       orgMemberships: orgMemberships.length ? orgMemberships : undefined,
     };
 
-    const result = await updateMyProfile({ name: name.trim(), profile: profilePayload });
+    const result = await updateMemberProfile(membership.id, {
+      name: name.trim() || undefined,
+      profile: profilePayload,
+    });
 
     setSubmitting(false);
     if (result.error) {
@@ -147,7 +137,10 @@ export function ProfileForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 flex max-w-3xl flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4 rounded-xl border border-ink/10 bg-white p-6 sm:p-8"
+    >
       <Section title="Basic information" divider={false}>
         <label className="flex flex-col gap-1">
           <span className={fieldLabelClass()}>Name</span>
@@ -162,8 +155,8 @@ export function ProfileForm({
 
         <label className="flex flex-col gap-1">
           <span className={fieldLabelClass()}>Email</span>
-          <input type="email" value={email} disabled className={`${inputClass()} bg-sand/20`} />
-          <span className="text-xs text-black/50">Contact us if you need to change your email address.</span>
+          <input type="email" value={membership.user.email} disabled className={`${inputClass()} bg-sand/20`} />
+          <span className="text-xs text-black/50">Contact the member directly to change their email address.</span>
         </label>
 
         <label className="flex flex-col gap-1">
@@ -413,7 +406,7 @@ export function ProfileForm({
       </Section>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {saved && !error && <p className="text-sm text-forest">Profile updated.</p>}
+      {saved && !error && <p className="text-sm text-forest">Saved.</p>}
 
       <button
         type="submit"

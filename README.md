@@ -36,7 +36,7 @@ dashboard that manages members, using the same `admin`-role account.
    ```
    cd apps/api
    npm install
-   cp .env.example .env   # fill in real Stripe/SendGrid keys when ready — PAYMENTS_BYPASS=true works for local dev/demo without them
+   cp .env.example .env   # fill in real Stripe/Brevo keys when ready — PAYMENTS_BYPASS=true works for local dev/demo without them
    npx prisma migrate dev
    npm run dev
    ```
@@ -71,9 +71,9 @@ Two env vars are the most common source of "it works locally but breaks after de
 Use these right after deploying to confirm everything is actually wired up:
 
 - `GET <api-url>/health` — checks the API process is up and can reach the database, and reports
-  whether Stripe/SendGrid are configured (vs still using placeholder keys) and whether
+  whether Stripe/Brevo are configured (vs still using placeholder keys) and whether
   `PAYMENTS_BYPASS` is on. Returns `{ ok: true, db: "connected", paymentsBypass, stripeConfigured,
-  sendgridConfigured }` or a `503` with the underlying DB error.
+  brevoConfigured }` or a `503` with the underlying DB error.
 - `GET <web-url>/api/health` — checks the web app's required env vars are set and that it can reach
   the API. Returns `{ ok: true, env: {...}, api: { reachable: true, ... } }` or a `503` explaining
   what's missing/unreachable.
@@ -110,7 +110,7 @@ CRUD, membership plan edits, reports), log in with an admin account and paste it
 **Foundation + membership + content management complete:** monorepo scaffold, full Prisma schema
 (Users, Memberships, Donations, Coupons, Payments, Receipts, and 6 content types), working auth
 (register/login/JWT, role-based access), an end-to-end donation flow (Stripe Checkout → webhook →
-SendGrid receipt), a 4-tier membership signup flow (Regular/Student/Institutional/Conference) with
+Brevo receipt), a 4-tier membership signup flow (Regular/Student/Institutional/Conference) with
 Stripe checkout and webhook activation, a `PAYMENTS_BYPASS` mode for demoing without real Stripe
 keys, a unified admin dashboard for both members and website content (with image/file upload), and
 a Home page pulling live event data from the API.
