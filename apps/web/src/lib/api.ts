@@ -9,6 +9,9 @@ export interface ApiMembership {
 }
 
 export interface AdminMembership extends ApiMembership {
+  // Institutional only: null on the institution's own membership, set on a
+  // sponsored student's — see AdminMembershipDetail for the same convention.
+  groupId: string | null;
   user: { id: number; name: string; email: string; isActive: boolean };
 }
 
@@ -25,7 +28,7 @@ export interface ApiPayment {
   amountCents: number;
   status: "pending" | "succeeded" | "failed" | "refunded";
   createdAt: string;
-  membership: { type: ApiMembership["type"] } | null;
+  membership: { type: ApiMembership["type"]; groupId: string | null } | null;
   donation: { purpose: string | null } | null;
 }
 

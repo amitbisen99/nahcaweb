@@ -141,14 +141,16 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
   }
 
   const selectedPlan = tierByType.get(selectedType) ?? availablePlans[0];
-  // Every selectable plan type gets the full questionnaire (conference is
-  // excluded from SELECTABLE_PLAN_TYPES, so this covers all of them).
-  const showProfileQuestionnaire = SELECTABLE_PLAN_TYPES.includes(selectedType);
+  // Regular/Student are chaplains themselves and get the full questionnaire.
+  // Institutional is a billing/admin contact managing a batch of codes for
+  // students who'll fill out their own questionnaire when they claim a code
+  // (see ClaimForm.tsx) — so the institution's own signup skips it entirely.
+  const isInstitutional = selectedType === "institutional";
+  const showProfileQuestionnaire = SELECTABLE_PLAN_TYPES.includes(selectedType) && !isInstitutional;
 
-  const basePriceCents =
-    selectedType === "institutional"
-      ? studentCount * institutionalPricePerStudentCents
-      : selectedPlan.priceCents;
+  const basePriceCents = isInstitutional
+    ? studentCount * institutionalPricePerStudentCents
+    : selectedPlan.priceCents;
   const finalPriceCents = discountedPriceCents(basePriceCents, appliedCoupon);
   const computedPrice = `$${(finalPriceCents / 100).toFixed(0)}`;
 
@@ -158,9 +160,9 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
     setSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    const firstName = String(formData.get("firstName") ?? "").trim();
-    const lastName = String(formData.get("lastName") ?? "").trim();
-    const name = `${firstName} ${lastName}`.trim();
+    const name = isInstitutional
+      ? String(formData.get("institutionName") ?? "").trim()
+      : `${String(formData.get("firstName") ?? "").trim()} ${String(formData.get("lastName") ?? "").trim()}`.trim();
 
     const showsDivinityOther = HEAR_ABOUT_OTHER_TRIGGERS.includes(hearAboutUs);
 
@@ -206,7 +208,7 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
           email: formData.get("email"),
           password: formData.get("password"),
           type: selectedType,
-          ...(selectedType === "institutional" ? { studentCount } : {}),
+          ...(isInstitutional ? { studentCount } : {}),
           ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
           ...(profile ? { profile } : {}),
         }),
@@ -250,16 +252,23 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
         <Section title="Basic information" divider={false}>
-          <div className="grid gap-4 sm:grid-cols-2">
+          {isInstitutional ? (
             <label className="flex flex-col gap-1">
-              <span className={fieldLabelClass()}>First Name</span>
-              <input type="text" name="firstName" required className={inputClass()} />
+              <span className={fieldLabelClass()}>Institution / Organization Name</span>
+              <input type="text" name="institutionName" required className={inputClass()} />
             </label>
-            <label className="flex flex-col gap-1">
-              <span className={fieldLabelClass()}>Last Name</span>
-              <input type="text" name="lastName" required className={inputClass()} />
-            </label>
-          </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>First Name</span>
+                <input type="text" name="firstName" required className={inputClass()} />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>Last Name</span>
+                <input type="text" name="lastName" required className={inputClass()} />
+              </label>
+            </div>
+          )}
 
           {showProfileQuestionnaire && (
             <label className="flex flex-col gap-1">
@@ -289,7 +298,9 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
           )}
 
           <label className="flex flex-col gap-1">
-            <span className={fieldLabelClass()}>Email address that you check regularly</span>
+            <span className={fieldLabelClass()}>
+              {isInstitutional ? "Contact email address" : "Email address that you check regularly"}
+            </span>
             <input type="email" name="email" required className={inputClass()} />
           </label>
 
@@ -341,7 +352,7 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
             </>
           )}
 
-          {selectedType === "institutional" && (
+          {isInstitutional && (
             <label className="flex flex-col gap-1">
               <span className={fieldLabelClass()}>
                 Number of students to sponsor (minimum {institutionalMinStudents})

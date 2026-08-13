@@ -2,17 +2,21 @@ import { prisma } from "../prisma";
 import {
   buildDonationAdminNotificationBody,
   buildDonationReceiptBody,
+  buildInstitutionCodesEmailBody,
   buildMembershipAdminNotificationBody,
   buildMembershipReceiptBody,
   sendEmail,
 } from "./mailer";
 import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTiers";
 import { redeemCoupon } from "./coupons";
+import { createCodeBatch } from "./institutions";
 
 // Shared by the Stripe webhook (real payments) and the payments-bypass paths
 // (demo/staging without Stripe configured) — marks a Payment succeeded and
 // activates whatever it's attached to (a Donation receipt or a Membership).
-export async function activatePayment(paymentId: number, stripeRef: string) {
+// stripeSubscriptionId is only relevant for institutional memberships (a
+// recurring subscription) — everything else is a one-time payment.
+export async function activatePayment(paymentId: number, stripeRef: string, stripeSubscriptionId?: string) {
   const payment = await prisma.payment.update({
     where: { id: paymentId },
     data: { status: "succeeded", stripeRef },
@@ -76,7 +80,7 @@ export async function activatePayment(paymentId: number, stripeRef: string) {
 
     await prisma.membership.update({
       where: { id: payment.membership.id },
-      data: { status: "active", startDate, endDate },
+      data: { status: "active", startDate, endDate, stripeSubscriptionId },
     });
 
     const plan = await getMembershipPlan(payment.membership.type);
@@ -123,6 +127,44 @@ export async function activatePayment(paymentId: number, stripeRef: string) {
         });
       } catch (err) {
         console.error("Failed to send admin membership-purchase notification:", err);
+      }
+    }
+
+    // Institutional-only: this is always the institution's own payment —
+    // sponsored students never carry a Payment/go through activatePayment,
+    // they're activated directly by POST /institutions/claim or /redeem.
+    if (payment.membership.type === "institutional") {
+      const seatCount = payment.membership.studentCount ?? 0;
+
+      const sponsorship = await prisma.institutionSponsorship.upsert({
+        where: { userId: payment.membership.userId },
+        update: { seatCount, stripeSubscriptionId, startDate, endDate },
+        create: {
+          userId: payment.membership.userId,
+          seatCount,
+          stripeSubscriptionId,
+          startDate,
+          endDate,
+        },
+      });
+
+      if (seatCount > 0) {
+        const codes = await createCodeBatch(sponsorship.id, seatCount);
+
+        const codesBody = buildInstitutionCodesEmailBody({
+          institutionName: payment.membership.user.name,
+          seatCount,
+          codes,
+          startDate,
+          endDate,
+          isRenewal: false,
+        });
+
+        await sendEmail({
+          to: payment.membership.user.email,
+          subject: "Your NAHCA institutional sponsorship — claim codes",
+          body: codesBody,
+        });
       }
     }
   }

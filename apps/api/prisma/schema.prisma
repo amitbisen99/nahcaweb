@@ -71,6 +71,10 @@ model User {
   memberships  Membership[]
   payments     Payment[]
   profile      MemberProfile?
+  // Set only for the institution's own login (the paying party) — see
+  // InstitutionSponsorship for the institution-sponsored-membership feature.
+  institutionSponsorship InstitutionSponsorship?
+  claimedCodes           InstitutionClaimCode[]
 }
 
 // Extended demographic/professional questionnaire collected on the
@@ -117,12 +121,52 @@ model Membership {
   endDate              DateTime?
   priceCents           Int
   stripeSubscriptionId String?
+  // Institutional only: null on the institution's own paying membership,
+  // set to the InstitutionSponsorship id (as a string) on a sponsored
+  // student's membership — that's how the two are told apart.
   groupId              String?
+  // Institutional only: seats purchased. Used to size each claim-code batch.
+  studentCount         Int?
   createdAt            DateTime         @default(now())
   payment              Payment?
 
   @@index([userId])
   @@index([groupId])
+}
+
+// One per institution — created when their sponsorship subscription first
+// activates (see activatePayment in paymentActivation.ts). Renewed in place
+// every 24 months (see the Stripe webhook's invoice.paid handling), which
+// extends endDate and adds a fresh batch of claim codes.
+model InstitutionSponsorship {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @unique
+  user                 User     @relation(fields: [userId], references: [id])
+  seatCount            Int
+  stripeSubscriptionId String?
+  startDate            DateTime
+  endDate              DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  codes                InstitutionClaimCode[]
+
+  @@index([stripeSubscriptionId])
+}
+
+// A single-use code from a sponsorship's batch. Redeemed via POST
+// /institutions/claim (new student) or POST /institutions/redeem (existing
+// member extending) — either way it results in a new Membership row.
+model InstitutionClaimCode {
+  id              Int                     @id @default(autoincrement())
+  sponsorshipId   Int
+  sponsorship     InstitutionSponsorship  @relation(fields: [sponsorshipId], references: [id])
+  code            String                  @unique
+  claimedByUserId Int?
+  claimedByUser   User?                   @relation(fields: [claimedByUserId], references: [id])
+  claimedAt       DateTime?
+  createdAt       DateTime                @default(now())
+
+  @@index([sponsorshipId])
 }
 
 model MembershipPlan {

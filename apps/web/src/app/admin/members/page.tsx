@@ -69,7 +69,13 @@ export default async function MembersPage({
                       )}
                     </td>
                     <td className="px-4 py-3 text-black">{m.user.email}</td>
-                    <td className="px-4 py-3 text-black">{TIER_LABELS[m.type] ?? m.type}</td>
+                    <td className="px-4 py-3 text-black">
+                      {m.type === "institutional"
+                        ? m.groupId === null
+                          ? "Institutional (Sponsor)"
+                          : "Institutional (Sponsored)"
+                        : (TIER_LABELS[m.type] ?? m.type)}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[m.status] ?? "bg-ink/10 text-black"}`}

@@ -45,12 +45,15 @@ function YesNoField({ label, value }: { label: string; value: boolean | null | u
 // active/inactive login toggle rendered above this component.
 export function MemberProfileView({ membership }: { membership: AdminMembershipDetail }) {
   const profile = membership.user.profile;
+  const isInstitutionSponsor = membership.type === "institutional" && !membership.groupId;
 
   if (!profile) {
     return (
       <div className="rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
         <p className="text-sm text-black">
-          This member doesn&rsquo;t have a filled-out profile questionnaire on file.
+          {isInstitutionSponsor
+            ? "Institutional sponsors are billing/admin contacts, not chaplains — there's no membership questionnaire on file for them."
+            : "This member doesn’t have a filled-out profile questionnaire on file."}
         </p>
       </div>
     );

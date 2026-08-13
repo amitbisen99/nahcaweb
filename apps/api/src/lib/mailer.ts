@@ -40,6 +40,19 @@ export async function sendEmail(opts: {
   }
 }
 
+// Best-effort internal notification — never throws, so a Brevo hiccup here
+// can't fail whatever already-succeeded flow triggered it. No-ops if
+// ADMIN_NOTIFICATION_EMAIL isn't set.
+export async function sendAdminNotification(subject: string, body: string) {
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+  if (!adminEmail) return;
+  try {
+    await sendEmail({ to: adminEmail, subject, body });
+  } catch (err) {
+    console.error(`Failed to send admin notification "${subject}":`, err);
+  }
+}
+
 export function buildDonationReceiptBody(opts: {
   donorName: string;
   amountCents: number;
@@ -102,6 +115,54 @@ export function buildDonationAdminNotificationBody(opts: {
     `${opts.donorName} (${opts.donorEmail}) just donated $${amount}${opts.purpose ? ` for "${opts.purpose}"` : ""}${opts.recurring ? " (monthly recurring)" : ""}.`,
     `Date: ${opts.date.toDateString()}`,
     `Payment reference: ${opts.paymentRef}`,
+  ].join("\n");
+}
+
+// Sent to the institution itself whenever a batch of claim codes is ready —
+// both the first batch (initial sponsorship activation) and every 24-month
+// renewal batch (see webhooks.ts's invoice.paid handling).
+export function buildInstitutionCodesEmailBody(opts: {
+  institutionName: string;
+  seatCount: number;
+  codes: string[];
+  startDate: Date;
+  endDate: Date;
+  isRenewal: boolean;
+}) {
+  return [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.institutionName},`,
+    ``,
+    opts.isRenewal
+      ? `Your institutional sponsorship has renewed for another term. Here is your fresh batch of ${opts.seatCount} claim code(s) — share one per student.`
+      : `Thank you for sponsoring ${opts.seatCount} student membership(s) with NAHCA! Here are your claim codes — share one per student.`,
+    `Sponsorship period: ${opts.startDate.toDateString()} – ${opts.endDate.toDateString()}`,
+    ``,
+    `Codes:`,
+    ...opts.codes.map((c) => `  ${c}`),
+    ``,
+    `New students can register with a code at ${process.env.WEB_ORIGIN}/membership/claim`,
+    `Students who are already NAHCA members can redeem a code from their Member Portal.`,
+    `You can see which codes have been claimed any time from your own Member Portal dashboard.`,
+  ].join("\n");
+}
+
+// Sent to a student the moment they successfully claim/redeem a sponsorship code.
+export function buildInstitutionClaimReceiptBody(opts: {
+  memberName: string;
+  startDate: Date;
+  endDate: Date;
+}) {
+  return [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.memberName},`,
+    ``,
+    `Your institution-sponsored NAHCA membership is now active — no payment needed on your end.`,
+    `Membership period: ${opts.startDate.toDateString()} – ${opts.endDate.toDateString()}`,
+    ``,
+    `You can view your membership status any time from the Member Portal.`,
   ].join("\n");
 }
 

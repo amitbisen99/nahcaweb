@@ -2,6 +2,7 @@ import { Router } from "express";
 import Stripe from "stripe";
 import { stripe } from "../lib/stripe";
 import { activatePayment } from "../lib/paymentActivation";
+import { renewInstitutionSponsorship } from "../lib/institutions";
 import { asyncHandler } from "../lib/asyncHandler";
 
 export const webhooksRouter = Router();
@@ -25,7 +26,24 @@ webhooksRouter.post("/stripe", asyncHandler(async (req, res) => {
     const session = event.data.object as Stripe.Checkout.Session;
     const paymentId = Number(session.metadata?.paymentId);
     if (paymentId) {
-      await activatePayment(paymentId, session.id);
+      const subscriptionId =
+        typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+      await activatePayment(paymentId, session.id, subscriptionId);
+    }
+  }
+
+  // Institutional sponsorships renew automatically every 24 months (see
+  // memberships.ts's subscription-mode checkout). Stripe re-charges the
+  // subscription and fires this event on success — "subscription_create" is
+  // the very first invoice, already handled above via
+  // checkout.session.completed, so only "subscription_cycle" (an actual
+  // renewal) needs handling here.
+  if (event.type === "invoice.paid") {
+    const invoice = event.data.object as Stripe.Invoice;
+    const subscriptionId =
+      typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+    if (invoice.billing_reason === "subscription_cycle" && subscriptionId) {
+      await renewInstitutionSponsorship(subscriptionId, invoice.id);
     }
   }
 

@@ -1,3 +1,5 @@
+import { ApiInstitutionSponsorship } from "@/lib/institutions";
+
 export async function listContent(apiPath: string, token: string): Promise<Record<string, unknown>[]> {
   try {
     const res = await fetch(`${process.env.API_URL}/${apiPath}`, {
@@ -140,6 +142,10 @@ export interface AdminMembershipDetail {
   type: "regular" | "student" | "institutional" | "conference";
   status: "active" | "expired" | "pending";
   priceCents: number;
+  // Institutional only: null on the institution's own membership, set on a
+  // sponsored student's — see the same convention noted on the Prisma
+  // schema's Membership model.
+  groupId: string | null;
   createdAt: string;
   user: {
     id: number;
@@ -147,7 +153,11 @@ export interface AdminMembershipDetail {
     email: string;
     isActive: boolean;
     profile: AdminMemberProfile | null;
+    institutionSponsorship: ApiInstitutionSponsorship | null;
   };
+  // Set only when groupId is set (a sponsored student) — the institution
+  // that sponsored them, resolved server-side from the sponsorship record.
+  sponsoringInstitution: { id: number; name: string; email: string } | null;
 }
 
 export async function getMembershipDetail(id: number, token: string): Promise<AdminMembershipDetail | null> {

@@ -80,7 +80,13 @@ membershipsRouter.post(
     }
 
     const membership = await prisma.membership.create({
-      data: { userId: user.id, type, status: "pending", priceCents },
+      data: {
+        userId: user.id,
+        type,
+        status: "pending",
+        priceCents,
+        studentCount: type === "institutional" ? studentCount : undefined,
+      },
     });
 
     const payment = await prisma.payment.create({
@@ -104,8 +110,13 @@ membershipsRouter.post(
       return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/membership?status=success` });
     }
 
+    // Institutional sponsorship is a recurring 24-month subscription (renews
+    // itself in Stripe; see webhooks.ts's invoice.paid handling for how a
+    // renewal issues a fresh batch of claim codes). Everything else is a
+    // one-time payment, same as before.
+    const isInstitutional = type === "institutional";
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+      mode: isInstitutional ? "subscription" : "payment",
       payment_method_types: ["card"],
       customer_email: email,
       line_items: [
@@ -114,6 +125,7 @@ membershipsRouter.post(
             currency: "usd",
             product_data: { name: `NAHCA Membership — ${plan.name}` },
             unit_amount: priceCents,
+            ...(isInstitutional ? { recurring: { interval: "month" as const, interval_count: 24 } } : {}),
           },
           quantity: 1,
         },
@@ -191,11 +203,41 @@ membershipsRouter.get(
 
     const membership = await prisma.membership.findUnique({
       where: { id },
-      include: { user: { include: { profile: true } } },
+      include: {
+        user: {
+          include: {
+            profile: true,
+            // Only ever populated for the institution's own membership row
+            // (groupId is null there) — a sponsored student's row has no
+            // sponsorship of their own to show.
+            institutionSponsorship: {
+              include: {
+                codes: {
+                  orderBy: { createdAt: "desc" },
+                  include: { claimedByUser: { select: { id: true, name: true, email: true } } },
+                },
+              },
+            },
+          },
+        },
+      },
     });
     if (!membership) return res.status(404).json({ error: "Membership not found" });
 
-    res.json({ membership });
+    // A sponsored student's row has groupId set to their sponsorship's id
+    // (see the Membership.groupId convention noted on the Prisma schema) —
+    // look up that sponsorship's owner so the admin view can show which
+    // institution sponsored them.
+    let sponsoringInstitution: { id: number; name: string; email: string } | null = null;
+    if (membership.groupId) {
+      const sponsorship = await prisma.institutionSponsorship.findUnique({
+        where: { id: Number(membership.groupId) },
+        include: { user: { select: { id: true, name: true, email: true } } },
+      });
+      if (sponsorship) sponsoringInstitution = sponsorship.user;
+    }
+
+    res.json({ membership: { ...membership, sponsoringInstitution } });
   })
 );
 

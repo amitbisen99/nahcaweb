@@ -7,6 +7,7 @@ import { authRouter } from "./routes/auth";
 import { donationsRouter } from "./routes/donations";
 import { webhooksRouter } from "./routes/webhooks";
 import { membershipsRouter } from "./routes/memberships";
+import { institutionsRouter } from "./routes/institutions";
 import { membershipPlansRouter } from "./routes/membershipPlans";
 import { couponsRouter } from "./routes/coupons";
 import { paymentsRouter } from "./routes/payments";
@@ -91,6 +92,7 @@ app.get(
 app.use("/auth", authRouter);
 app.use("/donations", donationsRouter);
 app.use("/memberships", membershipsRouter);
+app.use("/institutions", institutionsRouter);
 app.use("/membership-plans", membershipPlansRouter);
 app.use("/coupons", couponsRouter);
 app.use("/payments", paymentsRouter);

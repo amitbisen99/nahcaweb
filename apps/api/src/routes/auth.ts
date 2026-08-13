@@ -148,6 +148,9 @@ authRouter.post(
   })
 );
 
-function signToken(userId: number, role: string) {
+// Exported for other routes that log a user straight in after creating
+// their account outside the normal /register flow (see POST
+// /institutions/claim).
+export function signToken(userId: number, role: string) {
   return jwt.sign({ userId, role }, process.env.JWT_SECRET as string, { expiresIn: "7d" });
 }
