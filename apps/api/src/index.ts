@@ -114,6 +114,34 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
-app.listen(port, () => {
-  console.log(`NAHCA API listening on http://localhost:${port}`);
-});
+
+// Prisma connects lazily on its first query — without this, the process
+// reports "listening" and accepts traffic before the DB connection is
+// actually up, so whichever request happens to be first pays the connection
+// cost and can lose a race against MySQL still finishing its own restart
+// (seen in production: the very first request after a `pm2 restart` failed
+// with "Can't reach database server", then every request after succeeded).
+// Retrying here means we only start accepting traffic once the DB is
+// confirmed reachable.
+async function start() {
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await prisma.$connect();
+      break;
+    } catch (err) {
+      console.error(`Database connection attempt ${attempt}/${maxAttempts} failed:`, err);
+      if (attempt === maxAttempts) {
+        console.error("Giving up after max attempts — exiting so the process manager can restart us.");
+        process.exit(1);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+
+  app.listen(port, () => {
+    console.log(`NAHCA API listening on http://localhost:${port}`);
+  });
+}
+
+start();
