@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 interface ApiUser {
@@ -6,6 +6,16 @@ interface ApiUser {
   email: string;
   name: string;
   role: "admin" | "member";
+}
+
+// Thrown instead of returning null so the login form can show "This account
+// has been deactivated" instead of the generic "Invalid email or password" —
+// distinct from a wrong-password failure, not a security-sensitive
+// distinction to hide. Errors thrown from authorize() propagate through
+// signIn() intact (instanceof and all) when signIn is called directly from a
+// Server Action, so this is safe to catch specifically in login/actions.ts.
+export class AccountDeactivatedError extends CredentialsSignin {
+  code = "account_deactivated";
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -39,6 +49,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // is almost always the deploy-time bug, not a user's typo.
           console.error(`NextAuth: could not reach API_URL (${process.env.API_URL}) for /auth/login:`, err);
           return null;
+        }
+
+        if (res.status === 403) {
+          // Account exists, password is correct, but an admin deactivated
+          // it — deserves a clearer message than "wrong password".
+          throw new AccountDeactivatedError();
         }
 
         if (!res.ok) {
