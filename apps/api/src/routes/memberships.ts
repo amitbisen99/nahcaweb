@@ -10,6 +10,7 @@ import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
 import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
 import { memberProfileSchema } from "../lib/memberProfile";
+import { addOrUpdateBrevoContact, removeBrevoContactFromList } from "../lib/brevoContacts";
 
 export const membershipsRouter = Router();
 
@@ -276,6 +277,18 @@ membershipsRouter.patch(
       where: { id },
       include: { user: { include: { profile: true } } },
     });
+
+    // Keep the Brevo newsletter list's member tag in sync with the login
+    // gate — skipped for an institutional sponsor's own row, who was never
+    // added as a member in the first place (see paymentActivation.ts).
+    if (updated && !(updated.type === "institutional" && !updated.groupId)) {
+      if (parsed.data.isActive) {
+        await addOrUpdateBrevoContact(updated.user.email, { name: updated.user.name, isMember: true });
+      } else {
+        await removeBrevoContactFromList(updated.user.email);
+      }
+    }
+
     res.json({ membership: updated });
   })
 );

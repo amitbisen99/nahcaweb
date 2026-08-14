@@ -7,6 +7,7 @@ import { WhatIsNahcaCards } from "@/components/WhatIsNahcaCards";
 import { UpcomingEventsSnippet } from "@/components/UpcomingEventsSnippet";
 import { VideoThumbnail } from "@/components/VideoThumbnail";
 import { Reveal } from "@/components/Reveal";
+import { NewsletterSignupForm } from "@/components/NewsletterSignupForm";
 import { ChevronIcon } from "@/components/icons";
 import { auth } from "@/auth";
 import { getUpcomingEvents } from "@/lib/cms";
@@ -130,17 +131,7 @@ export default async function Home() {
 
             <div className="text-center sm:text-left">
               <h2 className="font-heading text-xl font-medium text-heading">Get our monthly newsletter &amp; updates</h2>
-              <form className="mt-4 flex max-w-sm gap-2 sm:mx-0 mx-auto">
-                <input
-                  type="email"
-                  required
-                  placeholder="Your email address"
-                  className="w-full rounded-lg border border-ink/20 bg-white px-4 py-2.5 text-sm focus:border-brand focus:outline-none"
-                />
-                <Button variant="solid" className="!px-5 !py-2.5 whitespace-nowrap">
-                  Sign Up
-                </Button>
-              </form>
+              <NewsletterSignupForm />
             </div>
           </Reveal>
         </Container>

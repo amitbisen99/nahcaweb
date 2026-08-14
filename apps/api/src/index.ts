@@ -2,7 +2,9 @@ import "dotenv/config";
 import path from "path";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
+import cron from "node-cron";
 import { prisma } from "./prisma";
+import { runMembershipExpirySweep } from "./lib/membershipExpirySweep";
 import { authRouter } from "./routes/auth";
 import { donationsRouter } from "./routes/donations";
 import { webhooksRouter } from "./routes/webhooks";
@@ -141,6 +143,15 @@ async function start() {
 
   app.listen(port, () => {
     console.log(`NAHCA API listening on http://localhost:${port}`);
+  });
+
+  // Catch up on anything missed while the process was down, then keep
+  // sweeping daily — see lib/membershipExpirySweep.ts for what this does
+  // and why it's needed (nothing else in the app ever notices a
+  // membership's endDate has passed).
+  runMembershipExpirySweep().catch((err) => console.error("[membershipExpirySweep] Startup run failed:", err));
+  cron.schedule("0 3 * * *", () => {
+    runMembershipExpirySweep().catch((err) => console.error("[membershipExpirySweep] Scheduled run failed:", err));
   });
 }
 

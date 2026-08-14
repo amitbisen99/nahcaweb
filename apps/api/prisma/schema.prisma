@@ -325,6 +325,19 @@ model Newsletter {
   @@index([published])
 }
 
+// Local record of who signed up via the site footer's "Get our monthly
+// newsletter & updates" form — NOT the same thing as the Newsletter model
+// above (that's published newsletter PDFs). Brevo is the actual mailing
+// list (see lib/brevoContacts.ts); this table exists purely so admins have
+// a record of footer signups without needing to log into Brevo. Members are
+// pushed to the same Brevo list directly from their signup/claim flow and
+// don't get a row here (they're already tracked as Users).
+model NewsletterSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
 model Board {
   id        Int      @id @default(autoincrement())
   name      String

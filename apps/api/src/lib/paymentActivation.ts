@@ -10,6 +10,7 @@ import {
 import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTiers";
 import { redeemCoupon } from "./coupons";
 import { createCodeBatch } from "./institutions";
+import { addOrUpdateBrevoContact } from "./brevoContacts";
 
 // Shared by the Stripe webhook (real payments) and the payments-bypass paths
 // (demo/staging without Stripe configured) — marks a Payment succeeded and
@@ -128,6 +129,18 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       } catch (err) {
         console.error("Failed to send admin membership-purchase notification:", err);
       }
+    }
+
+    // Newsletter list sync — everyone EXCEPT an institutional sponsor, who
+    // is a billing/admin contact rather than a chaplaincy member (see the
+    // groupId convention below). Sponsored students get synced separately
+    // from POST /institutions/claim or /redeem, since they never reach
+    // activatePayment at all.
+    if (payment.membership.type !== "institutional") {
+      await addOrUpdateBrevoContact(payment.membership.user.email, {
+        name: payment.membership.user.name,
+        isMember: true,
+      });
     }
 
     // Institutional-only: this is always the institution's own payment —

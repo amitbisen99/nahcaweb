@@ -7,6 +7,7 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { memberProfileSchema } from "../lib/memberProfile";
 import { TIER_TERM_MONTHS } from "../lib/membershipTiers";
 import { buildInstitutionClaimReceiptBody, sendAdminNotification, sendEmail } from "../lib/mailer";
+import { addOrUpdateBrevoContact } from "../lib/brevoContacts";
 import { signToken } from "./auth";
 
 export const institutionsRouter = Router();
@@ -62,6 +63,9 @@ async function notifyClaim(memberName: string, memberEmail: string, startDate: D
     `Institution code claimed — ${memberName}`,
     `${memberName} (${memberEmail}) claimed an institutional sponsorship code.\nMembership period: ${startDate.toDateString()} – ${endDate.toDateString()}`
   );
+  // Sponsored students are real chaplaincy members (unlike the institution
+  // itself, which is a billing contact — see paymentActivation.ts).
+  await addOrUpdateBrevoContact(memberEmail, { name: memberName, isMember: true });
 }
 
 // New student registering with a code — no login required, no payment.
