@@ -6,12 +6,16 @@ export interface ApiMembership {
   endDate: string | null;
   priceCents: number;
   createdAt: string;
+  // Institutional only: null on the institution's own membership, set on a
+  // sponsored student's — see the same convention noted on the Prisma
+  // schema's Membership model.
+  groupId: string | null;
+  // Set only when groupId is set (a sponsored student) — resolved
+  // server-side from the sponsorship record.
+  sponsoringInstitutionName: string | null;
 }
 
 export interface AdminMembership extends ApiMembership {
-  // Institutional only: null on the institution's own membership, set on a
-  // sponsored student's — see AdminMembershipDetail for the same convention.
-  groupId: string | null;
   user: { id: number; name: string; email: string; isActive: boolean };
 }
 

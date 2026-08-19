@@ -156,7 +156,27 @@ membershipsRouter.get(
       where: { userId: req.auth!.userId },
       orderBy: { createdAt: "desc" },
     });
-    res.json({ memberships });
+
+    // Resolve which institution sponsored each sponsored-student membership
+    // (groupId set — see the Membership.groupId convention on the Prisma
+    // schema) so the portal dashboard can say "sponsored by X" instead of
+    // showing a misleading "no purchases" empty state — sponsored students
+    // never carry a Payment, since they never go through activatePayment.
+    const groupIds = [...new Set(memberships.map((m) => m.groupId).filter((id): id is string => id !== null))];
+    const sponsorships = groupIds.length
+      ? await prisma.institutionSponsorship.findMany({
+          where: { id: { in: groupIds.map(Number) } },
+          include: { user: { select: { name: true } } },
+        })
+      : [];
+    const sponsorNameById = new Map(sponsorships.map((s) => [String(s.id), s.user.name]));
+
+    const membershipsWithSponsor = memberships.map((m) => ({
+      ...m,
+      sponsoringInstitutionName: m.groupId ? (sponsorNameById.get(m.groupId) ?? null) : null,
+    }));
+
+    res.json({ memberships: membershipsWithSponsor });
   })
 );
 

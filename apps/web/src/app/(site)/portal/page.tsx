@@ -60,11 +60,18 @@ export default async function PortalDashboardPage() {
   const [memberships, payments] = await Promise.all([getMyMemberships(token), getMyPayments(token)]);
   const recentPurchases = payments.slice(0, 5);
   const reminders = buildReminders(memberships);
+  // Set only for a sponsored student's active membership (see the groupId
+  // convention on ApiMembership) — they never have a Payment, so the
+  // "Recent Purchases" empty state below shouldn't read as "not a member".
+  const sponsoringInstitutionName = memberships.find((m) => m.status === "active")?.sponsoringInstitutionName;
 
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Dashboard</h1>
       <p className="mt-2 text-black">Welcome, {session?.user?.name}.</p>
+      {sponsoringInstitutionName && (
+        <p className="mt-1 text-sm text-black">Your membership is sponsored by {sponsoringInstitutionName}.</p>
+      )}
 
       <section className="mt-10">
         <div className="flex items-center justify-between">
@@ -77,13 +84,7 @@ export default async function PortalDashboardPage() {
         </div>
 
         {recentPurchases.length === 0 ? (
-          <p className="mt-3 text-sm text-black">
-            No purchases yet. Visit the{" "}
-            <Link href="/membership" className="font-semibold text-brand hover:text-brand-dark">
-              Membership page
-            </Link>{" "}
-            to join.
-          </p>
+          <p className="mt-3 text-sm text-black">No purchase yet.</p>
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {recentPurchases.map((p) => (
