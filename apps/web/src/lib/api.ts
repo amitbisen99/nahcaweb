@@ -26,6 +26,25 @@ export interface PaginatedMemberships {
   pageSize: number;
 }
 
+export interface AdminDonation {
+  id: number;
+  donorName: string;
+  donorEmail: string;
+  amountCents: number;
+  purpose: string | null;
+  recurring: boolean;
+  stripePaymentId: string | null;
+  createdAt: string;
+  payment: { status: "pending" | "succeeded" | "failed" | "refunded"; stripeRef: string | null } | null;
+}
+
+export interface PaginatedDonations {
+  donations: AdminDonation[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface ApiPayment {
   id: number;
   type: "membership" | "donation" | "conference" | "endorsement";
@@ -169,6 +188,20 @@ export async function getAllMemberships(
     token
   );
   return data ?? { memberships: [], total: 0, page, pageSize };
+}
+
+export async function getAllDonations(
+  token: string,
+  opts: { page?: number; pageSize?: number; email?: string; from?: string; to?: string } = {}
+): Promise<PaginatedDonations> {
+  const page = opts.page ?? 1;
+  const pageSize = opts.pageSize ?? 10;
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (opts.email) params.set("email", opts.email);
+  if (opts.from) params.set("from", opts.from);
+  if (opts.to) params.set("to", opts.to);
+  const data = await apiFetch<PaginatedDonations>(`/donations?${params}`, token);
+  return data ?? { donations: [], total: 0, page, pageSize };
 }
 
 export async function getMyPayments(token: string): Promise<ApiPayment[]> {

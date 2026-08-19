@@ -8,6 +8,7 @@ import { CONTENT_TYPES } from "@/lib/contentTypes";
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin" },
   { label: "Members", href: "/admin/members" },
+  { label: "Donations", href: "/admin/donations" },
   { label: "Membership Plans", href: "/admin/membership-plans" },
   { label: "Coupons", href: "/admin/coupons" },
 ];

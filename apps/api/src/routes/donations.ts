@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
+import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
@@ -73,3 +74,49 @@ donationsRouter.post("/", asyncHandler(async (req, res) => {
 
   res.status(201).json({ checkoutUrl: session.url });
 }));
+
+const DEFAULT_PAGE_SIZE = 10;
+
+// Admin donation list — every completed/pending/failed donation, searchable
+// by donor email and by a createdAt date range. Donations were always
+// stored correctly (see POST / above); this was just never surfaced
+// anywhere in the admin panel.
+donationsRouter.get(
+  "/",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
+
+    const email = typeof req.query.email === "string" ? req.query.email.trim() : "";
+    const from = typeof req.query.from === "string" ? req.query.from : "";
+    const to = typeof req.query.to === "string" ? req.query.to : "";
+
+    const where: { donorEmail?: { contains: string }; createdAt?: { gte?: Date; lte?: Date } } = {};
+    if (email) where.donorEmail = { contains: email };
+    if (from || to) {
+      where.createdAt = {};
+      if (from) where.createdAt.gte = new Date(from);
+      if (to) {
+        // Inclusive of the whole "to" day, not just midnight.
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = toDate;
+      }
+    }
+
+    const [donations, total] = await Promise.all([
+      prisma.donation.findMany({
+        where,
+        include: { payment: { select: { status: true, stripeRef: true } } },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.donation.count({ where }),
+    ]);
+
+    res.json({ donations, total, page, pageSize });
+  })
+);

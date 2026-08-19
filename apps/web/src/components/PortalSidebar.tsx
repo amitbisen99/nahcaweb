@@ -21,7 +21,7 @@ const NAV_ITEMS_END = [
 // An institution's own login manages/distributes codes — it never redeems
 // one itself, so that link is student/member-only. Conversely, only the
 // institution's own login gets its dashboard.
-const REDEEM_ITEM = { label: "Redeem Institution Code", href: "/portal/redeem" };
+const REDEEM_ITEM = { label: "Renew your membership", href: "/portal/redeem" };
 const INSTITUTION_ITEM = { label: "Institution Dashboard", href: "/portal/institution" };
 
 function linkClasses(active: boolean) {

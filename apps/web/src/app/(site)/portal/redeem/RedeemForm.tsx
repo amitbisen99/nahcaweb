@@ -29,7 +29,7 @@ export function RedeemForm() {
   return (
     <form onSubmit={handleSubmit} className="mt-6 flex max-w-md flex-col gap-4">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black">Claim code</span>
+        <span className="text-sm font-medium text-black">Renewal code</span>
         <input
           type="text"
           value={code}
@@ -42,7 +42,9 @@ export function RedeemForm() {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {success && (
-        <p className="text-sm text-forest">Code redeemed — your membership is active. Check Purchases for details.</p>
+        <p className="text-sm text-forest">
+          Membership renewed — your new period is active. Check Purchases for details.
+        </p>
       )}
 
       <button
@@ -50,7 +52,7 @@ export function RedeemForm() {
         disabled={submitting}
         className="self-start rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
       >
-        {submitting ? "Redeeming…" : "Redeem code"}
+        {submitting ? "Renewing…" : "Renew membership"}
       </button>
     </form>
   );

@@ -129,9 +129,11 @@ institutionsRouter.post(
   })
 );
 
-// Existing member redeeming a code — adds a new institutional membership
-// period to their account (members can hold more than one Membership row
-// over time, same pattern used everywhere else in the app).
+// Existing member renewing their sponsored membership with a fresh code —
+// only allowed once their current one has ended (see the check below).
+// Adds a new Membership row rather than extending the old one, same
+// pattern used everywhere else in the app for a member holding more than
+// one Membership row over time.
 const redeemSchema = z.object({
   code: z.string().min(1),
 });
@@ -145,11 +147,27 @@ institutionsRouter.post(
       return res.status(400).json({ error: parsed.error.flatten() });
     }
 
-    const found = await findClaimableCode(parsed.data.code);
-    if (!found.code) return res.status(found.error.status).json({ error: found.error.message });
-
     const user = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // This is a renewal, not an open-ended "add another membership" — only
+    // allowed once the member's current sponsored membership has actually
+    // ended. Checked against endDate directly rather than the cached
+    // `status` field, since the daily expiry sweep (see
+    // membershipExpirySweep.ts) can lag up to a day behind the real
+    // calendar date.
+    const currentSponsored = await prisma.membership.findFirst({
+      where: { userId: user.id, type: "institutional", groupId: { not: null } },
+      orderBy: { endDate: "desc" },
+    });
+    if (currentSponsored?.endDate && currentSponsored.endDate > new Date()) {
+      return res.status(400).json({
+        error: "You already have active membership. Use renewal code after membership expire",
+      });
+    }
+
+    const found = await findClaimableCode(parsed.data.code);
+    if (!found.code) return res.status(found.error.status).json({ error: found.error.message });
 
     const { startDate, endDate } = membershipTerm();
 
