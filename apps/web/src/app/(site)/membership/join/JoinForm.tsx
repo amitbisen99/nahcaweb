@@ -75,6 +75,7 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
   const [endorsed, setEndorsed] = useState<"" | "yes" | "no">("");
   const [endorsedBy, setEndorsedBy] = useState("");
   const [orgMemberships, setOrgMemberships] = useState<string[]>([]);
+  const [orgMembershipOther, setOrgMembershipOther] = useState("");
 
   const [couponInput, setCouponInput] = useState("");
   const [couponChecking, setCouponChecking] = useState(false);
@@ -196,6 +197,7 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
           endorsed: endorsed === "" ? undefined : endorsed === "yes",
           endorsedBy: endorsed === "yes" ? endorsedBy.trim() || undefined : undefined,
           orgMemberships: orgMemberships.length ? orgMemberships : undefined,
+          orgMembershipOther: orgMemberships.includes("Other") ? orgMembershipOther.trim() || undefined : undefined,
         }
       : undefined;
 
@@ -556,6 +558,15 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
                 selected={orgMemberships}
                 onToggle={(value) => setOrgMemberships((list) => toggleInArray(list, value))}
               />
+              {orgMemberships.includes("Other") && (
+                <input
+                  type="text"
+                  value={orgMembershipOther}
+                  onChange={(e) => setOrgMembershipOther(e.target.value)}
+                  placeholder="Please specify"
+                  className={inputClass()}
+                />
+              )}
             </Section>
           </>
         )}

@@ -137,6 +137,9 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
 
       <Section title="Professional organization memberships">
         <ListField label="Organizations" values={profile.orgMemberships} />
+        {profile.orgMembershipOther && (
+          <Field label="Other — specified as" value={profile.orgMembershipOther} />
+        )}
       </Section>
     </div>
   );

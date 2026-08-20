@@ -58,6 +58,7 @@ export const ORG_MEMBERSHIPS = [
   "Association of Chaplains and Spiritual Life in Higher Education (ACSLHE)",
   "Chaplaincy Innovation Lab",
   "Chinmaya Mission",
+  "Other",
 ];
 
 export const PREFERRED_PRONOUN_OPTIONS = ["She/Her", "He/Him", "They/Them", "Ze/Zir", "Something else"];

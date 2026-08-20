@@ -91,6 +91,7 @@ export interface ApiMemberProfile {
   endorsed: boolean | null;
   endorsedBy: string | null;
   orgMemberships: string[] | null;
+  orgMembershipOther: string | null;
 }
 
 export interface ApiUserWithProfile {

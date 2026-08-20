@@ -46,6 +46,7 @@ export function ClaimForm({ initialCode }: { initialCode?: string }) {
   const [endorsed, setEndorsed] = useState<"" | "yes" | "no">("");
   const [endorsedBy, setEndorsedBy] = useState("");
   const [orgMemberships, setOrgMemberships] = useState<string[]>([]);
+  const [orgMembershipOther, setOrgMembershipOther] = useState("");
 
   function updateEmploymentRow(index: number, patch: Partial<EmploymentEntry>) {
     setEmployment((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -99,6 +100,7 @@ export function ClaimForm({ initialCode }: { initialCode?: string }) {
       endorsed: endorsed === "" ? undefined : endorsed === "yes",
       endorsedBy: endorsed === "yes" ? endorsedBy.trim() || undefined : undefined,
       orgMemberships: orgMemberships.length ? orgMemberships : undefined,
+      orgMembershipOther: orgMemberships.includes("Other") ? orgMembershipOther.trim() || undefined : undefined,
     };
 
     try {
@@ -438,6 +440,15 @@ export function ClaimForm({ initialCode }: { initialCode?: string }) {
             selected={orgMemberships}
             onToggle={(value) => setOrgMemberships((list) => toggleInArray(list, value))}
           />
+          {orgMemberships.includes("Other") && (
+            <input
+              type="text"
+              value={orgMembershipOther}
+              onChange={(e) => setOrgMembershipOther(e.target.value)}
+              placeholder="Please specify"
+              className={inputClass()}
+            />
+          )}
         </Section>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

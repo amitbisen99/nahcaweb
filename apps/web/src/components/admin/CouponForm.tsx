@@ -4,6 +4,7 @@ import { FormEvent, useActionState, useState } from "react";
 import { AdminCoupon } from "@/lib/adminApi";
 import { CouponFormState } from "@/app/admin/coupons/actions";
 import { Button } from "@/components/Button";
+import { DateField } from "./DateField";
 
 const initialState: CouponFormState = {};
 
@@ -13,12 +14,6 @@ const PLAN_OPTIONS: { value: NonNullable<AdminCoupon["appliesTo"]>[number]; labe
   { value: "institutional", label: "Institution-Sponsored Membership" },
   { value: "nahca_programmes", label: "Nahca Programmes (a specific Event/Webinar)" },
 ];
-
-function dateInputValue(value: string | null): string {
-  if (!value) return "";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-}
 
 export function CouponForm({
   coupon,
@@ -163,24 +158,8 @@ export function CouponForm({
       {(formError ?? state.error) && <p className="text-sm text-red-600">{formError ?? state.error}</p>}
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-black">Valid from</span>
-          <input
-            type="date"
-            name="validFrom"
-            defaultValue={dateInputValue(coupon?.validFrom ?? null)}
-            className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-black">Valid till</span>
-          <input
-            type="date"
-            name="validTill"
-            defaultValue={dateInputValue(coupon?.validTill ?? null)}
-            className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
-          />
-        </label>
+        <DateField name="validFrom" label="Valid from" currentValue={coupon?.validFrom ?? null} />
+        <DateField name="validTill" label="Valid till" currentValue={coupon?.validTill ?? null} />
       </div>
 
       <label className="flex flex-col gap-1">

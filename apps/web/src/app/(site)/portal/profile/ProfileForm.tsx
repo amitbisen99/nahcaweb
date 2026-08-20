@@ -75,6 +75,7 @@ export function ProfileForm({
   const [endorsed, setEndorsed] = useState<"" | "yes" | "no">(toYesNo(profile?.endorsed));
   const [endorsedBy, setEndorsedBy] = useState(profile?.endorsedBy ?? "");
   const [orgMemberships, setOrgMemberships] = useState<string[]>(profile?.orgMemberships ?? []);
+  const [orgMembershipOther, setOrgMembershipOther] = useState(profile?.orgMembershipOther ?? "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +135,7 @@ export function ProfileForm({
       endorsed: endorsed === "" ? undefined : endorsed === "yes",
       endorsedBy: endorsed === "yes" ? endorsedBy.trim() || undefined : undefined,
       orgMemberships: orgMemberships.length ? orgMemberships : undefined,
+      orgMembershipOther: orgMemberships.includes("Other") ? orgMembershipOther.trim() || undefined : undefined,
     };
 
     const result = await updateMyProfile({ name: name.trim(), profile: profilePayload });
@@ -410,6 +412,15 @@ export function ProfileForm({
           selected={orgMemberships}
           onToggle={(value) => setOrgMemberships((list) => toggleInArray(list, value))}
         />
+        {orgMemberships.includes("Other") && (
+          <input
+            type="text"
+            value={orgMembershipOther}
+            onChange={(e) => setOrgMembershipOther(e.target.value)}
+            placeholder="Please specify"
+            className={inputClass()}
+          />
+        )}
       </Section>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

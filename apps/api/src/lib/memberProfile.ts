@@ -28,4 +28,5 @@ export const memberProfileSchema = z.object({
   endorsed: z.boolean().optional(),
   endorsedBy: z.string().optional(),
   orgMemberships: z.array(z.string()).optional(),
+  orgMembershipOther: z.string().optional(),
 });
