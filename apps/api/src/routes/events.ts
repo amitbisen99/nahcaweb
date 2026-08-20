@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { speakersSchema } from "../lib/speakers";
+import { createEventCode } from "../lib/eventCodes";
 
 // Events now have the same open/members_only visibility rule as Webinars, so
 // this uses the same bespoke-router pattern instead of the generic
@@ -61,7 +62,8 @@ eventsRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = eventSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-    const item = await prisma.event.create({ data: parsed.data });
+    const eventCode = await createEventCode("EVT");
+    const item = await prisma.event.create({ data: { ...parsed.data, eventCode } });
     res.status(201).json({ item });
   })
 );

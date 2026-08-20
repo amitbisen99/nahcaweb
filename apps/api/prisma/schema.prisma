@@ -220,10 +220,19 @@ model Coupon {
   // Meaning depends on discountType: a 0-100 percentage for `percent`, cents
   // for `fixed_amount`, unused for `complimentary`.
   discountValue Int
-  // Membership plan types this coupon can be applied to (MembershipType
-  // values, e.g. ["regular","student"]). Null/empty means "applies to all
-  // plans" — donation and conference-fee checkout don't consult this yet.
+  // What this coupon can be applied to — a JSON array of membership plan
+  // types ("regular"/"student"/"institutional") and/or the sentinel value
+  // "nahca_programmes" (an Event/Webinar, via eventCode below). At least
+  // one entry is required going forward (enforced in the API, not the DB —
+  // stays nullable so pre-existing coupons created under the old "empty
+  // means applies to everything" rule aren't broken by this migration).
   appliesTo     Json?
+  // Set only when appliesTo includes "nahca_programmes" — the specific
+  // Event.eventCode or Webinar.eventCode this coupon is scoped to. Not a
+  // real foreign key since it can point at either table; existence is
+  // checked in the API on save. Not consulted by any checkout flow yet —
+  // event/webinar payment + coupon redemption is a future phase.
+  eventCode     String?
   validFrom     DateTime?
   validTill     DateTime?
   maxUses       Int?
@@ -278,6 +287,9 @@ model Event {
   speakers         Json?
   access           WebinarAccess @default(open)
   published        Boolean       @default(false)
+  // Unique, admin-facing code generated on creation (see lib/eventCodes.ts)
+  // — used to scope a Coupon to this specific event.
+  eventCode        String        @unique
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -296,6 +308,9 @@ model Webinar {
   featuredImageUrl  String?
   access            WebinarAccess @default(open)
   published         Boolean       @default(false)
+  // Unique, admin-facing code generated on creation (see lib/eventCodes.ts)
+  // — used to scope a Coupon to this specific webinar.
+  eventCode         String        @unique
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

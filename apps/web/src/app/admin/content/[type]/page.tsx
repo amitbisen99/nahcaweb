@@ -40,7 +40,14 @@ export default async function ContentListPage({
             className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ink/10 bg-white p-4"
           >
             <div>
-              <p className="font-medium text-ink">{String(item[config.titleField])}</p>
+              <p className="font-medium text-ink">
+                {String(item[config.titleField])}
+                {(config.key === "events" || config.key === "webinars") && typeof item.eventCode === "string" && (
+                  <span className="ml-2 rounded bg-sand px-1.5 py-0.5 font-mono text-xs font-normal text-black/70">
+                    {item.eventCode}
+                  </span>
+                )}
+              </p>
               <span
                 className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
                   item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"

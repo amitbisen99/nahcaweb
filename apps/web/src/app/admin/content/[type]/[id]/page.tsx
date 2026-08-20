@@ -30,6 +30,15 @@ export default async function EditContentPage({
       <h1 className="mt-1 font-heading text-3xl font-medium text-heading">
         Edit {config.singularLabel}
       </h1>
+
+      {(config.key === "events" || config.key === "webinars") && typeof item.eventCode === "string" && (
+        <div className="mt-4 inline-block rounded-lg border border-ink/10 bg-sand/30 px-4 py-3">
+          <span className="text-xs font-semibold uppercase tracking-wide text-black/60">Event Code</span>
+          <p className="mt-0.5 font-mono text-lg font-semibold text-heading">{item.eventCode}</p>
+          <p className="mt-0.5 text-xs text-black/50">Use this code to scope a coupon to this {config.singularLabel.toLowerCase()}.</p>
+        </div>
+      )}
+
       <div className="mt-8">
         <ContentForm
           config={config}

@@ -33,12 +33,15 @@ function buildPayload(formData: FormData) {
   // app), as a plain 0-100 integer for percent, unused for complimentary.
   const discountValue = discountType === "fixed_amount" ? Math.round(rawDiscountValue * 100) : Math.round(rawDiscountValue);
 
+  const eventCode = formData.get("eventCode");
+
   return {
     name: formData.get("name"),
     code: formData.get("code"),
     discountType,
     discountValue,
     appliesTo,
+    eventCode: appliesTo.includes("nahca_programmes") && eventCode ? eventCode : undefined,
     validFrom: validFrom ? validFrom : null,
     validTill: validTill ? validTill : null,
     maxUses: maxUses ? Number(maxUses) : null,
@@ -46,7 +49,17 @@ function buildPayload(formData: FormData) {
   };
 }
 
-export async function createCoupon(formData: FormData) {
+export interface CouponFormState {
+  error?: string;
+}
+
+// Returns state instead of throwing on failure — a plain <form action={...}>
+// has no way to display a thrown Error (it surfaces as an opaque digest
+// code in production), so CouponForm uses useActionState instead, which
+// needs an action shaped (prevState, formData) => state. redirect() below
+// is unrelated to that — it's Next's own throw-based mechanism and still
+// works the same either way.
+export async function createCoupon(_prevState: CouponFormState, formData: FormData): Promise<CouponFormState> {
   const token = await requireAdminToken();
   const payload = buildPayload(formData);
 
@@ -57,14 +70,18 @@ export async function createCoupon(formData: FormData) {
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to create coupon: ${await extractErrorMessage(res)}`);
+    return { error: await extractErrorMessage(res) };
   }
 
   revalidatePath("/admin/coupons");
   redirect("/admin/coupons");
 }
 
-export async function updateCoupon(id: string, formData: FormData) {
+export async function updateCoupon(
+  id: string,
+  _prevState: CouponFormState,
+  formData: FormData
+): Promise<CouponFormState> {
   const token = await requireAdminToken();
   const payload = buildPayload(formData);
 
@@ -75,7 +92,7 @@ export async function updateCoupon(id: string, formData: FormData) {
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to update coupon: ${await extractErrorMessage(res)}`);
+    return { error: await extractErrorMessage(res) };
   }
 
   revalidatePath("/admin/coupons");

@@ -4,12 +4,33 @@ import { prisma } from "../prisma";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { findValidCoupon, isCouponError } from "../lib/coupons";
+import { eventCodeExists } from "../lib/eventCodes";
 
 export const couponsRouter = Router();
 
+// Real membership plan types — used by /validate's planType, which checks
+// an actual Membership purchase against Coupon.appliesTo. Unrelated to
+// COUPON_SCOPES below (appliesTo's own value domain is a superset — it
+// also has to represent "this coupon is for a specific event/webinar",
+// which isn't a membership type at all).
 const MEMBERSHIP_TYPES = ["regular", "student", "institutional", "conference"] as const;
 
-const couponSchema = z.object({
+// What a coupon's "Applied to which plan" can be set to. "conference" was
+// removed from here (per the client) in favor of "nahca_programmes" — a
+// coupon scoped to one specific Event or Webinar via eventCode below.
+// Actual Conference memberships (MEMBERSHIP_TYPES above) are unaffected;
+// this only changes what a *coupon* can be scoped to.
+const COUPON_SCOPES = ["regular", "student", "institutional", "nahca_programmes"] as const;
+
+function couponRefinement(data: { appliesTo?: string[]; eventCode?: string }) {
+  return !data.appliesTo?.includes("nahca_programmes") || Boolean(data.eventCode);
+}
+const COUPON_REFINEMENT_ISSUE = {
+  message: "Enter the event code this coupon applies to",
+  path: ["eventCode"],
+};
+
+const couponFields = {
   name: z.string().min(1),
   code: z
     .string()
@@ -19,12 +40,30 @@ const couponSchema = z.object({
   // Percentage (0-100) for `percent`, cents for `fixed_amount`, ignored for
   // `complimentary` — defaulted to 0 so the field can be omitted for that type.
   discountValue: z.number().int().min(0).default(0),
-  appliesTo: z.array(z.enum(MEMBERSHIP_TYPES)).optional(),
+  // At least one required — there's no more "leave blank to apply to
+  // everything" state (client's explicit requirement).
+  appliesTo: z.array(z.enum(COUPON_SCOPES)).min(1, "Select at least one option"),
+  eventCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .optional()
+    .transform((v) => v || undefined),
   validFrom: z.coerce.date().nullable().optional(),
   validTill: z.coerce.date().nullable().optional(),
   maxUses: z.number().int().min(1).nullable().optional(),
   published: z.boolean().optional(),
-});
+};
+
+const couponSchema = z.object(couponFields).refine(couponRefinement, COUPON_REFINEMENT_ISSUE);
+
+// Used for PUT — appliesTo/eventCode are individually optional (a partial
+// update might not touch them at all), but if appliesTo IS present in the
+// payload and includes "nahca_programmes", eventCode is still required.
+const couponUpdateSchema = z
+  .object({ ...couponFields, appliesTo: couponFields.appliesTo.optional() })
+  .partial()
+  .refine(couponRefinement, COUPON_REFINEMENT_ISSUE);
 
 // Admin CRUD — list, view, create, update, delete.
 
@@ -49,6 +88,15 @@ couponsRouter.get(
   })
 );
 
+// Shared by POST/PUT — 400s if the coupon is scoped to Nahca Programmes but
+// the entered code doesn't match a real Event or Webinar.
+async function checkEventCode(eventCode: string | undefined) {
+  if (eventCode && !(await eventCodeExists(eventCode))) {
+    return { error: { fieldErrors: { eventCode: ["No event or webinar found with this code"] } } };
+  }
+  return null;
+}
+
 couponsRouter.post(
   "/",
   requireAuth,
@@ -60,7 +108,13 @@ couponsRouter.post(
     const existing = await prisma.coupon.findUnique({ where: { code: parsed.data.code } });
     if (existing) return res.status(409).json({ error: "A coupon with this code already exists" });
 
-    const coupon = await prisma.coupon.create({ data: parsed.data });
+    const isProgramme = parsed.data.appliesTo.includes("nahca_programmes");
+    const codeError = await checkEventCode(isProgramme ? parsed.data.eventCode : undefined);
+    if (codeError) return res.status(400).json(codeError);
+
+    const coupon = await prisma.coupon.create({
+      data: { ...parsed.data, eventCode: isProgramme ? parsed.data.eventCode : null },
+    });
     res.status(201).json({ item: coupon });
   })
 );
@@ -70,7 +124,7 @@ couponsRouter.put(
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const parsed = couponSchema.partial().safeParse(req.body);
+    const parsed = couponUpdateSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
     if (parsed.data.code) {
@@ -80,7 +134,18 @@ couponsRouter.put(
       }
     }
 
-    const coupon = await prisma.coupon.update({ where: { id: Number(req.params.id) }, data: parsed.data });
+    // appliesTo may be absent entirely on a partial update — only touch
+    // eventCode's stored value when appliesTo was actually part of this
+    // payload (the admin form always sends it, but the schema allows not).
+    const data: Omit<typeof parsed.data, "eventCode"> & { eventCode?: string | null } = { ...parsed.data };
+    if (parsed.data.appliesTo) {
+      const isProgramme = parsed.data.appliesTo.includes("nahca_programmes");
+      const codeError = await checkEventCode(isProgramme ? parsed.data.eventCode : undefined);
+      if (codeError) return res.status(400).json(codeError);
+      data.eventCode = isProgramme ? parsed.data.eventCode : null;
+    }
+
+    const coupon = await prisma.coupon.update({ where: { id: Number(req.params.id) }, data });
     res.json({ item: coupon });
   })
 );

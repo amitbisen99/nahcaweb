@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { speakersSchema } from "../lib/speakers";
+import { createEventCode } from "../lib/eventCodes";
 
 // Webinars have a visibility rule the other content types don't: "open" ones
 // are public, "members_only" ones require any logged-in account (not just
@@ -60,7 +61,8 @@ webinarsRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = webinarSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-    const item = await prisma.webinar.create({ data: parsed.data });
+    const eventCode = await createEventCode("WEB");
+    const item = await prisma.webinar.create({ data: { ...parsed.data, eventCode } });
     res.status(201).json({ item });
   })
 );

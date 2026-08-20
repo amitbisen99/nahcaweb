@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useActionState, useState } from "react";
 import { AdminCoupon } from "@/lib/adminApi";
+import { CouponFormState } from "@/app/admin/coupons/actions";
 import { Button } from "@/components/Button";
+
+const initialState: CouponFormState = {};
 
 const PLAN_OPTIONS: { value: NonNullable<AdminCoupon["appliesTo"]>[number]; label: string }[] = [
   { value: "regular", label: "Regular Membership" },
   { value: "student", label: "Student Membership" },
   { value: "institutional", label: "Institution-Sponsored Membership" },
-  { value: "conference", label: "Conference Membership" },
+  { value: "nahca_programmes", label: "Nahca Programmes (a specific Event/Webinar)" },
 ];
 
 function dateInputValue(value: string | null): string {
@@ -22,14 +25,42 @@ export function CouponForm({
   action,
 }: {
   coupon?: AdminCoupon;
-  action: (formData: FormData) => Promise<void>;
+  action: (state: CouponFormState, formData: FormData) => Promise<CouponFormState>;
 }) {
+  const [state, formAction, isPending] = useActionState(action, initialState);
   const [discountType, setDiscountType] = useState<AdminCoupon["discountType"]>(
     coupon?.discountType ?? "percent"
   );
+  const [appliesTo, setAppliesTo] = useState<string[]>(coupon?.appliesTo ?? []);
+  const [formError, setFormError] = useState<string | null>(null);
+  const isProgramme = appliesTo.includes("nahca_programmes");
+
+  function toggleAppliesTo(value: string, checked: boolean) {
+    setAppliesTo((prev) => (checked ? [...prev, value] : prev.filter((v) => v !== value)));
+  }
+
+  // The server action throws a plain Error on failure, which a plain
+  // <form action={...}> has no way to display — same issue the login form
+  // had. Validating here instead means these two required-field mistakes
+  // never actually reach the server action in normal use.
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    setFormError(null);
+    if (appliesTo.length === 0) {
+      e.preventDefault();
+      setFormError('Select at least one option for "Applied to which plan".');
+      return;
+    }
+    if (isProgramme) {
+      const eventCode = new FormData(e.currentTarget).get("eventCode");
+      if (!String(eventCode ?? "").trim()) {
+        e.preventDefault();
+        setFormError("Enter the event code this coupon applies to.");
+      }
+    }
+  }
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form action={formAction} onSubmit={handleSubmit} className="flex flex-col gap-5">
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-black">Coupon name</span>
         <input
@@ -95,7 +126,7 @@ export function CouponForm({
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-black">Applied to which plan</span>
-        <span className="text-xs text-black/50">Leave all unchecked to apply to every plan.</span>
+        <span className="text-xs text-black/50">Select at least one.</span>
         <div className="mt-1 flex flex-col gap-2">
           {PLAN_OPTIONS.map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 text-sm text-black">
@@ -103,13 +134,33 @@ export function CouponForm({
                 type="checkbox"
                 name="appliesTo"
                 value={opt.value}
-                defaultChecked={coupon?.appliesTo?.includes(opt.value)}
+                checked={appliesTo.includes(opt.value)}
+                onChange={(e) => toggleAppliesTo(opt.value, e.target.checked)}
               />
               {opt.label}
             </label>
           ))}
         </div>
+
+        {isProgramme && (
+          <label className="mt-2 flex flex-col gap-1">
+            <span className="text-sm font-medium text-black">Event code</span>
+            <input
+              type="text"
+              name="eventCode"
+              required
+              defaultValue={coupon?.eventCode ?? ""}
+              placeholder="EVT-A1B2C3"
+              className="rounded-lg border border-ink/20 bg-white px-3 py-2 uppercase focus:border-brand focus:outline-none"
+            />
+            <span className="text-xs text-black/50">
+              Find this on the event or webinar&rsquo;s own page in Website Content.
+            </span>
+          </label>
+        )}
       </div>
+
+      {(formError ?? state.error) && <p className="text-sm text-red-600">{formError ?? state.error}</p>}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
@@ -152,8 +203,8 @@ export function CouponForm({
         Published (active — code can be redeemed)
       </label>
 
-      <Button type="submit" className="mt-2 self-start">
-        Save
+      <Button type="submit" className="mt-2 self-start" disabled={isPending}>
+        {isPending ? "Saving…" : "Save"}
       </Button>
     </form>
   );

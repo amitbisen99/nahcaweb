@@ -48,7 +48,10 @@ export interface AdminCoupon {
   code: string;
   discountType: "percent" | "fixed_amount" | "complimentary";
   discountValue: number;
-  appliesTo: ("regular" | "student" | "institutional" | "conference")[] | null;
+  appliesTo: ("regular" | "student" | "institutional" | "nahca_programmes")[] | null;
+  // Set only when appliesTo includes "nahca_programmes" — the Event/Webinar
+  // this coupon is scoped to (matches Event.eventCode or Webinar.eventCode).
+  eventCode: string | null;
   validFrom: string | null;
   validTill: string | null;
   maxUses: number | null;
