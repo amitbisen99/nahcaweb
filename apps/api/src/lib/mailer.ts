@@ -166,6 +166,23 @@ export function buildInstitutionClaimReceiptBody(opts: {
   ].join("\n");
 }
 
+// Sent on POST /auth/forgot-password with a single-use, expiring link to
+// /reset-password?token=... — see routes/auth.ts for token generation.
+export function buildPasswordResetEmailBody(opts: { name: string; resetUrl: string; expiresInMinutes: number }) {
+  return [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.name},`,
+    ``,
+    `We received a request to reset your NAHCA account password. Click the link below to set a new one:`,
+    ``,
+    opts.resetUrl,
+    ``,
+    `This link expires in ${opts.expiresInMinutes} minutes and can only be used once.`,
+    `If you didn't request this, you can safely ignore this email — your password won't be changed.`,
+  ].join("\n");
+}
+
 // Internal heads-up sent to ADMIN_NOTIFICATION_EMAIL alongside the member's
 // own receipt — lets staff notice new signups without checking the admin
 // dashboard.

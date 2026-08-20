@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Button } from "@/components/Button";
 import { login, LoginState } from "./actions";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 
 const initialState: LoginState = {};
 
@@ -29,6 +30,7 @@ export function LoginForm() {
           className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
         />
       </label>
+      <ForgotPasswordModal />
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
       <Button type="submit" variant="solid" className="mt-2 w-full" disabled={isPending}>
         {isPending ? "Signing in…" : "Sign in"}

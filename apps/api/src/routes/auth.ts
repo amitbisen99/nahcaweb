@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -6,6 +7,7 @@ import { prisma } from "../prisma";
 import { asyncHandler } from "../lib/asyncHandler";
 import { requireAuth } from "../middleware/auth";
 import { memberProfileSchema } from "../lib/memberProfile";
+import { sendEmail, buildPasswordResetEmailBody } from "../lib/mailer";
 
 export const authRouter = Router();
 
@@ -144,6 +146,81 @@ authRouter.post(
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    res.json({ ok: true });
+  })
+);
+
+const RESET_TOKEN_EXPIRY_MINUTES = 60;
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+// Deliberately confirms whether the email is registered — the client
+// wants "no account found" surfaced to the user, not a generic response.
+authRouter.post(
+  "/forgot-password",
+  asyncHandler(async (req, res) => {
+    const parsed = forgotPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const { email } = parsed.data;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: "No account found with that email address." });
+    }
+
+    // Invalidate any earlier still-valid tokens for this user so only the
+    // newest link works, rather than leaving several live in parallel.
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MINUTES * 60_000);
+    await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } });
+
+    const resetUrl = `${process.env.WEB_ORIGIN}/reset-password?token=${token}`;
+    const body = buildPasswordResetEmailBody({
+      name: user.name,
+      resetUrl,
+      expiresInMinutes: RESET_TOKEN_EXPIRY_MINUTES,
+    });
+    await sendEmail({ to: user.email, subject: "Reset your NAHCA password", body });
+
+    res.json({ ok: true });
+  })
+);
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8),
+});
+
+authRouter.post(
+  "/reset-password",
+  asyncHandler(async (req, res) => {
+    const parsed = resetPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const { token, password } = parsed.data;
+
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      return res.status(400).json({ error: "This reset link is invalid or has expired. Please request a new one." });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: resetToken.userId }, data: { passwordHash } }),
+      prisma.passwordResetToken.update({ where: { id: resetToken.id }, data: { usedAt: new Date() } }),
+      // Any other outstanding tokens for this user are now moot.
+      prisma.passwordResetToken.deleteMany({
+        where: { userId: resetToken.userId, id: { not: resetToken.id }, usedAt: null },
+      }),
+    ]);
+
     res.json({ ok: true });
   })
 );

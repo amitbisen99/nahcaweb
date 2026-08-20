@@ -75,6 +75,22 @@ model User {
   // InstitutionSponsorship for the institution-sponsored-membership feature.
   institutionSponsorship InstitutionSponsorship?
   claimedCodes           InstitutionClaimCode[]
+  passwordResetTokens    PasswordResetToken[]
+}
+
+// Single-use, expiring token emailed as a link on "forgot password". See
+// POST /auth/forgot-password (creates) and POST /auth/reset-password
+// (consumes) in routes/auth.ts.
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // Extended demographic/professional questionnaire collected on the
