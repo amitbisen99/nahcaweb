@@ -164,6 +164,84 @@ export interface AdminMembershipDetail {
   sponsoringInstitution: { id: number; name: string; email: string } | null;
 }
 
+// Mirrors apps/api/src/routes/eventRegistrations.ts's EventRegistration
+// shape — the questionnaire captured on the event/webinar join form (a
+// trimmed subset of AdminMemberProfile above), plus guest vs. member
+// identity fields.
+export interface AdminEventRegistrationEmployment {
+  employerName: string;
+  jobTitle: string | null;
+  employmentType: "full_time" | "part_time" | "volunteer" | null;
+}
+
+export interface AdminEventRegistration {
+  id: number;
+  eventCode: string;
+  userId: number | null;
+  name: string | null;
+  email: string | null;
+  status: "pending" | "active";
+  createdAt: string;
+  preferredPronouns: string | null;
+  mailingAddress: string | null;
+  phone: string | null;
+  usesWhatsapp: boolean | null;
+  whatsappContactOk: boolean | null;
+  religiousTraditions: string[] | null;
+  religiousTraditionOther: string | null;
+  primaryRole: "chaplain" | "student" | null;
+  employment: AdminEventRegistrationEmployment[] | null;
+  hearAboutUs: string | null;
+  hearAboutUsOther: string | null;
+  user: { id: number; name: string; email: string } | null;
+  payment: { id: number; amountCents: number; status: string } | null;
+}
+
+export async function listEventRegistrations(
+  eventCode: string,
+  token: string,
+  opts: { page?: number; pageSize?: number } = {}
+): Promise<{ registrations: AdminEventRegistration[]; total: number }> {
+  try {
+    const params = new URLSearchParams({ eventCode });
+    if (opts.page) params.set("page", String(opts.page));
+    if (opts.pageSize) params.set("pageSize", String(opts.pageSize));
+    const res = await fetch(`${process.env.API_URL}/event-registrations?${params.toString()}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      console.error(`listEventRegistrations ${eventCode} failed: ${res.status} ${res.statusText}`);
+      return { registrations: [], total: 0 };
+    }
+    const data = await res.json();
+    return { registrations: data.registrations ?? [], total: data.total ?? 0 };
+  } catch (err) {
+    console.error(`listEventRegistrations ${eventCode} threw:`, err);
+    return { registrations: [], total: 0 };
+  }
+}
+
+export async function getEventRegistration(id: number, token: string): Promise<AdminEventRegistration | null> {
+  try {
+    const res = await fetch(`${process.env.API_URL}/event-registrations/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      console.error(`getEventRegistration ${id} failed: ${res.status} ${res.statusText}`);
+      return null;
+    }
+    const data = await res.json();
+    return data.registration ?? null;
+  } catch (err) {
+    console.error(`getEventRegistration ${id} threw:`, err);
+    return null;
+  }
+}
+
 export async function getMembershipDetail(id: number, token: string): Promise<AdminMembershipDetail | null> {
   try {
     const res = await fetch(`${process.env.API_URL}/memberships/${id}`, {

@@ -15,6 +15,7 @@ export interface CmsSpeaker {
 
 export interface CmsEvent {
   id: number;
+  eventCode: string;
   title: string;
   date: string;
   time: string | null;
@@ -65,6 +66,7 @@ export async function getEvent(id: string, token?: string): Promise<CmsEvent | n
 
 export interface CmsWebinar {
   id: number;
+  eventCode: string;
   title: string;
   description: string | null;
   zoomOrYoutubeLink: string | null;
@@ -118,6 +120,31 @@ export async function getBoardMembers(): Promise<CmsBoardMember[]> {
     return items;
   } catch {
     return [];
+  }
+}
+
+export interface CmsEventInfo {
+  type: "event" | "webinar";
+  title: string;
+  date: string | null;
+  priceCents: number | null;
+  published: boolean;
+}
+
+// Resolves an Event/Webinar eventCode into just what the join page/form
+// need — used by events/join/[code], not the admin or detail pages (which
+// already have the full record via getEvent/getOpenWebinar).
+export async function getEventInfoByCode(code: string): Promise<CmsEventInfo | null> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/event-registrations/by-code/${code}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const { item } = (await res.json()) as { item: CmsEventInfo };
+    return item;
+  } catch {
+    return null;
   }
 }
 

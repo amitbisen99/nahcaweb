@@ -3,15 +3,22 @@ import { prisma } from "../prisma";
 
 export type CouponValidationError = { status: number; message: string };
 
-// Shared by every checkout flow that accepts a coupon code (membership today;
-// donation and conference-fee flows will call this once they exist). Returns
-// the coupon row on success, or a status/message pair to send straight back
-// as an error response. Never increments usedCount — that only happens once
-// the payment actually succeeds (see redeemCoupon, called from
-// activatePayment), so an abandoned checkout doesn't burn a use.
+// Shared by every checkout flow that accepts a coupon code (membership,
+// event/webinar registration). Returns the coupon row on success, or a
+// status/message pair to send straight back as an error response. Never
+// increments usedCount — that only happens once the payment actually
+// succeeds (see redeemCoupon, called from activatePayment), so an
+// abandoned checkout doesn't burn a use.
+//
+// `context.planType` and `context.eventCode` are mutually exclusive
+// checkout contexts, not two independent filters — a coupon scoped to
+// "nahca_programmes" (an event/webinar) is never valid for a membership
+// purchase and vice versa, since appliesTo's value domain is different for
+// each (see the COUPON_SCOPES vs MEMBERSHIP_TYPES distinction in
+// routes/coupons.ts).
 export async function findValidCoupon(
   code: string,
-  planType?: string
+  context: { planType?: string; eventCode?: string } = {}
 ): Promise<Coupon | CouponValidationError> {
   const coupon = await prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() } });
 
@@ -31,7 +38,12 @@ export async function findValidCoupon(
   }
 
   const appliesTo = (coupon.appliesTo as string[] | null) ?? [];
-  if (planType && appliesTo.length > 0 && !appliesTo.includes(planType)) {
+
+  if (context.eventCode) {
+    if (!appliesTo.includes("nahca_programmes") || coupon.eventCode !== context.eventCode) {
+      return { status: 400, message: "This coupon does not apply to this event" };
+    }
+  } else if (context.planType && appliesTo.length > 0 && !appliesTo.includes(context.planType)) {
     return { status: 400, message: "This coupon does not apply to the selected plan" };
   }
 

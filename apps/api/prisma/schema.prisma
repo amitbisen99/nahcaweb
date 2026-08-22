@@ -36,6 +36,12 @@ enum PaymentType {
   donation
   conference
   endorsement
+  event
+}
+
+enum EventRegistrationStatus {
+  pending
+  active
 }
 
 enum PaymentStatus {
@@ -76,6 +82,7 @@ model User {
   institutionSponsorship InstitutionSponsorship?
   claimedCodes           InstitutionClaimCode[]
   passwordResetTokens    PasswordResetToken[]
+  eventRegistrations     EventRegistration[]
 }
 
 // Single-use, expiring token emailed as a link on "forgot password". See
@@ -252,6 +259,8 @@ model Payment {
   donation     Donation?     @relation(fields: [donationId], references: [id])
   membershipId Int?          @unique
   membership   Membership?   @relation(fields: [membershipId], references: [id])
+  eventRegistrationId Int?               @unique
+  eventRegistration   EventRegistration? @relation(fields: [eventRegistrationId], references: [id])
   couponId     Int?
   coupon       Coupon?       @relation(fields: [couponId], references: [id])
   type         PaymentType
@@ -285,8 +294,9 @@ model Event {
   description      String?       @db.Text
   registrationLink String?
   // Optional fee to join, in cents (same convention as every other price
-  // field in this app) — null/0 means free. Display-only for now; no
-  // payment is collected through this field yet.
+  // field in this app) — null/0 means free. Collected via
+  // EventRegistration/Payment when someone clicks Join (see
+  // routes/eventRegistrations.ts).
   priceCents       Int?
   featuredImageUrl String?
   speakers         Json?
@@ -307,8 +317,9 @@ model Webinar {
   title             String
   description       String?       @db.Text
   zoomOrYoutubeLink String?
-  // Optional fee to join, in cents — null/0 means free. Display-only for
-  // now; no payment is collected through this field yet.
+  // Optional fee to join, in cents — null/0 means free. Collected via
+  // EventRegistration/Payment when someone clicks Join (see
+  // routes/eventRegistrations.ts).
   priceCents        Int?
   speakerInfo       String?       @db.Text
   speakers          Json?
@@ -323,6 +334,40 @@ model Webinar {
 
   @@index([published])
   @@index([access])
+}
+
+// One row per person who clicks Join on an Event or Webinar. eventCode
+// matches Event.eventCode or Webinar.eventCode — same "which one, not a
+// real FK since it spans two tables" convention Coupon.eventCode already
+// uses. A logged-in member's quick-join sets userId and nothing else (see
+// POST /event-registrations/quick-join) — no payment, no questionnaire.
+// Everyone else (guest) leaves userId null and fills in the fields below
+// via the join form; payment (if the event has a fee) is optional too,
+// null for a free event or a complimentary coupon.
+model EventRegistration {
+  id        Int    @id @default(autoincrement())
+  eventCode String
+  userId    Int?
+  user      User?  @relation(fields: [userId], references: [id])
+  name      String?
+  email     String?
+  preferredPronouns       String?
+  mailingAddress          String?  @db.Text
+  phone                   String?
+  usesWhatsapp            Boolean?
+  whatsappContactOk       Boolean?
+  religiousTraditions     Json?
+  religiousTraditionOther String?
+  primaryRole             String?
+  employment              Json?
+  hearAboutUs             String?
+  hearAboutUsOther        String?
+  status    EventRegistrationStatus @default(pending)
+  createdAt DateTime @default(now())
+  payment   Payment?
+
+  @@index([eventCode])
+  @@index([userId])
 }
 
 model ConferenceVideo {

@@ -66,7 +66,7 @@ membershipsRouter.post(
     let couponId: number | null = null;
     let priceCents = basePriceCents;
     if (couponCode) {
-      const result = await findValidCoupon(couponCode, type);
+      const result = await findValidCoupon(couponCode, { planType: type });
       if (isCouponError(result)) return res.status(result.status).json({ error: result.message });
       couponId = result.id;
       priceCents = applyCouponDiscount(basePriceCents, result);

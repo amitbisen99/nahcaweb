@@ -20,6 +20,7 @@ import { articlesRouter, newslettersRouter, boardRouter } from "./routes/content
 import { eventsRouter } from "./routes/events";
 import { webinarsRouter } from "./routes/webinars";
 import { conferenceVideosRouter } from "./routes/conferenceVideos";
+import { eventRegistrationsRouter } from "./routes/eventRegistrations";
 import { asyncHandler } from "./lib/asyncHandler";
 import { paymentsBypassed } from "./lib/paymentsBypass";
 import { brevoConfigured } from "./lib/mailer";
@@ -106,6 +107,7 @@ app.use("/uploads", uploadsRouter);
 app.use("/events", eventsRouter);
 app.use("/webinars", webinarsRouter);
 app.use("/conference-videos", conferenceVideosRouter);
+app.use("/event-registrations", eventRegistrationsRouter);
 app.use("/articles", articlesRouter);
 app.use("/newsletters", newslettersRouter);
 app.use("/board", boardRouter);

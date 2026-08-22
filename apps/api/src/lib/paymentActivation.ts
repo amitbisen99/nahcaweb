@@ -2,26 +2,30 @@ import { prisma } from "../prisma";
 import {
   buildDonationAdminNotificationBody,
   buildDonationReceiptBody,
+  buildEventRegistrationReceiptBody,
   buildInstitutionCodesEmailBody,
   buildMembershipAdminNotificationBody,
   buildMembershipReceiptBody,
+  sendAdminNotification,
   sendEmail,
 } from "./mailer";
 import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTiers";
 import { redeemCoupon } from "./coupons";
 import { createCodeBatch } from "./institutions";
 import { addOrUpdateBrevoContact } from "./brevoContacts";
+import { findEventOrWebinarByCode } from "./eventCodes";
 
 // Shared by the Stripe webhook (real payments) and the payments-bypass paths
 // (demo/staging without Stripe configured) — marks a Payment succeeded and
-// activates whatever it's attached to (a Donation receipt or a Membership).
-// stripeSubscriptionId is only relevant for institutional memberships (a
-// recurring subscription) — everything else is a one-time payment.
+// activates whatever it's attached to (a Donation receipt, a Membership, or
+// an EventRegistration). stripeSubscriptionId is only relevant for
+// institutional memberships (a recurring subscription) — everything else is
+// a one-time payment.
 export async function activatePayment(paymentId: number, stripeRef: string, stripeSubscriptionId?: string) {
   const payment = await prisma.payment.update({
     where: { id: paymentId },
     data: { status: "succeeded", stripeRef },
-    include: { donation: true, membership: { include: { user: true } } },
+    include: { donation: true, membership: { include: { user: true } }, eventRegistration: true },
   });
 
   if (payment.couponId) {
@@ -179,6 +183,43 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
           body: codesBody,
         });
       }
+    }
+  }
+
+  // A guest event/webinar registration that had a fee (free ones and a
+  // logged-in member's quick-join both skip Stripe/this function entirely
+  // — see routes/eventRegistrations.ts).
+  if (payment.eventRegistration) {
+    const registration = payment.eventRegistration;
+
+    await prisma.eventRegistration.update({
+      where: { id: registration.id },
+      data: { status: "active" },
+    });
+
+    const eventInfo = await findEventOrWebinarByCode(registration.eventCode);
+    if (eventInfo && registration.email) {
+      const body = buildEventRegistrationReceiptBody({
+        attendeeName: registration.name ?? "there",
+        eventTitle: eventInfo.title,
+        eventDate: eventInfo.date,
+      });
+
+      await prisma.receipt.create({ data: { paymentId: payment.id, emailBody: body } });
+
+      await sendEmail({
+        to: registration.email,
+        subject: `You're registered — ${eventInfo.title}`,
+        body,
+      });
+
+      await sendAdminNotification(
+        `New event registration — ${eventInfo.title}`,
+        [
+          `${registration.name} (${registration.email}) registered for "${eventInfo.title}".`,
+          `Amount paid: $${(payment.amountCents / 100).toFixed(2)}`,
+        ].join("\n")
+      );
     }
   }
 

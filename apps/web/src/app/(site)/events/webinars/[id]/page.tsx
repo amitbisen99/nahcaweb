@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
-import { Button } from "@/components/Button";
 import { SpeakerCards } from "@/components/SpeakerCards";
+import { JoinButton } from "@/components/JoinButton";
 import { auth } from "@/auth";
 import { getOpenWebinar, formatEventFee } from "@/lib/cms";
 
@@ -62,11 +62,14 @@ export default async function WebinarDetailPage({
               />
             )}
 
-            {webinar.zoomOrYoutubeLink && (
-              <Button href={webinar.zoomOrYoutubeLink} className="mt-8">
-                Join →
-              </Button>
-            )}
+            <div className="mt-8">
+              <JoinButton
+                eventCode={webinar.eventCode}
+                eventTitle={webinar.title}
+                eventDate={null}
+                isLoggedIn={Boolean(session?.apiToken)}
+              />
+            </div>
           </div>
         </div>
       </Container>

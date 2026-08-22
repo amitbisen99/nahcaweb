@@ -40,3 +40,29 @@ export async function eventCodeExists(code: string): Promise<boolean> {
   ]);
   return Boolean(event || webinar);
 }
+
+export interface EventOrWebinarSummary {
+  type: "event" | "webinar";
+  title: string;
+  // Events have a scheduled date; Webinars don't (they're an always-on
+  // Zoom/YouTube link) — callers building a "held on {date}" message need
+  // to handle the webinar case, where this is always null.
+  date: Date | null;
+  priceCents: number | null;
+  published: boolean;
+}
+
+// Used by the event-registration flow to resolve an event code into the
+// details it actually needs (title/date for the confirmation message,
+// price for the Stripe line item) without the caller having to know or
+// care whether it's an Event or a Webinar.
+export async function findEventOrWebinarByCode(code: string): Promise<EventOrWebinarSummary | null> {
+  const [event, webinar] = await Promise.all([
+    prisma.event.findUnique({ where: { eventCode: code } }),
+    prisma.webinar.findUnique({ where: { eventCode: code } }),
+  ]);
+
+  if (event) return { type: "event", title: event.title, date: event.date, priceCents: event.priceCents, published: event.published };
+  if (webinar) return { type: "webinar", title: webinar.title, date: null, priceCents: webinar.priceCents, published: webinar.published };
+  return null;
+}

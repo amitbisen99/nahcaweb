@@ -166,6 +166,7 @@ couponsRouter.delete(
 const validateSchema = z.object({
   code: z.string().min(1),
   planType: z.enum(MEMBERSHIP_TYPES).optional(),
+  eventCode: z.string().optional(),
 });
 
 couponsRouter.post(
@@ -174,7 +175,10 @@ couponsRouter.post(
     const parsed = validateSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-    const result = await findValidCoupon(parsed.data.code, parsed.data.planType);
+    const result = await findValidCoupon(parsed.data.code, {
+      planType: parsed.data.planType,
+      eventCode: parsed.data.eventCode,
+    });
     if (isCouponError(result)) {
       return res.status(result.status).json({ error: result.message });
     }

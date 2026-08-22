@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { ContentTypeConfig, ContentTypeKey } from "@/lib/contentTypes";
 import { deleteContentItem, publishContentItem } from "@/app/admin/content/actions";
-import { EyeIcon, PencilIcon, TrashIcon, XIcon, isImageUrl } from "./icons";
+import { EyeIcon, PencilIcon, TrashIcon, UsersIcon, XIcon, isImageUrl } from "./icons";
 
 function formatValue(value: unknown, type: string): string {
   if (value === null || value === undefined || value === "") return "—";
@@ -76,6 +76,16 @@ export function ContentRowActions({
         >
           <PencilIcon className="h-[18px] w-[18px]" />
         </Link>
+        {(type === "events" || type === "webinars") && (
+          <Link
+            href={`/admin/content/${type}/${item.id}/attendees`}
+            aria-label="Attendees"
+            title="Attendees"
+            className="text-black transition-colors hover:text-brand"
+          >
+            <UsersIcon className="h-[18px] w-[18px]" />
+          </Link>
+        )}
         <button
           type="button"
           onClick={handleDelete}

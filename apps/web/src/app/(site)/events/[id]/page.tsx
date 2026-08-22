@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Container } from "@/components/Container";
 import { AddToCalendar } from "@/components/AddToCalendar";
 import { SpeakerCards } from "@/components/SpeakerCards";
-import { Button } from "@/components/Button";
+import { JoinButton } from "@/components/JoinButton";
 import { auth } from "@/auth";
 import { getEvent, formatEventFee } from "@/lib/cms";
 
@@ -63,11 +63,12 @@ export default async function EventDetailPage({
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              {/* Not wired up yet — placeholder only, per explicit instruction
-                  to hold off on the actual join/payment flow for now. */}
-              <Button type="button" variant="solid">
-                Join
-              </Button>
+              <JoinButton
+                eventCode={event.eventCode}
+                eventTitle={event.title}
+                eventDate={event.date}
+                isLoggedIn={Boolean(session?.apiToken)}
+              />
               <AddToCalendar
                 event={{
                   title: event.title,

@@ -166,6 +166,26 @@ export function buildInstitutionClaimReceiptBody(opts: {
   ].join("\n");
 }
 
+// Sent once an event/webinar registration is confirmed — a guest's paid or
+// free registration (via activatePayment), or an existing member's
+// quick-join. `eventDate` is only set for Events (Webinars have no
+// scheduled date), so the "held on" clause is conditional.
+export function buildEventRegistrationReceiptBody(opts: {
+  attendeeName: string;
+  eventTitle: string;
+  eventDate: Date | null;
+}) {
+  return [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.attendeeName},`,
+    ``,
+    `You registered for this event (${opts.eventTitle})${
+      opts.eventDate ? ` held on ${opts.eventDate.toDateString()}` : ""
+    }.`,
+  ].join("\n");
+}
+
 // Sent on POST /auth/forgot-password with a single-use, expiring link to
 // /reset-password?token=... — see routes/auth.ts for token generation.
 export function buildPasswordResetEmailBody(opts: { name: string; resetUrl: string; expiresInMinutes: number }) {
