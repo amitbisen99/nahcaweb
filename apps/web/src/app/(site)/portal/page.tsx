@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { getMyMemberships, getMyPayments } from "@/lib/api";
+import { getMyMemberships, getMyPayments, getProgrammeCoupons, ApiProgrammeCoupon } from "@/lib/api";
 import { TIER_LABELS, PAYMENT_STATUS_STYLES } from "@/lib/membershipLabels";
 import { paymentLabel } from "@/lib/paymentLabel";
 
@@ -54,12 +54,28 @@ function buildReminders(memberships: Awaited<ReturnType<typeof getMyMemberships>
   return reminders;
 }
 
+// One reminder per currently-usable event/webinar coupon — shown to every
+// member (general and sponsored alike, since both land on this same
+// dashboard), pointing them at the join page where the coupon code can be
+// entered.
+function buildCouponReminders(coupons: ApiProgrammeCoupon[]): Reminder[] {
+  return coupons.map((c) => ({
+    text: `You have received a coupon for the ${c.type === "webinar" ? "Webinar" : "Event"} '${c.eventTitle}'. The coupon code is - ${c.code}`,
+    href: `/events/join/${c.eventCode}`,
+    tone: "info",
+  }));
+}
+
 export default async function PortalDashboardPage() {
   const session = await auth();
   const token = session?.apiToken ?? "";
-  const [memberships, payments] = await Promise.all([getMyMemberships(token), getMyPayments(token)]);
+  const [memberships, payments, programmeCoupons] = await Promise.all([
+    getMyMemberships(token),
+    getMyPayments(token),
+    getProgrammeCoupons(token),
+  ]);
   const recentPurchases = payments.slice(0, 5);
-  const reminders = buildReminders(memberships);
+  const reminders = [...buildReminders(memberships), ...buildCouponReminders(programmeCoupons)];
   // Set only for a sponsored student's active membership (see the groupId
   // convention on ApiMembership) — they never have a Payment, so the
   // "Recent Purchases" empty state below shouldn't read as "not a member".

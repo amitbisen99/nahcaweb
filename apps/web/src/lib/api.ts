@@ -225,6 +225,21 @@ export async function getPublishedArticles(): Promise<ApiArticle[]> {
   return data?.items ?? [];
 }
 
+export interface ApiProgrammeCoupon {
+  code: string;
+  eventCode: string;
+  eventTitle: string;
+  type: "event" | "webinar";
+}
+
+// Every currently-usable coupon scoped to a specific Event/Webinar —
+// powers the portal dashboard's Reminders section, for both general and
+// sponsored members (see GET /coupons/programmes).
+export async function getProgrammeCoupons(token: string): Promise<ApiProgrammeCoupon[]> {
+  const data = await apiFetch<{ items: ApiProgrammeCoupon[] }>("/coupons/programmes", token);
+  return data?.items ?? [];
+}
+
 export async function getMemberConferenceVideos(token: string): Promise<ApiConferenceVideo[]> {
   const data = await apiFetch<{ items: ApiConferenceVideo[] }>("/conference-videos", token);
   return data?.items ?? [];

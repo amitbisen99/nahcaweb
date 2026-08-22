@@ -19,8 +19,10 @@ function confirmationMessage(type: "event" | "webinar", eventTitle: string, even
 }
 
 // Not logged in -> off to the registration/payment form. Already a member ->
-// one click, no form, no payment (client's explicit requirement) — this
-// component makes that call itself and swaps in the confirmation message.
+// one click, no form to re-fill, but they pay the same fee a guest would
+// (client's explicit requirement) — a free event/webinar confirms inline
+// immediately, a paid one redirects to Stripe Checkout just like the guest
+// form does, landing back on the same success page.
 export function JoinButton({
   eventCode,
   eventTitle,
@@ -44,12 +46,20 @@ export function JoinButton({
     setPending(true);
     setError(null);
     const result = await quickJoinEvent(eventCode);
-    setPending(false);
 
     if (result.error) {
+      setPending(false);
       setError(result.error);
       return;
     }
+
+    if (result.checkoutUrl) {
+      // Leave `pending` true — the page is about to navigate away.
+      window.location.href = result.checkoutUrl;
+      return;
+    }
+
+    setPending(false);
     setJoined(true);
   }
 

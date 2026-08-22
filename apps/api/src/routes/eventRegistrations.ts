@@ -45,6 +45,38 @@ const eventProfileSchema = z.object({
   hearAboutUsOther: z.string().optional(),
 });
 
+// Shared by both the guest and member paid-join paths below.
+function eventJoinSuccessUrl(eventCode: string): string {
+  return `${process.env.WEB_ORIGIN}/events/join/${eventCode}?status=success`;
+}
+
+async function createEventCheckoutSession(opts: {
+  eventCode: string;
+  eventTitle: string;
+  email: string;
+  priceCents: number;
+  paymentId: number;
+}) {
+  return stripe.checkout.sessions.create({
+    mode: "payment",
+    payment_method_types: ["card"],
+    customer_email: opts.email,
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: { name: `NAHCA — ${opts.eventTitle}` },
+          unit_amount: opts.priceCents,
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: eventJoinSuccessUrl(opts.eventCode),
+    cancel_url: `${process.env.WEB_ORIGIN}/events/join/${opts.eventCode}?status=cancelled`,
+    metadata: { paymentId: String(opts.paymentId) },
+  });
+}
+
 // Guest registration — no login, no password (client's explicit
 // requirement, same guest pattern as POST /donations). Applies an
 // event-scoped coupon if given, then mirrors memberships.ts's
@@ -102,35 +134,22 @@ eventRegistrationsRouter.post(
       },
     });
 
-    const successUrl = `${process.env.WEB_ORIGIN}/events/join/${eventCode}?status=success`;
-
     if (paymentsBypassed()) {
       await activatePayment(payment.id, `bypass-${Date.now()}`);
-      return res.status(201).json({ checkoutUrl: successUrl });
+      return res.status(201).json({ checkoutUrl: eventJoinSuccessUrl(eventCode) });
     }
 
     if (priceCents === 0) {
       await activatePayment(payment.id, `comp-${Date.now()}`);
-      return res.status(201).json({ checkoutUrl: successUrl });
+      return res.status(201).json({ checkoutUrl: eventJoinSuccessUrl(eventCode) });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      customer_email: email,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: { name: `NAHCA — ${eventInfo.title}` },
-            unit_amount: priceCents,
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: successUrl,
-      cancel_url: `${process.env.WEB_ORIGIN}/events/join/${eventCode}?status=cancelled`,
-      metadata: { paymentId: String(payment.id) },
+    const session = await createEventCheckoutSession({
+      eventCode,
+      eventTitle: eventInfo.title,
+      email,
+      priceCents,
+      paymentId: payment.id,
     });
 
     await prisma.payment.update({
@@ -142,9 +161,12 @@ eventRegistrationsRouter.post(
   })
 );
 
-// Existing logged-in member — no form, no payment, per explicit
-// instruction. Idempotent: joining the same event twice returns the
-// existing registration instead of creating a duplicate.
+// Existing logged-in member — no form to re-fill (we already have their
+// account info), but they pay the same fee a guest would (client's
+// explicit requirement — this used to be free for members, no longer is).
+// Free events/webinars still join instantly with no payment step at all.
+// Idempotent: an already-active registration is returned as-is instead of
+// charging again; an abandoned pending attempt is retried fresh.
 const quickJoinSchema = z.object({
   eventCode: z.string().min(1),
 });
@@ -163,30 +185,67 @@ eventRegistrationsRouter.post(
     }
 
     const existing = await prisma.eventRegistration.findFirst({
-      where: { eventCode, userId: req.auth!.userId },
+      where: { eventCode, userId: req.auth!.userId, status: "active" },
     });
     if (existing) return res.status(200).json({ registration: existing });
 
     const user = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    const priceCents = eventInfo.priceCents ?? 0;
+
+    if (priceCents === 0) {
+      const registration = await prisma.eventRegistration.create({
+        data: { eventCode, userId: user.id, status: "active" },
+      });
+
+      const body = buildEventRegistrationReceiptBody({
+        attendeeName: user.name,
+        eventTitle: eventInfo.title,
+        eventDate: eventInfo.date,
+        type: eventInfo.type,
+      });
+      await sendEmail({ to: user.email, subject: `You're registered — ${eventInfo.title}`, body });
+      await sendAdminNotification(
+        `New event registration — ${eventInfo.title}`,
+        `${user.name} (${user.email}) joined "${eventInfo.title}" — existing member, no fee for this event.`
+      );
+
+      return res.status(201).json({ registration });
+    }
+
     const registration = await prisma.eventRegistration.create({
-      data: { eventCode, userId: user.id, status: "active" },
+      data: { eventCode, userId: user.id, status: "pending" },
     });
 
-    const body = buildEventRegistrationReceiptBody({
-      attendeeName: user.name,
+    const payment = await prisma.payment.create({
+      data: {
+        eventRegistrationId: registration.id,
+        type: "event",
+        amountCents: priceCents,
+        status: "pending",
+      },
+    });
+
+    if (paymentsBypassed()) {
+      await activatePayment(payment.id, `bypass-${Date.now()}`);
+      return res.status(201).json({ checkoutUrl: eventJoinSuccessUrl(eventCode) });
+    }
+
+    const session = await createEventCheckoutSession({
+      eventCode,
       eventTitle: eventInfo.title,
-      eventDate: eventInfo.date,
-      type: eventInfo.type,
+      email: user.email,
+      priceCents,
+      paymentId: payment.id,
     });
-    await sendEmail({ to: user.email, subject: `You're registered — ${eventInfo.title}`, body });
-    await sendAdminNotification(
-      `New event registration — ${eventInfo.title}`,
-      `${user.name} (${user.email}) joined "${eventInfo.title}" — existing member, no payment required.`
-    );
 
-    res.status(201).json({ registration });
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { stripeRef: session.id },
+    });
+
+    res.status(201).json({ checkoutUrl: session.url });
   })
 );
 

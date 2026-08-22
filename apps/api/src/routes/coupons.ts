@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../prisma";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
-import { findValidCoupon, isCouponError } from "../lib/coupons";
+import { findValidCoupon, isCouponError, listActiveProgrammeCoupons } from "../lib/coupons";
 import { eventCodeExists } from "../lib/eventCodes";
 
 export const couponsRouter = Router();
@@ -74,6 +74,19 @@ couponsRouter.get(
   asyncHandler(async (_req, res) => {
     const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
     res.json({ items: coupons });
+  })
+);
+
+// Member-facing (any logged-in account, not just admins) — every currently
+// usable coupon scoped to a specific Event/Webinar, so the portal
+// dashboard can remind both general and sponsored members it exists.
+// Registered before /:id so "programmes" is never swallowed as an id.
+couponsRouter.get(
+  "/programmes",
+  requireAuth,
+  asyncHandler(async (_req, res) => {
+    const items = await listActiveProgrammeCoupons();
+    res.json({ items });
   })
 );
 

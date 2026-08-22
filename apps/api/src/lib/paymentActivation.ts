@@ -25,7 +25,11 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
   const payment = await prisma.payment.update({
     where: { id: paymentId },
     data: { status: "succeeded", stripeRef },
-    include: { donation: true, membership: { include: { user: true } }, eventRegistration: true },
+    include: {
+      donation: true,
+      membership: { include: { user: true } },
+      eventRegistration: { include: { user: true } },
+    },
   });
 
   if (payment.couponId) {
@@ -186,11 +190,14 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
     }
   }
 
-  // A guest event/webinar registration that had a fee (free ones and a
-  // logged-in member's quick-join both skip Stripe/this function entirely
-  // — see routes/eventRegistrations.ts).
+  // Either a guest registration (name/email filled in directly) or a paid
+  // registration from an existing member (name/email resolved from their
+  // account instead — see routes/eventRegistrations.ts's POST /quick-join).
+  // Free registrations skip Stripe/this function entirely either way.
   if (payment.eventRegistration) {
     const registration = payment.eventRegistration;
+    const recipientName = registration.name ?? registration.user?.name ?? "there";
+    const recipientEmail = registration.email ?? registration.user?.email ?? null;
 
     await prisma.eventRegistration.update({
       where: { id: registration.id },
@@ -198,9 +205,9 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
     });
 
     const eventInfo = await findEventOrWebinarByCode(registration.eventCode);
-    if (eventInfo && registration.email) {
+    if (eventInfo && recipientEmail) {
       const body = buildEventRegistrationReceiptBody({
-        attendeeName: registration.name ?? "there",
+        attendeeName: recipientName,
         eventTitle: eventInfo.title,
         eventDate: eventInfo.date,
         type: eventInfo.type,
@@ -209,7 +216,7 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       await prisma.receipt.create({ data: { paymentId: payment.id, emailBody: body } });
 
       await sendEmail({
-        to: registration.email,
+        to: recipientEmail,
         subject: `You're registered — ${eventInfo.title}`,
         body,
       });
@@ -217,7 +224,7 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       await sendAdminNotification(
         `New event registration — ${eventInfo.title}`,
         [
-          `${registration.name} (${registration.email}) registered for "${eventInfo.title}".`,
+          `${recipientName} (${recipientEmail}) registered for "${eventInfo.title}".`,
           `Amount paid: $${(payment.amountCents / 100).toFixed(2)}`,
         ].join("\n")
       );

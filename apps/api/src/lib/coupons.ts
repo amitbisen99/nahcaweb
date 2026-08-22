@@ -1,5 +1,6 @@
 import { Coupon } from "@prisma/client";
 import { prisma } from "../prisma";
+import { findEventOrWebinarByCode } from "./eventCodes";
 
 export type CouponValidationError = { status: number; message: string };
 
@@ -68,4 +69,50 @@ export function applyCouponDiscount(baseCents: number, coupon: Coupon): number {
 // Called once a payment referencing this coupon has actually succeeded.
 export async function redeemCoupon(couponId: number) {
   await prisma.coupon.update({ where: { id: couponId }, data: { usedCount: { increment: 1 } } });
+}
+
+export interface ActiveProgrammeCoupon {
+  code: string;
+  eventCode: string;
+  eventTitle: string;
+  type: "event" | "webinar";
+}
+
+// Every currently-usable "Nahca Programmes" coupon (published, within its
+// date window, uses remaining) — surfaced as a dashboard reminder to every
+// member (see GET /coupons/programmes) so they know a discount exists for
+// that event/webinar. Validity mirrors findValidCoupon's own checks, so a
+// member is never pointed at a code that would then fail at checkout.
+export async function listActiveProgrammeCoupons(): Promise<ActiveProgrammeCoupon[]> {
+  const now = new Date();
+  const candidates = await prisma.coupon.findMany({
+    where: {
+      published: true,
+      eventCode: { not: null },
+      AND: [
+        { OR: [{ validFrom: null }, { validFrom: { lte: now } }] },
+        { OR: [{ validTill: null }, { validTill: { gte: now } }] },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const usable = candidates.filter((coupon) => {
+    const appliesTo = (coupon.appliesTo as string[] | null) ?? [];
+    return appliesTo.includes("nahca_programmes") && (coupon.maxUses === null || coupon.usedCount < coupon.maxUses);
+  });
+
+  const results: ActiveProgrammeCoupon[] = [];
+  for (const coupon of usable) {
+    if (!coupon.eventCode) continue;
+    const eventInfo = await findEventOrWebinarByCode(coupon.eventCode);
+    if (!eventInfo || !eventInfo.published) continue;
+    results.push({
+      code: coupon.code,
+      eventCode: coupon.eventCode,
+      eventTitle: eventInfo.title,
+      type: eventInfo.type,
+    });
+  }
+  return results;
 }

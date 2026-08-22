@@ -1,14 +1,18 @@
 "use server";
 
 // Shared by both the Event and Webinar detail pages' JoinButton — an
-// existing member clicking Join needs no form/payment (client's explicit
-// requirement), just this one call.
+// existing member clicking Join needs no form to re-fill, but pays the
+// same fee a guest would (client's explicit requirement). A free
+// event/webinar still returns { success: true } directly (no payment
+// step); a paid one returns { checkoutUrl } for the client to redirect to,
+// same as the guest join form does.
 
 import { auth } from "@/auth";
 
 export interface QuickJoinState {
   error?: string;
   success?: boolean;
+  checkoutUrl?: string;
 }
 
 export async function quickJoinEvent(eventCode: string): Promise<QuickJoinState> {
@@ -23,10 +27,15 @@ export async function quickJoinEvent(eventCode: string): Promise<QuickJoinState>
     body: JSON.stringify({ eventCode }),
   });
 
+  const data = await res.json().catch(() => null);
+
   if (!res.ok) {
-    const data = await res.json().catch(() => null);
     const message = typeof data?.error === "string" ? data.error : "Something went wrong. Please try again.";
     return { error: message };
+  }
+
+  if (typeof data?.checkoutUrl === "string") {
+    return { checkoutUrl: data.checkoutUrl };
   }
 
   return { success: true };
