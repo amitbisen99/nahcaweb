@@ -15,7 +15,7 @@ export interface QuickJoinState {
   checkoutUrl?: string;
 }
 
-export async function quickJoinEvent(eventCode: string): Promise<QuickJoinState> {
+export async function quickJoinEvent(eventCode: string, couponCode?: string): Promise<QuickJoinState> {
   const session = await auth();
   if (!session?.apiToken) {
     return { error: "You must be signed in to join." };
@@ -24,7 +24,7 @@ export async function quickJoinEvent(eventCode: string): Promise<QuickJoinState>
   const res = await fetch(`${process.env.API_URL}/event-registrations/quick-join`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.apiToken}` },
-    body: JSON.stringify({ eventCode }),
+    body: JSON.stringify({ eventCode, ...(couponCode ? { couponCode } : {}) }),
   });
 
   const data = await res.json().catch(() => null);

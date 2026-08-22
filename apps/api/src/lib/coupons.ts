@@ -76,6 +76,10 @@ export interface ActiveProgrammeCoupon {
   eventCode: string;
   eventTitle: string;
   type: "event" | "webinar";
+  // The Event/Webinar's own id — the dashboard reminder links straight to
+  // its detail page (not the join form) so a member can use the existing
+  // Join button/coupon prompt instead of re-filling the guest form.
+  id: number;
 }
 
 // Every currently-usable "Nahca Programmes" coupon (published, within its
@@ -112,6 +116,7 @@ export async function listActiveProgrammeCoupons(): Promise<ActiveProgrammeCoupo
       eventCode: coupon.eventCode,
       eventTitle: eventInfo.title,
       type: eventInfo.type,
+      id: eventInfo.id,
     });
   }
   return results;

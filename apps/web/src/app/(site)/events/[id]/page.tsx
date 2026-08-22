@@ -67,6 +67,7 @@ export default async function EventDetailPage({
                 eventCode={event.eventCode}
                 eventTitle={event.title}
                 eventDate={event.date}
+                priceCents={event.priceCents}
                 isLoggedIn={Boolean(session?.apiToken)}
                 type="event"
               />

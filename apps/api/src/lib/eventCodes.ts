@@ -42,6 +42,7 @@ export async function eventCodeExists(code: string): Promise<boolean> {
 }
 
 export interface EventOrWebinarSummary {
+  id: number;
   type: "event" | "webinar";
   title: string;
   // Events have a scheduled date; Webinars don't (they're an always-on
@@ -62,7 +63,25 @@ export async function findEventOrWebinarByCode(code: string): Promise<EventOrWeb
     prisma.webinar.findUnique({ where: { eventCode: code } }),
   ]);
 
-  if (event) return { type: "event", title: event.title, date: event.date, priceCents: event.priceCents, published: event.published };
-  if (webinar) return { type: "webinar", title: webinar.title, date: null, priceCents: webinar.priceCents, published: webinar.published };
+  if (event) {
+    return {
+      id: event.id,
+      type: "event",
+      title: event.title,
+      date: event.date,
+      priceCents: event.priceCents,
+      published: event.published,
+    };
+  }
+  if (webinar) {
+    return {
+      id: webinar.id,
+      type: "webinar",
+      title: webinar.title,
+      date: null,
+      priceCents: webinar.priceCents,
+      published: webinar.published,
+    };
+  }
   return null;
 }

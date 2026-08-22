@@ -56,12 +56,13 @@ function buildReminders(memberships: Awaited<ReturnType<typeof getMyMemberships>
 
 // One reminder per currently-usable event/webinar coupon — shown to every
 // member (general and sponsored alike, since both land on this same
-// dashboard), pointing them at the join page where the coupon code can be
-// entered.
+// dashboard). Links to the event/webinar's own detail page rather than the
+// guest join form — a member doesn't need to re-fill that, they can just
+// use the Join button there, which prompts for a coupon code itself.
 function buildCouponReminders(coupons: ApiProgrammeCoupon[]): Reminder[] {
   return coupons.map((c) => ({
     text: `You have received a coupon for the ${c.type === "webinar" ? "Webinar" : "Event"} '${c.eventTitle}'. The coupon code is - ${c.code}`,
-    href: `/events/join/${c.eventCode}`,
+    href: c.type === "webinar" ? `/events/webinars/${c.id}` : `/events/${c.id}`,
     tone: "info",
   }));
 }

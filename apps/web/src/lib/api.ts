@@ -230,6 +230,9 @@ export interface ApiProgrammeCoupon {
   eventCode: string;
   eventTitle: string;
   type: "event" | "webinar";
+  // The Event/Webinar's own id — used to link the reminder straight to its
+  // detail page rather than the guest join form (see portal/page.tsx).
+  id: number;
 }
 
 // Every currently-usable coupon scoped to a specific Event/Webinar —

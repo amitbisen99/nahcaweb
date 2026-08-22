@@ -164,11 +164,16 @@ eventRegistrationsRouter.post(
 // Existing logged-in member — no form to re-fill (we already have their
 // account info), but they pay the same fee a guest would (client's
 // explicit requirement — this used to be free for members, no longer is).
-// Free events/webinars still join instantly with no payment step at all.
+// A paid join accepts the same optional coupon a guest can enter (the
+// client's "have a coupon?" popup on the Join button, see JoinButton.tsx —
+// applied the same way findValidCoupon/applyCouponDiscount handle it for
+// guests). Free events/webinars still join instantly with no payment step
+// at all — no coupon prompt either, since there's nothing to discount.
 // Idempotent: an already-active registration is returned as-is instead of
 // charging again; an abandoned pending attempt is retried fresh.
 const quickJoinSchema = z.object({
   eventCode: z.string().min(1),
+  couponCode: z.string().optional(),
 });
 
 eventRegistrationsRouter.post(
@@ -177,7 +182,7 @@ eventRegistrationsRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = quickJoinSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-    const { eventCode } = parsed.data;
+    const { eventCode, couponCode } = parsed.data;
 
     const eventInfo = await findEventOrWebinarByCode(eventCode);
     if (!eventInfo || !eventInfo.published) {
@@ -192,9 +197,9 @@ eventRegistrationsRouter.post(
     const user = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const priceCents = eventInfo.priceCents ?? 0;
+    const basePriceCents = eventInfo.priceCents ?? 0;
 
-    if (priceCents === 0) {
+    if (basePriceCents === 0) {
       const registration = await prisma.eventRegistration.create({
         data: { eventCode, userId: user.id, status: "active" },
       });
@@ -214,6 +219,15 @@ eventRegistrationsRouter.post(
       return res.status(201).json({ registration });
     }
 
+    let couponId: number | null = null;
+    let priceCents = basePriceCents;
+    if (couponCode) {
+      const result = await findValidCoupon(couponCode, { eventCode });
+      if (isCouponError(result)) return res.status(result.status).json({ error: result.message });
+      couponId = result.id;
+      priceCents = applyCouponDiscount(basePriceCents, result);
+    }
+
     const registration = await prisma.eventRegistration.create({
       data: { eventCode, userId: user.id, status: "pending" },
     });
@@ -221,6 +235,7 @@ eventRegistrationsRouter.post(
     const payment = await prisma.payment.create({
       data: {
         eventRegistrationId: registration.id,
+        couponId,
         type: "event",
         amountCents: priceCents,
         status: "pending",
@@ -229,6 +244,11 @@ eventRegistrationsRouter.post(
 
     if (paymentsBypassed()) {
       await activatePayment(payment.id, `bypass-${Date.now()}`);
+      return res.status(201).json({ checkoutUrl: eventJoinSuccessUrl(eventCode) });
+    }
+
+    if (priceCents === 0) {
+      await activatePayment(payment.id, `comp-${Date.now()}`);
       return res.status(201).json({ checkoutUrl: eventJoinSuccessUrl(eventCode) });
     }
 

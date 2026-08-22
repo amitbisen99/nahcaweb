@@ -67,6 +67,7 @@ export default async function WebinarDetailPage({
                 eventCode={webinar.eventCode}
                 eventTitle={webinar.title}
                 eventDate={null}
+                priceCents={webinar.priceCents}
                 isLoggedIn={Boolean(session?.apiToken)}
                 type="webinar"
                 size="sm"
