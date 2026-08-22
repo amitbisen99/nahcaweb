@@ -203,6 +203,7 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
         attendeeName: registration.name ?? "there",
         eventTitle: eventInfo.title,
         eventDate: eventInfo.date,
+        type: eventInfo.type,
       });
 
       await prisma.receipt.create({ data: { paymentId: payment.id, emailBody: body } });

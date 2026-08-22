@@ -68,6 +68,7 @@ export default async function EventDetailPage({
                 eventTitle={event.title}
                 eventDate={event.date}
                 isLoggedIn={Boolean(session?.apiToken)}
+                type="event"
               />
               <AddToCalendar
                 event={{

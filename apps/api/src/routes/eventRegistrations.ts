@@ -178,6 +178,7 @@ eventRegistrationsRouter.post(
       attendeeName: user.name,
       eventTitle: eventInfo.title,
       eventDate: eventInfo.date,
+      type: eventInfo.type,
     });
     await sendEmail({ to: user.email, subject: `You're registered — ${eventInfo.title}`, body });
     await sendAdminNotification(

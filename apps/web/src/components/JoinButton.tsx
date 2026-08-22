@@ -8,6 +8,16 @@ function formatDate(date: string): string {
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// Webinars have no scheduled date and get their own wording; Events keep
+// the "held on" clause. Mirrors buildEventRegistrationReceiptBody on the
+// API side — keep both in sync.
+function confirmationMessage(type: "event" | "webinar", eventTitle: string, eventDate: string | null): string {
+  if (type === "webinar") {
+    return `You successfully registered for the webinar '${eventTitle}'.`;
+  }
+  return `You registered for this event '${eventTitle}'${eventDate ? ` held on ${formatDate(eventDate)}` : ""}.`;
+}
+
 // Not logged in -> off to the registration/payment form. Already a member ->
 // one click, no form, no payment (client's explicit requirement) — this
 // component makes that call itself and swaps in the confirmation message.
@@ -16,11 +26,15 @@ export function JoinButton({
   eventTitle,
   eventDate,
   isLoggedIn,
+  type,
+  size = "md",
 }: {
   eventCode: string;
   eventTitle: string;
   eventDate: string | null;
   isLoggedIn: boolean;
+  type: "event" | "webinar";
+  size?: "sm" | "md";
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,26 +55,26 @@ export function JoinButton({
 
   if (joined) {
     return (
-      <p className="rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest">
-        You registered for this event ({eventTitle}){eventDate ? ` held on ${formatDate(eventDate)}` : ""}.
+      <p className="max-w-sm rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest break-words">
+        {confirmationMessage(type, eventTitle, eventDate)}
       </p>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <Button href={`/events/join/${eventCode}`} variant="solid">
+      <Button href={`/events/join/${eventCode}`} variant="solid" size={size}>
         Join
       </Button>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button type="button" variant="solid" onClick={handleQuickJoin} disabled={pending}>
+    <div className="flex flex-col items-start gap-2">
+      <Button type="button" variant="solid" size={size} onClick={handleQuickJoin} disabled={pending}>
         {pending ? "Joining…" : "Join"}
       </Button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="max-w-sm text-sm text-red-600 break-words">{error}</p>}
     </div>
   );
 }

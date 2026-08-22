@@ -168,22 +168,23 @@ export function buildInstitutionClaimReceiptBody(opts: {
 
 // Sent once an event/webinar registration is confirmed — a guest's paid or
 // free registration (via activatePayment), or an existing member's
-// quick-join. `eventDate` is only set for Events (Webinars have no
-// scheduled date), so the "held on" clause is conditional.
+// quick-join. Webinars get their own wording (they have no scheduled
+// date); Events keep the "held on" clause, conditional since it's only
+// ever missing if the event data itself is incomplete.
 export function buildEventRegistrationReceiptBody(opts: {
   attendeeName: string;
   eventTitle: string;
   eventDate: Date | null;
+  type: "event" | "webinar";
 }) {
-  return [
-    `${process.env.ORG_NAME}`,
-    ``,
-    `Dear ${opts.attendeeName},`,
-    ``,
-    `You registered for this event (${opts.eventTitle})${
-      opts.eventDate ? ` held on ${opts.eventDate.toDateString()}` : ""
-    }.`,
-  ].join("\n");
+  const confirmation =
+    opts.type === "webinar"
+      ? `You successfully registered for the webinar '${opts.eventTitle}'.`
+      : `You registered for this event '${opts.eventTitle}'${
+          opts.eventDate ? ` held on ${opts.eventDate.toDateString()}` : ""
+        }.`;
+
+  return [`${process.env.ORG_NAME}`, ``, `Dear ${opts.attendeeName},`, ``, confirmation].join("\n");
 }
 
 // Sent on POST /auth/forgot-password with a single-use, expiring link to

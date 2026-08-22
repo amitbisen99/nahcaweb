@@ -68,6 +68,8 @@ export default async function WebinarDetailPage({
                 eventTitle={webinar.title}
                 eventDate={null}
                 isLoggedIn={Boolean(session?.apiToken)}
+                type="webinar"
+                size="sm"
               />
             </div>
           </div>

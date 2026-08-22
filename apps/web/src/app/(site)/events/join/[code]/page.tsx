@@ -8,6 +8,16 @@ function formatDate(date: string): string {
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// Webinars have no scheduled date and get their own wording; Events keep
+// the "held on" clause. Mirrors JoinButton.tsx's confirmationMessage and
+// the API's buildEventRegistrationReceiptBody — keep all three in sync.
+function confirmationMessage(type: "event" | "webinar", title: string, date: string | null): string {
+  if (type === "webinar") {
+    return `You successfully registered for the webinar '${title}'.`;
+  }
+  return `You registered for this event '${title}'${date ? ` held on ${formatDate(date)}` : ""}.`;
+}
+
 export default async function EventJoinPage({
   params,
   searchParams,
@@ -35,8 +45,7 @@ export default async function EventJoinPage({
 
           {status === "success" ? (
             <p className="mt-6 max-w-xl rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest">
-              You registered for this event ({eventInfo.title})
-              {eventInfo.date ? ` held on ${formatDate(eventInfo.date)}` : ""}.
+              {confirmationMessage(eventInfo.type, eventInfo.title, eventInfo.date)}
             </p>
           ) : (
             <>

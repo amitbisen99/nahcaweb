@@ -17,6 +17,13 @@ export default async function ContentListPage({
 
   const session = await auth();
   const items = await listContent(config.key, session?.apiToken ?? "");
+  // Events come back from the API sorted by event date (soonest first) —
+  // fine for the public site, but admins want to see whatever they just
+  // added at the top instead of hunting for it by date. id is a reliable
+  // stand-in for creation order (auto-increment).
+  if (config.key === "events") {
+    items.sort((a, b) => Number(b.id) - Number(a.id));
+  }
 
   return (
     <div>
