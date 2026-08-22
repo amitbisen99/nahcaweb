@@ -4,7 +4,7 @@ import { Container } from "@/components/Container";
 import { Button } from "@/components/Button";
 import { SpeakerCards } from "@/components/SpeakerCards";
 import { auth } from "@/auth";
-import { getOpenWebinar } from "@/lib/cms";
+import { getOpenWebinar, formatEventFee } from "@/lib/cms";
 
 export default async function WebinarDetailPage({
   params,
@@ -40,6 +40,9 @@ export default async function WebinarDetailPage({
               </span>
             )}
             <h1 className="font-heading text-3xl font-medium text-heading">{webinar.title}</h1>
+            {formatEventFee(webinar.priceCents) && (
+              <p className="mt-1 text-sm font-semibold text-brand-dark">{formatEventFee(webinar.priceCents)}</p>
+            )}
 
             {webinar.description && (
               <div

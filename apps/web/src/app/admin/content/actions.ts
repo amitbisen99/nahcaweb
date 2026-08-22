@@ -77,7 +77,13 @@ async function buildPayload(type: ContentTypeKey, formData: FormData, token: str
 
     const raw = formData.get(field.name);
     if (raw === null || raw === "") continue;
-    payload[field.name] = field.type === "number" ? Number(raw) : raw;
+    if (field.type === "currency") {
+      // Entered in dollars (see ContentForm's currency field), stored in
+      // cents like every other price field in this app.
+      payload[field.name] = Math.round(Number(raw) * 100);
+    } else {
+      payload[field.name] = field.type === "number" ? Number(raw) : raw;
+    }
   }
 
   return payload;

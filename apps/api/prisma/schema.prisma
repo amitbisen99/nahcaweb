@@ -284,6 +284,10 @@ model Event {
   time             String?
   description      String?       @db.Text
   registrationLink String?
+  // Optional fee to join, in cents (same convention as every other price
+  // field in this app) — null/0 means free. Display-only for now; no
+  // payment is collected through this field yet.
+  priceCents       Int?
   featuredImageUrl String?
   speakers         Json?
   access           WebinarAccess @default(open)
@@ -303,6 +307,8 @@ model Webinar {
   title             String
   description       String?       @db.Text
   zoomOrYoutubeLink String?
+  // Optional fee to join, in cents — null/0 means free. Display-only for
+  // now; no payment is collected through this field yet.
   priceCents        Int?
   speakerInfo       String?       @db.Text
   speakers          Json?

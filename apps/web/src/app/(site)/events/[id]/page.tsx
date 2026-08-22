@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Container } from "@/components/Container";
 import { AddToCalendar } from "@/components/AddToCalendar";
 import { SpeakerCards } from "@/components/SpeakerCards";
+import { Button } from "@/components/Button";
 import { auth } from "@/auth";
-import { getEvent } from "@/lib/cms";
+import { getEvent, formatEventFee } from "@/lib/cms";
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -46,6 +47,9 @@ export default async function EventDetailPage({
               {formatDate(event.date)} {event.time ? `· ${event.time}` : ""}
             </p>
             <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{event.title}</h1>
+            {formatEventFee(event.priceCents) && (
+              <p className="mt-1 text-sm font-semibold text-brand-dark">{formatEventFee(event.priceCents)}</p>
+            )}
 
             {event.description && (
               <div
@@ -59,6 +63,11 @@ export default async function EventDetailPage({
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
+              {/* Not wired up yet — placeholder only, per explicit instruction
+                  to hold off on the actual join/payment flow for now. */}
+              <Button type="button" variant="solid">
+                Join
+              </Button>
               <AddToCalendar
                 event={{
                   title: event.title,

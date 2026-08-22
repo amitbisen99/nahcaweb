@@ -19,6 +19,7 @@ const eventSchema = z.object({
   time: z.string().optional(),
   description: z.string().optional(),
   registrationLink: z.string().optional(),
+  priceCents: z.number().int().min(0).nullable().optional(),
   featuredImageUrl: z.string().nullable().optional(),
   speakers: speakersSchema,
   access: z.enum(["open", "members_only"]).optional(),

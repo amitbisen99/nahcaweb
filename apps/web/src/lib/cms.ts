@@ -1,3 +1,12 @@
+// Shared by the Event and Webinar detail pages — null/undefined means no
+// fee was set at all (nothing shown), 0 means explicitly free ("Free"),
+// anything else is a dollar amount.
+export function formatEventFee(priceCents: number | null | undefined): string | null {
+  if (priceCents === null || priceCents === undefined) return null;
+  if (priceCents === 0) return "Free";
+  return `$${(priceCents / 100).toFixed(2)}`;
+}
+
 export interface CmsSpeaker {
   name: string;
   title?: string | null;
@@ -11,6 +20,8 @@ export interface CmsEvent {
   time: string | null;
   description: string | null;
   registrationLink: string | null;
+  // Cents — null/0 means free. Display-only for now, no payment collected.
+  priceCents: number | null;
   featuredImageUrl?: string | null;
   speakers?: CmsSpeaker[] | null;
   access: "open" | "members_only";
@@ -57,6 +68,8 @@ export interface CmsWebinar {
   title: string;
   description: string | null;
   zoomOrYoutubeLink: string | null;
+  // Cents — null/0 means free. Display-only for now, no payment collected.
+  priceCents: number | null;
   speakerInfo: string | null;
   speakers?: CmsSpeaker[] | null;
   featuredImageUrl: string | null;

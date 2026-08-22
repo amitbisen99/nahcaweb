@@ -21,6 +21,7 @@ export interface FieldConfig {
     | "date"
     | "time"
     | "number"
+    | "currency"
     | "checkbox"
     | "select"
     | "file"
@@ -51,6 +52,12 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "description", label: "Description", type: "richtext" },
       { name: "registrationLink", label: "Registration Link", type: "text" },
       {
+        name: "priceCents",
+        label: "Event Fee (USD)",
+        type: "currency",
+        helpText: "Leave blank for a free event.",
+      },
+      {
         name: "featuredImageUrl",
         label: "Featured Image",
         type: "file",
@@ -79,6 +86,12 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "title", label: "Title", type: "text", required: true },
       { name: "description", label: "Description", type: "richtext" },
       { name: "zoomOrYoutubeLink", label: "Zoom / YouTube Link", type: "text" },
+      {
+        name: "priceCents",
+        label: "Event Fee (USD)",
+        type: "currency",
+        helpText: "Leave blank for a free webinar.",
+      },
       { name: "speakers", label: "Speakers", type: "speakers" },
       {
         name: "featuredImageUrl",

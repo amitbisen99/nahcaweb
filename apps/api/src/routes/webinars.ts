@@ -16,7 +16,7 @@ const webinarSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   zoomOrYoutubeLink: z.string().optional(),
-  priceCents: z.number().int().optional(),
+  priceCents: z.number().int().min(0).nullable().optional(),
   speakerInfo: z.string().optional(),
   speakers: speakersSchema,
   featuredImageUrl: z.string().nullable().optional(),

@@ -121,6 +121,29 @@ export function ContentForm({
           );
         }
 
+        if (field.type === "currency") {
+          // Stored in cents (same convention as every other price field in
+          // this app) but entered/shown in dollars — matches how the
+          // bespoke MembershipPlanForm handles price, unlike this generic
+          // form's "number" type, which submits the raw value as-is.
+          const dollars = typeof currentValue === "number" ? (currentValue / 100).toFixed(2) : "";
+          return (
+            <label key={field.name} className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-black">{field.label}</span>
+              <input
+                type="number"
+                name={field.name}
+                min={0}
+                step={0.01}
+                required={field.required}
+                defaultValue={dollars}
+                className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
+              />
+              {field.helpText && <span className="text-xs text-black/60">{field.helpText}</span>}
+            </label>
+          );
+        }
+
         return (
           <label key={field.name} className="flex flex-col gap-1">
             <span className="text-sm font-medium text-black">{field.label}</span>
