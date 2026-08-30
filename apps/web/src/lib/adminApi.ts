@@ -1,22 +1,12 @@
 import { ApiInstitutionSponsorship } from "@/lib/institutions";
+import { fetchJson } from "@/lib/fetchJson";
 
 export async function listContent(apiPath: string, token: string): Promise<Record<string, unknown>[]> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/${apiPath}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`listContent ${apiPath} failed: ${res.status} ${res.statusText}`);
-      return [];
-    }
-    const data = await res.json();
-    return data.items ?? [];
-  } catch (err) {
-    console.error(`listContent ${apiPath} threw:`, err);
-    return [];
-  }
+  const data = await fetchJson<{ items: Record<string, unknown>[] }>(`${process.env.API_URL}/${apiPath}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.items ?? [];
 }
 
 export async function getContentItem(
@@ -24,22 +14,11 @@ export async function getContentItem(
   id: string,
   token: string
 ): Promise<Record<string, unknown> | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/${apiPath}/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`getContentItem ${apiPath}/${id} failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    const data = await res.json();
-    return data.item ?? null;
-  } catch (err) {
-    console.error(`getContentItem ${apiPath}/${id} threw:`, err);
-    return null;
-  }
+  const data = await fetchJson<{ item: Record<string, unknown> }>(`${process.env.API_URL}/${apiPath}/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.item ?? null;
 }
 
 export interface AdminCoupon {
@@ -75,41 +54,19 @@ export interface AdminMembershipPlan {
 }
 
 export async function listMembershipPlans(token: string): Promise<AdminMembershipPlan[]> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/membership-plans`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`listMembershipPlans failed: ${res.status} ${res.statusText}`);
-      return [];
-    }
-    const data = await res.json();
-    return data.plans ?? [];
-  } catch (err) {
-    console.error("listMembershipPlans threw:", err);
-    return [];
-  }
+  const data = await fetchJson<{ plans: AdminMembershipPlan[] }>(`${process.env.API_URL}/membership-plans`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.plans ?? [];
 }
 
 export async function getMembershipPlanByType(type: string, token: string): Promise<AdminMembershipPlan | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/membership-plans/${type}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`getMembershipPlanByType ${type} failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    const data = await res.json();
-    return data.plan ?? null;
-  } catch (err) {
-    console.error(`getMembershipPlanByType ${type} threw:`, err);
-    return null;
-  }
+  const data = await fetchJson<{ plan: AdminMembershipPlan }>(`${process.env.API_URL}/membership-plans/${type}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.plan ?? null;
 }
 
 // Mirrors apps/api/src/lib/memberProfile.ts's memberProfileSchema — the
@@ -202,61 +159,29 @@ export async function listEventRegistrations(
   token: string,
   opts: { page?: number; pageSize?: number } = {}
 ): Promise<{ registrations: AdminEventRegistration[]; total: number }> {
-  try {
-    const params = new URLSearchParams({ eventCode });
-    if (opts.page) params.set("page", String(opts.page));
-    if (opts.pageSize) params.set("pageSize", String(opts.pageSize));
-    const res = await fetch(`${process.env.API_URL}/event-registrations?${params.toString()}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`listEventRegistrations ${eventCode} failed: ${res.status} ${res.statusText}`);
-      return { registrations: [], total: 0 };
-    }
-    const data = await res.json();
-    return { registrations: data.registrations ?? [], total: data.total ?? 0 };
-  } catch (err) {
-    console.error(`listEventRegistrations ${eventCode} threw:`, err);
-    return { registrations: [], total: 0 };
-  }
+  const params = new URLSearchParams({ eventCode });
+  if (opts.page) params.set("page", String(opts.page));
+  if (opts.pageSize) params.set("pageSize", String(opts.pageSize));
+
+  const data = await fetchJson<{ registrations: AdminEventRegistration[]; total: number }>(
+    `${process.env.API_URL}/event-registrations?${params.toString()}`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" }
+  );
+  return { registrations: data?.registrations ?? [], total: data?.total ?? 0 };
 }
 
 export async function getEventRegistration(id: number, token: string): Promise<AdminEventRegistration | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/event-registrations/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`getEventRegistration ${id} failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    const data = await res.json();
-    return data.registration ?? null;
-  } catch (err) {
-    console.error(`getEventRegistration ${id} threw:`, err);
-    return null;
-  }
+  const data = await fetchJson<{ registration: AdminEventRegistration }>(
+    `${process.env.API_URL}/event-registrations/${id}`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" }
+  );
+  return data?.registration ?? null;
 }
 
 export async function getMembershipDetail(id: number, token: string): Promise<AdminMembershipDetail | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/memberships/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`getMembershipDetail ${id} failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    const data = await res.json();
-    return data.membership ?? null;
-  } catch (err) {
-    console.error(`getMembershipDetail ${id} threw:`, err);
-    return null;
-  }
+  const data = await fetchJson<{ membership: AdminMembershipDetail }>(`${process.env.API_URL}/memberships/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.membership ?? null;
 }

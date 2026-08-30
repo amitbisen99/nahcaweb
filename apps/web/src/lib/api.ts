@@ -1,3 +1,5 @@
+import { fetchJson } from "./fetchJson";
+
 export interface ApiMembership {
   id: number;
   type: "regular" | "student" | "institutional" | "conference";
@@ -133,38 +135,14 @@ export interface ApiConferenceVideo {
 }
 
 async function apiFetch<T>(path: string, token: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}${path}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`apiFetch ${path} failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    return (await res.json()) as T;
-  } catch (err) {
-    console.error(`apiFetch ${path} threw:`, err);
-    return null;
-  }
+  return fetchJson<T>(`${process.env.API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
 }
 
 async function publicFetch<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}${path}`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) {
-      console.error(`publicFetch ${path} failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    return (await res.json()) as T;
-  } catch (err) {
-    console.error(`publicFetch ${path} threw:`, err);
-    return null;
-  }
+  return fetchJson<T>(`${process.env.API_URL}${path}`, { cache: "no-store" });
 }
 
 export async function getMyProfile(token: string): Promise<ApiUserWithProfile | null> {

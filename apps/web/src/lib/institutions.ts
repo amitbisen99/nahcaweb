@@ -1,3 +1,5 @@
+import { fetchJson } from "@/lib/fetchJson";
+
 export interface ApiInstitutionCode {
   id: number;
   code: string;
@@ -16,21 +18,9 @@ export interface ApiInstitutionSponsorship {
 // Returns null both when the user has no sponsorship (404) and on any
 // network/server error — callers treat "no dashboard to show" uniformly.
 export async function getMySponsorship(token: string): Promise<ApiInstitutionSponsorship | null> {
-  try {
-    const res = await fetch(`${process.env.API_URL}/institutions/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      console.error(`getMySponsorship failed: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    const data = await res.json();
-    return data.sponsorship ?? null;
-  } catch (err) {
-    console.error("getMySponsorship threw:", err);
-    return null;
-  }
+  const data = await fetchJson<{ sponsorship: ApiInstitutionSponsorship }>(
+    `${process.env.API_URL}/institutions/me`,
+    { headers: { Authorization: `Bearer ${token}` }, cache: "no-store", silentStatuses: [404] }
+  );
+  return data?.sponsorship ?? null;
 }

@@ -1,3 +1,5 @@
+import { fetchJson } from "@/lib/fetchJson";
+
 // Shared by the Event and Webinar detail pages — null/undefined means no
 // fee was set at all (nothing shown), 0 means explicitly free ("Free"),
 // anything else is a dollar amount.
@@ -32,36 +34,21 @@ export interface CmsEvent {
 // members_only), so this must never go through the shared page/data cache —
 // pass the visitor's session token through and always fetch fresh.
 export async function getUpcomingEvents(limit = 3, token?: string): Promise<CmsEvent[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return [];
-
-    const { items } = (await res.json()) as { items: CmsEvent[] };
-    const now = Date.now();
-    return items.filter((e) => new Date(e.date).getTime() >= now).slice(0, limit);
-  } catch {
-    // API not reachable (e.g. not running yet in local dev) — degrade gracefully.
-    return [];
-  }
+  const data = await fetchJson<{ items: CmsEvent[] }>(`${process.env.NEXT_PUBLIC_API_URL}/events`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  const items = data?.items ?? [];
+  const now = Date.now();
+  return items.filter((e) => new Date(e.date).getTime() >= now).slice(0, limit);
 }
 
 export async function getEvent(id: string, token?: string): Promise<CmsEvent | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const { item } = (await res.json()) as { item: CmsEvent };
-    return item;
-  } catch {
-    return null;
-  }
+  const data = await fetchJson<{ item: CmsEvent }>(`${process.env.NEXT_PUBLIC_API_URL}/events/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.item ?? null;
 }
 
 export interface CmsWebinar {
@@ -86,18 +73,11 @@ export interface CmsWebinar {
 // (cache: "no-store") — caching it would risk leaking one member's
 // members-only view to a different, unauthenticated visitor.
 export async function getOpenWebinars(token?: string): Promise<CmsWebinar[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/webinars`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return [];
-    const { items } = (await res.json()) as { items: CmsWebinar[] };
-    return items;
-  } catch {
-    return [];
-  }
+  const data = await fetchJson<{ items: CmsWebinar[] }>(`${process.env.NEXT_PUBLIC_API_URL}/webinars`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.items ?? [];
 }
 
 export interface CmsBoardMember {
@@ -110,17 +90,10 @@ export interface CmsBoardMember {
 }
 
 export async function getBoardMembers(): Promise<CmsBoardMember[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/board`, {
-      next: { revalidate: 60 },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return [];
-    const { items } = (await res.json()) as { items: CmsBoardMember[] };
-    return items;
-  } catch {
-    return [];
-  }
+  const data = await fetchJson<{ items: CmsBoardMember[] }>(`${process.env.NEXT_PUBLIC_API_URL}/board`, {
+    next: { revalidate: 60 },
+  });
+  return data?.items ?? [];
 }
 
 export interface CmsEventInfo {
@@ -135,30 +108,17 @@ export interface CmsEventInfo {
 // need — used by events/join/[code], not the admin or detail pages (which
 // already have the full record via getEvent/getOpenWebinar).
 export async function getEventInfoByCode(code: string): Promise<CmsEventInfo | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/event-registrations/by-code/${code}`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const { item } = (await res.json()) as { item: CmsEventInfo };
-    return item;
-  } catch {
-    return null;
-  }
+  const data = await fetchJson<{ item: CmsEventInfo }>(
+    `${process.env.NEXT_PUBLIC_API_URL}/event-registrations/by-code/${code}`,
+    { cache: "no-store" }
+  );
+  return data?.item ?? null;
 }
 
 export async function getOpenWebinar(id: string, token?: string): Promise<CmsWebinar | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/webinars/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const { item } = (await res.json()) as { item: CmsWebinar };
-    return item;
-  } catch {
-    return null;
-  }
+  const data = await fetchJson<{ item: CmsWebinar }>(`${process.env.NEXT_PUBLIC_API_URL}/webinars/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return data?.item ?? null;
 }
