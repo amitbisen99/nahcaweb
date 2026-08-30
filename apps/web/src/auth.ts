@@ -42,11 +42,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               email: credentials?.email,
               password: credentials?.password,
             }),
+            // Without this, a hung API request (a slow/cold DB connection,
+            // a stalled proxy) leaves the sign-in page spinning forever
+            // instead of failing in a way the user can retry.
+            signal: AbortSignal.timeout(10_000),
           });
         } catch (err) {
-          // A network-level failure here (wrong API_URL, API down, DNS/firewall)
-          // looks identical to a wrong password unless logged distinctly — this
-          // is almost always the deploy-time bug, not a user's typo.
+          // A network-level failure here (wrong API_URL, API down, DNS/firewall,
+          // a timed-out request) looks identical to a wrong password unless
+          // logged distinctly — this is almost always an infra issue, not a
+          // user's typo.
           console.error(`NextAuth: could not reach API_URL (${process.env.API_URL}) for /auth/login:`, err);
           return null;
         }
@@ -64,7 +69,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const data: { token: string; user: ApiUser } = await res.json();
+        // A 2xx status only means headers arrived — the body can still fail
+        // to parse if the connection drops mid-response (a transient blip
+        // between this server and the API, seen intermittently in
+        // production). An uncaught throw here isn't a next-auth AuthError,
+        // so it escapes signIn() and login/actions.ts re-throws it (it must
+        // — a real success redirect looks the same to that catch block),
+        // which then renders as a full "Something went wrong" error page
+        // instead of a retry-able "Invalid email or password". Treat it the
+        // same as any other infra hiccup above: log distinctly, fail closed.
+        let data: { token: string; user: ApiUser };
+        try {
+          data = await res.json();
+          if (!data?.token || !data?.user?.id) {
+            throw new Error("Response body missing token/user");
+          }
+        } catch (err) {
+          console.error("NextAuth: /auth/login returned a 2xx response with an unusable body:", err);
+          return null;
+        }
+
         return {
           id: String(data.user.id),
           email: data.user.email,
