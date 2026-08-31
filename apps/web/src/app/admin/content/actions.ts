@@ -5,7 +5,17 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
 
-async function requireAdminToken() {
+// A "use server" function bound to <form action={...}> must never throw on
+// failure — Next.js has no way to display that, it just renders the
+// nearest error boundary's generic "Something went wrong" page and hides
+// the real reason. Every action below returns this instead and lets the
+// caller decide how to show it. (The same anti-pattern was already fixed
+// for login and coupons earlier — this file just hadn't been touched yet.)
+export interface ContentFormState {
+  error?: string;
+}
+
+async function requireAdminToken(): Promise<string> {
   const session = await auth();
   if (!session?.apiToken || session.user?.role !== "admin") {
     throw new Error("Not authorized");
@@ -100,69 +110,132 @@ async function extractErrorMessage(res: Response): Promise<string> {
   return fieldErrors || data.error.formErrors?.join("; ") || `Request failed with status ${res.status}`;
 }
 
-export async function createContentItem(type: ContentTypeKey, formData: FormData) {
-  const token = await requireAdminToken();
-  const payload = await buildPayload(type, formData, token);
+export async function createContentItem(
+  type: ContentTypeKey,
+  _prevState: ContentFormState,
+  formData: FormData
+): Promise<ContentFormState> {
+  let token: string;
+  let payload: Record<string, unknown>;
+  try {
+    token = await requireAdminToken();
+    payload = await buildPayload(type, formData, token);
+  } catch (err) {
+    console.error(`createContentItem ${type}: failed to prepare request:`, err);
+    return { error: "Something went wrong while preparing this request. Please try again." };
+  }
 
-  const res = await fetch(`${process.env.API_URL}/${type}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/${type}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error(`createContentItem ${type}: request failed:`, err);
+    return { error: "Couldn't reach the server. Please check your connection and try again." };
+  }
 
   if (!res.ok) {
-    throw new Error(`Failed to create ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+    return { error: `Failed to create ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
+  }
+
+  // redirect() throws internally by design — must stay outside the try/catch
+  // above, or its own throw would be caught and reported as a real error.
+  revalidatePath(`/admin/content/${type}`);
+  redirect(`/admin/content/${type}`);
+}
+
+export async function updateContentItem(
+  type: ContentTypeKey,
+  id: string,
+  _prevState: ContentFormState,
+  formData: FormData
+): Promise<ContentFormState> {
+  let token: string;
+  let payload: Record<string, unknown>;
+  try {
+    token = await requireAdminToken();
+    payload = await buildPayload(type, formData, token);
+  } catch (err) {
+    console.error(`updateContentItem ${type}/${id}: failed to prepare request:`, err);
+    return { error: "Something went wrong while preparing this request. Please try again." };
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error(`updateContentItem ${type}/${id}: request failed:`, err);
+    return { error: "Couldn't reach the server. Please check your connection and try again." };
+  }
+
+  if (!res.ok) {
+    return { error: `Failed to update ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
   }
 
   revalidatePath(`/admin/content/${type}`);
   redirect(`/admin/content/${type}`);
 }
 
-export async function updateContentItem(type: ContentTypeKey, id: string, formData: FormData) {
-  const token = await requireAdminToken();
-  const payload = await buildPayload(type, formData, token);
+export async function deleteContentItem(type: ContentTypeKey, id: string): Promise<ContentFormState> {
+  let token: string;
+  try {
+    token = await requireAdminToken();
+  } catch (err) {
+    console.error(`deleteContentItem ${type}/${id}: not authorized:`, err);
+    return { error: "You're not authorized to do that — try signing in again." };
+  }
 
-  const res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (err) {
+    console.error(`deleteContentItem ${type}/${id}: request failed:`, err);
+    return { error: "Couldn't reach the server. Please try again." };
+  }
 
   if (!res.ok) {
-    throw new Error(`Failed to update ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+    return { error: `Failed to delete ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
   }
 
   revalidatePath(`/admin/content/${type}`);
-  redirect(`/admin/content/${type}`);
+  return {};
 }
 
-export async function deleteContentItem(type: ContentTypeKey, id: string) {
-  const token = await requireAdminToken();
+export async function publishContentItem(type: ContentTypeKey, id: string): Promise<ContentFormState> {
+  let token: string;
+  try {
+    token = await requireAdminToken();
+  } catch (err) {
+    console.error(`publishContentItem ${type}/${id}: not authorized:`, err);
+    return { error: "You're not authorized to do that — try signing in again." };
+  }
 
-  const res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ published: true }),
+    });
+  } catch (err) {
+    console.error(`publishContentItem ${type}/${id}: request failed:`, err);
+    return { error: "Couldn't reach the server. Please try again." };
+  }
 
   if (!res.ok) {
-    throw new Error(`Failed to delete ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
+    return { error: `Failed to publish ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
   }
 
   revalidatePath(`/admin/content/${type}`);
-}
-
-export async function publishContentItem(type: ContentTypeKey, id: string) {
-  const token = await requireAdminToken();
-
-  const res = await fetch(`${process.env.API_URL}/${type}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ published: true }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to publish ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}`);
-  }
-
-  revalidatePath(`/admin/content/${type}`);
+  return {};
 }

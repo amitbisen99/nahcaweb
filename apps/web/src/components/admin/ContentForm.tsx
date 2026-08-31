@@ -1,4 +1,8 @@
+"use client";
+
+import { useActionState } from "react";
 import { ContentTypeConfig } from "@/lib/contentTypes";
+import { ContentFormState } from "@/app/admin/content/actions";
 import { Button } from "@/components/Button";
 import { ContentFileField } from "./ContentFileField";
 import { TimeField } from "./TimeField";
@@ -11,17 +15,21 @@ function dateInputValue(value: unknown): string {
   return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
 }
 
+const initialState: ContentFormState = {};
+
 export function ContentForm({
   config,
   action,
   item,
 }: {
   config: ContentTypeConfig;
-  action: (formData: FormData) => Promise<void>;
+  action: (prevState: ContentFormState, formData: FormData) => Promise<ContentFormState>;
   item?: Record<string, unknown>;
 }) {
+  const [state, formAction, isPending] = useActionState(action, initialState);
+
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-5">
       {config.fields.map((field) => {
         const currentValue = item?.[field.name];
 
@@ -164,8 +172,10 @@ export function ContentForm({
         );
       })}
 
-      <Button type="submit" className="mt-2 self-start">
-        Save
+      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+
+      <Button type="submit" className="mt-2 self-start" disabled={isPending}>
+        {isPending ? "Saving…" : "Save"}
       </Button>
     </form>
   );

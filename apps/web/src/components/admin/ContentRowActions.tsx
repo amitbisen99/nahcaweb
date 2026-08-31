@@ -35,20 +35,25 @@ export function ContentRowActions({
   config: ContentTypeConfig;
 }) {
   const [viewing, setViewing] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
     if (!confirm(`Delete this ${config.singularLabel.toLowerCase()}? This can't be undone.`)) {
       return;
     }
-    startTransition(() => {
-      deleteContentItem(type, String(item.id));
+    setActionError(null);
+    startTransition(async () => {
+      const result = await deleteContentItem(type, String(item.id));
+      if (result.error) setActionError(result.error);
     });
   }
 
   function handlePublish() {
-    startTransition(() => {
-      publishContentItem(type, String(item.id));
+    setActionError(null);
+    startTransition(async () => {
+      const result = await publishContentItem(type, String(item.id));
+      if (result.error) setActionError(result.error);
     });
   }
 
@@ -58,44 +63,47 @@ export function ContentRowActions({
 
   return (
     <>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setViewing(true)}
-          aria-label="View"
-          title="View"
-          className="text-black transition-colors hover:text-brand"
-        >
-          <EyeIcon className="h-[18px] w-[18px]" />
-        </button>
-        <Link
-          href={`/admin/content/${type}/${item.id}`}
-          aria-label="Edit"
-          title="Edit"
-          className="text-black transition-colors hover:text-brand"
-        >
-          <PencilIcon className="h-[18px] w-[18px]" />
-        </Link>
-        {(type === "events" || type === "webinars") && (
-          <Link
-            href={`/admin/content/${type}/${item.id}/attendees`}
-            aria-label="Attendees"
-            title="Attendees"
+      <div className="flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setViewing(true)}
+            aria-label="View"
+            title="View"
             className="text-black transition-colors hover:text-brand"
           >
-            <UsersIcon className="h-[18px] w-[18px]" />
+            <EyeIcon className="h-[18px] w-[18px]" />
+          </button>
+          <Link
+            href={`/admin/content/${type}/${item.id}`}
+            aria-label="Edit"
+            title="Edit"
+            className="text-black transition-colors hover:text-brand"
+          >
+            <PencilIcon className="h-[18px] w-[18px]" />
           </Link>
-        )}
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isPending}
-          aria-label="Delete"
-          title="Delete"
-          className="text-black transition-colors hover:text-red-600 disabled:opacity-50"
-        >
-          <TrashIcon className="h-[18px] w-[18px]" />
-        </button>
+          {(type === "events" || type === "webinars") && (
+            <Link
+              href={`/admin/content/${type}/${item.id}/attendees`}
+              aria-label="Attendees"
+              title="Attendees"
+              className="text-black transition-colors hover:text-brand"
+            >
+              <UsersIcon className="h-[18px] w-[18px]" />
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isPending}
+            aria-label="Delete"
+            title="Delete"
+            className="text-black transition-colors hover:text-red-600 disabled:opacity-50"
+          >
+            <TrashIcon className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+        {actionError && <p className="max-w-xs text-right text-xs text-red-600">{actionError}</p>}
       </div>
 
       {viewing && (
@@ -195,6 +203,8 @@ export function ContentRowActions({
                 );
               })}
             </dl>
+
+            {actionError && <p className="mt-4 text-sm text-red-600">{actionError}</p>}
 
             <div className="mt-8 flex items-center gap-3 border-t border-ink/10 pt-6">
               {!item.published && (
