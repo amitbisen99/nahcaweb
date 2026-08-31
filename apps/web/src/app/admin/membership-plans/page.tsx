@@ -4,7 +4,10 @@ import { MembershipPlanRowActions } from "@/components/admin/MembershipPlanRowAc
 
 export default async function MembershipPlansPage() {
   const session = await auth();
-  const plans = await listMembershipPlans(session?.apiToken ?? "");
+  // Conference membership is on pause for now — not selectable on the
+  // public join form (see JoinForm.tsx's SELECTABLE_PLAN_TYPES), and per
+  // the client, not shown for editing here either.
+  const plans = (await listMembershipPlans(session?.apiToken ?? "")).filter((p) => p.type !== "conference");
 
   return (
     <div>
