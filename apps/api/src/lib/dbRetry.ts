@@ -18,21 +18,33 @@ function isRetryableDbError(err: unknown): boolean {
   return RETRYABLE_MESSAGE.test(message);
 }
 
-const RETRY_DELAY_MS = 300;
+// Seen in production (2026-09-01 pm2 logs): a single 300ms retry was NOT
+// enough — the retry itself failed too, with a *different* code (P1001 on
+// the first attempt, P1017 "server has closed the connection" 300ms later)
+// — direct proof the outage window on that occasion outlasted one retry.
+// Three attempts total (two retries, backing off 300ms then 1000ms) gives
+// ~1.3s of extra breathing room without making a genuinely-down DB hang a
+// request for long.
+const RETRY_DELAYS_MS = [300, 1000];
 
-// Wraps a single read-only Prisma operation with one retry on a transient
-// connection failure. Only use this around reads (findUnique, findFirst,
-// findMany, count, …) — a write retried blindly after a dropped connection
-// risks a duplicate if the original write actually reached the database
-// and only the response back was lost. Callers pass a thunk, not a bare
-// promise, so nothing runs until this decides to (and can run it twice).
+// Wraps a read-only Prisma operation with a couple of retries on a
+// transient connection failure. Only use this around reads (findUnique,
+// findFirst, findMany, count, …) — a write retried blindly after a dropped
+// connection risks a duplicate if the original write actually reached the
+// database and only the response back was lost. Callers pass a thunk, not
+// a bare promise, so nothing runs until this decides to (and can run it
+// more than once).
 export async function withDbRetry<T>(fn: () => Promise<T>): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    if (!isRetryableDbError(err)) throw err;
-    console.error("withDbRetry: transient DB error, retrying once:", err);
-    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-    return fn();
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (!isRetryableDbError(err) || attempt >= RETRY_DELAYS_MS.length) throw err;
+      console.error(
+        `withDbRetry: transient DB error, retrying (${attempt + 1}/${RETRY_DELAYS_MS.length}):`,
+        err
+      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+    }
   }
 }
