@@ -8,12 +8,7 @@ import { ContentFileField } from "./ContentFileField";
 import { TimeField } from "./TimeField";
 import { RichTextField } from "./RichTextField";
 import { SpeakersField } from "./SpeakersField";
-
-function dateInputValue(value: unknown): string {
-  if (!value) return "";
-  const d = new Date(value as string);
-  return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-}
+import { DateField } from "./DateField";
 
 const initialState: ContentFormState = {};
 
@@ -61,6 +56,18 @@ export function ContentForm({
               name={field.name}
               label={field.label}
               currentValue={currentValue}
+            />
+          );
+        }
+
+        if (field.type === "date") {
+          return (
+            <DateField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              required={field.required}
+              currentValue={typeof currentValue === "string" ? currentValue : null}
             />
           );
         }
@@ -156,15 +163,11 @@ export function ContentForm({
           <label key={field.name} className="flex flex-col gap-1">
             <span className="text-sm font-medium text-black">{field.label}</span>
             <input
-              type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
+              type={field.type === "number" ? "number" : "text"}
               name={field.name}
               required={field.required}
               defaultValue={
-                field.type === "date"
-                  ? dateInputValue(currentValue)
-                  : typeof currentValue === "string" || typeof currentValue === "number"
-                    ? currentValue
-                    : ""
+                typeof currentValue === "string" || typeof currentValue === "number" ? currentValue : ""
               }
               className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
             />
