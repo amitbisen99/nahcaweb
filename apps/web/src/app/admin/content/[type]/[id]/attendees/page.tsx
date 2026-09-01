@@ -51,12 +51,20 @@ export default async function EventAttendeesPage({
           Attendees — {String(item[config.titleField])} ({total})
         </h1>
         {eventCode && (
-          <Link
-            href={`/admin/content/${config.key}/${id}/attendees/send-email`}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-          >
-            Send Receipt Email
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href={`/admin/content/${config.key}/${id}/attendees/export`}
+              className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/5"
+            >
+              Export as Excel
+            </Link>
+            <Link
+              href={`/admin/content/${config.key}/${id}/attendees/send-email`}
+              className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+            >
+              Send Receipt Email
+            </Link>
+          </div>
         )}
       </div>
       {eventCode && (
@@ -73,8 +81,8 @@ export default async function EventAttendeesPage({
                 <tr>
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Mobile No.</th>
                   <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Amount paid</th>
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3" />
@@ -85,16 +93,8 @@ export default async function EventAttendeesPage({
                   <tr key={r.id} className="border-t border-ink/10">
                     <td className="px-4 py-3 font-medium text-ink">{r.user?.name ?? r.name ?? "—"}</td>
                     <td className="px-4 py-3 text-black">{r.user?.email ?? r.email ?? "—"}</td>
+                    <td className="px-4 py-3 text-black">{r.user?.profile?.phone ?? r.phone ?? "—"}</td>
                     <td className="px-4 py-3 text-black">{r.user ? "Member" : "Guest"}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
-                          r.status === "active" ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"
-                        }`}
-                      >
-                        {r.status}
-                      </span>
-                    </td>
                     <td className="px-4 py-3 text-black">
                       {r.payment ? `$${(r.payment.amountCents / 100).toFixed(2)}` : "—"}
                     </td>

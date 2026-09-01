@@ -150,7 +150,9 @@ export interface AdminEventRegistration {
   employment: AdminEventRegistrationEmployment[] | null;
   hearAboutUs: string | null;
   hearAboutUsOther: string | null;
-  user: { id: number; name: string; email: string } | null;
+  // profile is null when a member has never filled out their profile at
+  // all (rare, but possible) — profile.phone can independently be null too.
+  user: { id: number; name: string; email: string; profile: { phone: string | null } | null } | null;
   payment: { id: number; amountCents: number; status: string } | null;
 }
 
