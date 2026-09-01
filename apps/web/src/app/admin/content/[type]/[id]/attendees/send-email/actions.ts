@@ -21,14 +21,25 @@ async function requireAdminToken(): Promise<string> {
 async function uploadAttachment(file: File, token: string): Promise<string | null> {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await fetch(`${process.env.API_URL}/uploads`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return (data.url as string) ?? null;
+  try {
+    const res = await fetch(`${process.env.API_URL}/uploads`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.url as string) ?? null;
+  } catch (err) {
+    // Same rule as every other fetch in this action: a form action bound to
+    // <form action={...}> must never throw, or it surfaces as the generic
+    // "Something went wrong" crash page instead of a real error message.
+    // This call previously had no try/catch — a network failure reaching
+    // the API (server down, connection reset, timeout) here would propagate
+    // straight out of sendReceiptEmail uncaught.
+    console.error("uploadAttachment: request failed:", err);
+    return null;
+  }
 }
 
 // A "use server" function bound to <form action={...}> must never throw on
