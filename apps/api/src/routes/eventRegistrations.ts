@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import path from "path";
 import fs from "fs";
+import ExcelJS from "exceljs";
 import { EventRegistrationStatus } from "@prisma/client";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
@@ -300,10 +301,21 @@ eventRegistrationsRouter.get(
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
 
+    // A guest registration has its own `phone` field (filled on the join
+    // form); a member's quick-join has none of that, so the admin list
+    // falls back to their MemberProfile's phone instead — hence the nested
+    // select here rather than just id/name/email.
+    const attendeeUserSelect = {
+      id: true,
+      name: true,
+      email: true,
+      profile: { select: { phone: true } },
+    } as const;
+
     const [registrations, total] = await Promise.all([
       prisma.eventRegistration.findMany({
         where,
-        include: { user: { select: { id: true, name: true, email: true } }, payment: true },
+        include: { user: { select: attendeeUserSelect }, payment: true },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -312,6 +324,64 @@ eventRegistrationsRouter.get(
     ]);
 
     res.json({ registrations, total, page, pageSize });
+  })
+);
+
+// Admin — export every attendee of one event/webinar as an .xlsx file.
+// Registered before "/:id" below so "export" is never matched as an id
+// there (Express matches routes in registration order, and "/:id" would
+// otherwise catch this path first and 400 on Number("export")).
+eventRegistrationsRouter.get(
+  "/export",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const eventCode = typeof req.query.eventCode === "string" ? req.query.eventCode : "";
+    if (!eventCode) return res.status(400).json({ error: "eventCode is required" });
+
+    const eventInfo = await findEventOrWebinarByCode(eventCode);
+
+    // Unpaginated — an export is expected to cover every attendee, not just
+    // whatever page the admin happened to be viewing.
+    const registrations = await prisma.eventRegistration.findMany({
+      where: { eventCode },
+      include: {
+        user: { select: { name: true, email: true, profile: { select: { phone: true } } } },
+        payment: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Attendees");
+    sheet.columns = [
+      { header: "Name", key: "name", width: 28 },
+      { header: "Email", key: "email", width: 32 },
+      { header: "Mobile No.", key: "phone", width: 18 },
+      { header: "Type", key: "type", width: 12 },
+      { header: "Amount Paid", key: "amountPaid", width: 14 },
+      { header: "Joined", key: "joined", width: 16 },
+    ];
+    sheet.getRow(1).font = { bold: true };
+
+    for (const r of registrations) {
+      sheet.addRow({
+        name: r.user?.name ?? r.name ?? "—",
+        email: r.user?.email ?? r.email ?? "—",
+        phone: r.user?.profile?.phone ?? r.phone ?? "—",
+        type: r.user ? "Member" : "Guest",
+        amountPaid: r.payment ? `$${(r.payment.amountCents / 100).toFixed(2)}` : "—",
+        joined: r.createdAt.toDateString(),
+      });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    // Strip anything but the title's own characters so a title full of
+    // emoji/punctuation can't produce a broken or unsafe filename.
+    const safeTitle = (eventInfo?.title ?? eventCode).replace(/[^a-z0-9 _-]+/gi, "").trim() || eventCode;
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="${safeTitle} - Attendees.xlsx"`);
+    res.send(Buffer.from(buffer));
   })
 );
 
@@ -325,7 +395,10 @@ eventRegistrationsRouter.get(
 
     const registration = await prisma.eventRegistration.findUnique({
       where: { id },
-      include: { user: { select: { id: true, name: true, email: true } }, payment: true },
+      include: {
+        user: { select: { id: true, name: true, email: true, profile: { select: { phone: true } } } },
+        payment: true,
+      },
     });
     if (!registration) return res.status(404).json({ error: "Not found" });
 
