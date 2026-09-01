@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { z } from "zod";
+import ExcelJS from "exceljs";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
+import type { Request } from "express";
 
 export const donationsRouter = Router();
 
@@ -77,6 +79,28 @@ donationsRouter.post("/", asyncHandler(async (req, res) => {
 
 const DEFAULT_PAGE_SIZE = 10;
 
+// Shared by the list and export routes below so the export always matches
+// whatever the admin currently has filtered to on screen.
+function buildDonationsWhere(req: Request): { donorEmail?: { contains: string }; createdAt?: { gte?: Date; lte?: Date } } {
+  const email = typeof req.query.email === "string" ? req.query.email.trim() : "";
+  const from = typeof req.query.from === "string" ? req.query.from : "";
+  const to = typeof req.query.to === "string" ? req.query.to : "";
+
+  const where: { donorEmail?: { contains: string }; createdAt?: { gte?: Date; lte?: Date } } = {};
+  if (email) where.donorEmail = { contains: email };
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt.gte = new Date(from);
+    if (to) {
+      // Inclusive of the whole "to" day, not just midnight.
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+      where.createdAt.lte = toDate;
+    }
+  }
+  return where;
+}
+
 // Admin donation list — every completed/pending/failed donation, searchable
 // by donor email and by a createdAt date range. Donations were always
 // stored correctly (see POST / above); this was just never surfaced
@@ -88,23 +112,7 @@ donationsRouter.get(
   asyncHandler(async (req, res) => {
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
-
-    const email = typeof req.query.email === "string" ? req.query.email.trim() : "";
-    const from = typeof req.query.from === "string" ? req.query.from : "";
-    const to = typeof req.query.to === "string" ? req.query.to : "";
-
-    const where: { donorEmail?: { contains: string }; createdAt?: { gte?: Date; lte?: Date } } = {};
-    if (email) where.donorEmail = { contains: email };
-    if (from || to) {
-      where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(from);
-      if (to) {
-        // Inclusive of the whole "to" day, not just midnight.
-        const toDate = new Date(to);
-        toDate.setHours(23, 59, 59, 999);
-        where.createdAt.lte = toDate;
-      }
-    }
+    const where = buildDonationsWhere(req);
 
     const [donations, total] = await Promise.all([
       prisma.donation.findMany({
@@ -118,5 +126,53 @@ donationsRouter.get(
     ]);
 
     res.json({ donations, total, page, pageSize });
+  })
+);
+
+// Admin — export the (optionally filtered) donation list as an .xlsx file.
+// Same email/from/to filters as the list above, unpaginated — an export is
+// expected to cover every matching donation, not just the current page.
+donationsRouter.get(
+  "/export",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const where = buildDonationsWhere(req);
+
+    const donations = await prisma.donation.findMany({
+      where,
+      include: { payment: { select: { status: true, stripeRef: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Donations");
+    sheet.columns = [
+      { header: "Donor", key: "donor", width: 28 },
+      { header: "Email", key: "email", width: 32 },
+      { header: "Purpose", key: "purpose", width: 24 },
+      { header: "Amount", key: "amount", width: 14 },
+      { header: "Recurring", key: "recurring", width: 12 },
+      { header: "Status", key: "status", width: 14 },
+      { header: "Date", key: "date", width: 16 },
+    ];
+    sheet.getRow(1).font = { bold: true };
+
+    for (const d of donations) {
+      sheet.addRow({
+        donor: d.donorName,
+        email: d.donorEmail,
+        purpose: d.purpose || "—",
+        amount: `$${(d.amountCents / 100).toFixed(2)}`,
+        recurring: d.recurring ? "Monthly" : "One-time",
+        status: d.payment?.status ?? "unknown",
+        date: d.createdAt.toDateString(),
+      });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="Donations.xlsx"`);
+    res.send(Buffer.from(buffer));
   })
 );
