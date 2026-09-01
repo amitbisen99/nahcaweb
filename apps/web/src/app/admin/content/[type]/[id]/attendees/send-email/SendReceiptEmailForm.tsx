@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { RichTextField } from "@/components/admin/RichTextField";
 import { fieldLabelClass, inputClass } from "@/components/MemberProfileFormFields";
@@ -10,11 +11,18 @@ const TAGS = [
   { label: "Event Name", value: "{{event_name}}" },
 ];
 
+// Kept in sync with the server-side MAX_ATTACHMENT_BYTES in actions.ts —
+// this copy is purely for instant client-side feedback (disabling submit,
+// showing a warning) before the form round-trips; the server check is what
+// actually enforces it.
+const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
+
 const initialState: SendReceiptEmailState = {};
 
 export function SendReceiptEmailForm({ eventCode, activeCount }: { eventCode: string; activeCount: number }) {
   const action = sendReceiptEmail.bind(null, eventCode);
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const [attachmentTooLarge, setAttachmentTooLarge] = useState(false);
 
   return (
     <form
@@ -70,8 +78,24 @@ export function SendReceiptEmailForm({ eventCode, activeCount }: { eventCode: st
 
       <label className="flex flex-col gap-1">
         <span className={fieldLabelClass()}>Attachment (PDF)</span>
-        <input type="file" name="attachment" accept="application/pdf" className={inputClass()} />
-        <span className="text-xs text-black/60">Optional — the same file is sent to every attendee.</span>
+        <input
+          type="file"
+          name="attachment"
+          accept="application/pdf"
+          className={inputClass()}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            setAttachmentTooLarge(Boolean(file && file.size > MAX_ATTACHMENT_BYTES));
+          }}
+        />
+        <span className="text-xs text-black/60">
+          Optional — the same file is sent to every attendee. Max 4MB (Brevo&apos;s limit for email attachments).
+        </span>
+        {attachmentTooLarge && (
+          <span className="text-xs text-red-600">
+            That file is over 4MB — Brevo will reject it. Please choose a smaller PDF.
+          </span>
+        )}
       </label>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -81,7 +105,7 @@ export function SendReceiptEmailForm({ eventCode, activeCount }: { eventCode: st
 
       <button
         type="submit"
-        disabled={isPending || activeCount === 0}
+        disabled={isPending || activeCount === 0 || attachmentTooLarge}
         className="mt-2 self-start rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-50"
       >
         {isPending ? "Sending…" : "Send Email"}

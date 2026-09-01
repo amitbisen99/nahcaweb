@@ -7,6 +7,15 @@ export interface SendReceiptEmailState {
   result?: { sent: number; failed: { email: string; error: string }[] };
 }
 
+// Brevo's own documented limit for a transactional email attachment is
+// under 4MB (https://help.brevo.com/hc/en-us/articles/4402811730962) — well
+// below the general /uploads endpoint's 10MB cap, which exists for a
+// different purpose (content images) and isn't Brevo-aware. Without this
+// check, a 5-9MB PDF would pass the upload step fine and only fail once it
+// hit Brevo, showing up as a "failed" recipient with a confusing API error
+// instead of a clear message before anything was even sent.
+const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
+
 async function requireAdminToken(): Promise<string> {
   const session = await auth();
   if (!session?.apiToken || session.user?.role !== "admin") {
@@ -69,6 +78,9 @@ export async function sendReceiptEmail(
   let attachmentUrl: string | undefined;
   const file = formData.get("attachment") as File | null;
   if (file && file.size > 0) {
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      return { error: "Attachment is too large — Brevo only accepts attachments under 4MB. Please use a smaller PDF." };
+    }
     const uploaded = await uploadAttachment(file, token);
     if (!uploaded) {
       return { error: "Couldn't upload the attachment. Please try again." };

@@ -384,6 +384,18 @@ eventRegistrationsRouter.post(
       const filePath = path.join(__dirname, "..", "..", "uploads", storedFilename);
       try {
         const fileBuffer = await fs.promises.readFile(filePath);
+        // Defense in depth: the web app's form action already rejects a
+        // >4MB attachment before it's even uploaded, but this route can be
+        // called directly too. Brevo's own documented limit for a
+        // transactional email attachment is under 4MB
+        // (https://help.brevo.com/hc/en-us/articles/4402811730962) — well
+        // below the general /uploads endpoint's 10MB cap, which exists for
+        // a different purpose (content images) and isn't Brevo-aware.
+        // Catching it here means one clean error instead of every
+        // recipient failing individually once the send loop hits Brevo.
+        if (fileBuffer.length > 4 * 1024 * 1024) {
+          return res.status(400).json({ error: "Attachment is too large — Brevo only accepts attachments under 4MB." });
+        }
         const ext = path.extname(storedFilename) || ".pdf";
         attachments = [{ name: `Receipt${ext}`, content: fileBuffer.toString("base64") }];
       } catch {
