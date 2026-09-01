@@ -46,9 +46,19 @@ export default async function EventAttendeesPage({
         ← {config.label}
       </Link>
 
-      <h1 className="mt-1 font-heading text-3xl font-medium text-heading">
-        Attendees — {String(item[config.titleField])} ({total})
-      </h1>
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-heading text-3xl font-medium text-heading">
+          Attendees — {String(item[config.titleField])} ({total})
+        </h1>
+        {eventCode && (
+          <Link
+            href={`/admin/content/${config.key}/${id}/attendees/send-email`}
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          >
+            Send Receipt Email
+          </Link>
+        )}
+      </div>
       {eventCode && (
         <p className="mt-1 font-mono text-xs text-black/60">{eventCode}</p>
       )}

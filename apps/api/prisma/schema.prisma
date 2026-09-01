@@ -370,6 +370,23 @@ model EventRegistration {
   @@index([userId])
 }
 
+// Audit trail for the admin's bulk "Receipt Email" send (see routes/
+// eventRegistrations.ts's POST /:eventCode/send-receipt-email) — one row
+// per send, not per recipient. sentByEmail is denormalized (not a User
+// relation) since this is just a record of what happened, not a live
+// reference that needs to stay valid if the admin account ever changes.
+model ReceiptEmailLog {
+  id          Int      @id @default(autoincrement())
+  eventCode   String
+  subject     String
+  sentByEmail String
+  sentCount   Int
+  failedCount Int
+  createdAt   DateTime @default(now())
+
+  @@index([eventCode])
+}
+
 model ConferenceVideo {
   id        Int      @id @default(autoincrement())
   title     String

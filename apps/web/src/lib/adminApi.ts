@@ -157,11 +157,12 @@ export interface AdminEventRegistration {
 export async function listEventRegistrations(
   eventCode: string,
   token: string,
-  opts: { page?: number; pageSize?: number } = {}
+  opts: { page?: number; pageSize?: number; status?: "active" | "pending" } = {}
 ): Promise<{ registrations: AdminEventRegistration[]; total: number }> {
   const params = new URLSearchParams({ eventCode });
   if (opts.page) params.set("page", String(opts.page));
   if (opts.pageSize) params.set("pageSize", String(opts.pageSize));
+  if (opts.status) params.set("status", opts.status);
 
   const data = await fetchJson<{ registrations: AdminEventRegistration[]; total: number }>(
     `${process.env.API_URL}/event-registrations?${params.toString()}`,
@@ -184,4 +185,25 @@ export async function getMembershipDetail(id: number, token: string): Promise<Ad
     cache: "no-store",
   });
   return data?.membership ?? null;
+}
+
+// One row per Receipt Email send (not per recipient) — shown on the
+// compose page so an admin can see "did we already send this?" before
+// sending again.
+export interface AdminReceiptEmailLog {
+  id: number;
+  eventCode: string;
+  subject: string;
+  sentByEmail: string;
+  sentCount: number;
+  failedCount: number;
+  createdAt: string;
+}
+
+export async function getReceiptEmailLogs(eventCode: string, token: string): Promise<AdminReceiptEmailLog[]> {
+  const data = await fetchJson<{ logs: AdminReceiptEmailLog[] }>(
+    `${process.env.API_URL}/event-registrations/${eventCode}/receipt-email-logs`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: "no-store" }
+  );
+  return data?.logs ?? [];
 }

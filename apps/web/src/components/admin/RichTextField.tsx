@@ -14,10 +14,16 @@ export function RichTextField({
   name,
   label,
   currentValue,
+  insertTags,
 }: {
   name: string;
   label: string;
   currentValue?: string | null;
+  // Extra toolbar buttons that insert literal text (e.g. "{{name}}") at
+  // the cursor — used by the Receipt Email compose form for its dynamic
+  // tags. Reuses the same execCommand path as the formatting buttons
+  // above, just with "insertText" instead of a formatting command.
+  insertTags?: { label: string; value: string }[];
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
@@ -52,6 +58,12 @@ export function RichTextField({
     syncHtml();
   }
 
+  function insertTag(value: string) {
+    editorRef.current?.focus();
+    document.execCommand("insertText", false, value);
+    syncHtml();
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm font-medium text-black">{label}</span>
@@ -75,6 +87,22 @@ export function RichTextField({
         >
           Link
         </button>
+        {insertTags && insertTags.length > 0 && (
+          <>
+            <span className="mx-1 w-px self-stretch bg-ink/15" />
+            {insertTags.map((tag) => (
+              <button
+                key={tag.value}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => insertTag(tag.value)}
+                className="rounded border border-brand/30 bg-brand/5 px-2 py-1 text-xs font-semibold text-brand-dark hover:bg-brand/10"
+              >
+                + {tag.label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
       <div
         ref={editorRef}

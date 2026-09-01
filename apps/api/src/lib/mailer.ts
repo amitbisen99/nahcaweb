@@ -5,10 +5,23 @@ const BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email";
 export const brevoConfigured =
   Boolean(process.env.BREVO_API_KEY) && !process.env.BREVO_API_KEY?.includes("placeholder");
 
+export interface EmailAttachment {
+  name: string;
+  // Base64-encoded file content, per Brevo's attachment format.
+  content: string;
+}
+
 export async function sendEmail(opts: {
   to: string;
   subject: string;
   body: string;
+  // Optional HTML variant — sent alongside the plain-text body (Brevo
+  // accepts both together, which is also better for deliverability than
+  // text-only). Every existing caller only ever passes `body`, so this is
+  // purely additive; introduced for the admin's Receipt Email feature,
+  // which composes rich-text content.
+  html?: string;
+  attachments?: EmailAttachment[];
 }) {
   if (!brevoConfigured) {
     // eslint-disable-next-line no-console
@@ -31,6 +44,8 @@ export async function sendEmail(opts: {
       to: [{ email: opts.to }],
       subject: opts.subject,
       textContent: opts.body,
+      ...(opts.html ? { htmlContent: opts.html } : {}),
+      ...(opts.attachments?.length ? { attachment: opts.attachments } : {}),
     }),
   });
 

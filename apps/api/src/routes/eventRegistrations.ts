@@ -1,5 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
+import path from "path";
+import fs from "fs";
+import { EventRegistrationStatus } from "@prisma/client";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
 import { requireAuth, requireAdmin } from "../middleware/auth";
@@ -9,7 +12,13 @@ import { activatePayment } from "../lib/paymentActivation";
 import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
 import { findEventOrWebinarByCode } from "../lib/eventCodes";
 import { employmentEntrySchema } from "../lib/memberProfile";
-import { buildEventRegistrationReceiptBody, sendAdminNotification, sendEmail } from "../lib/mailer";
+import {
+  buildEventRegistrationReceiptBody,
+  sendAdminNotification,
+  sendEmail,
+  EmailAttachment,
+} from "../lib/mailer";
+import { htmlToPlainText, substituteTagsHtml, substituteTagsPlain } from "../lib/receiptEmail";
 
 export const eventRegistrationsRouter = Router();
 
@@ -281,18 +290,25 @@ eventRegistrationsRouter.get(
     const eventCode = typeof req.query.eventCode === "string" ? req.query.eventCode : "";
     if (!eventCode) return res.status(400).json({ error: "eventCode is required" });
 
+    // Used by the Receipt Email compose page to show how many attendees
+    // are actually eligible ("active") without paginating through everyone.
+    const statusParam = req.query.status;
+    const status: EventRegistrationStatus | undefined =
+      statusParam === "active" ? "active" : statusParam === "pending" ? "pending" : undefined;
+    const where = { eventCode, ...(status ? { status } : {}) };
+
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
 
     const [registrations, total] = await Promise.all([
       prisma.eventRegistration.findMany({
-        where: { eventCode },
+        where,
         include: { user: { select: { id: true, name: true, email: true } }, payment: true },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      prisma.eventRegistration.count({ where: { eventCode } }),
+      prisma.eventRegistration.count({ where }),
     ]);
 
     res.json({ registrations, total, page, pageSize });
@@ -314,5 +330,112 @@ eventRegistrationsRouter.get(
     if (!registration) return res.status(404).json({ error: "Not found" });
 
     res.json({ registration });
+  })
+);
+
+// Admin — the Receipt Email feature: compose a subject/body (with {{name}}
+// and {{event_name}} tags) and an optional PDF, send it to every currently
+// "active" attendee of this event/webinar. Only active registrations count
+// as attendees here — a still-pending one never completed their
+// registration/payment, so there's nothing to send them a receipt for.
+const sendReceiptEmailSchema = z.object({
+  subject: z.string().min(1),
+  bodyHtml: z.string().min(1),
+  // The /uploads URL of a PDF already uploaded via POST /uploads (same
+  // upload endpoint the generic content forms use) — optional, an admin
+  // may want to send a text-only note with no attachment.
+  attachmentUrl: z.string().min(1).optional(),
+});
+
+eventRegistrationsRouter.post(
+  "/:eventCode/send-receipt-email",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const parsed = sendReceiptEmailSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    const { eventCode } = req.params;
+    const { subject, bodyHtml, attachmentUrl } = parsed.data;
+
+    const eventInfo = await findEventOrWebinarByCode(eventCode);
+    if (!eventInfo) return res.status(404).json({ error: "Event not found" });
+
+    const registrations = await prisma.eventRegistration.findMany({
+      where: { eventCode, status: "active" },
+      include: { user: { select: { name: true, email: true } } },
+    });
+
+    const recipients: { name: string; email: string }[] = [];
+    for (const r of registrations) {
+      const name = r.user?.name ?? r.name;
+      const email = r.user?.email ?? r.email;
+      if (name && email) recipients.push({ name, email });
+    }
+
+    if (recipients.length === 0) {
+      return res.status(400).json({ error: "There are no active attendees to email yet." });
+    }
+
+    let attachments: EmailAttachment[] | undefined;
+    if (attachmentUrl) {
+      // Uploaded files are stored under a randomized name — give the
+      // recipient a friendlier attachment filename instead.
+      const storedFilename = path.basename(attachmentUrl);
+      const filePath = path.join(__dirname, "..", "..", "uploads", storedFilename);
+      try {
+        const fileBuffer = await fs.promises.readFile(filePath);
+        const ext = path.extname(storedFilename) || ".pdf";
+        attachments = [{ name: `Receipt${ext}`, content: fileBuffer.toString("base64") }];
+      } catch {
+        return res.status(400).json({ error: "Could not read the attached file — please re-upload it." });
+      }
+    }
+
+    const admin = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
+
+    let sent = 0;
+    const failed: { email: string; error: string }[] = [];
+
+    for (const recipient of recipients) {
+      const values = { name: recipient.name, event_name: eventInfo.title };
+      try {
+        await sendEmail({
+          to: recipient.email,
+          subject: substituteTagsPlain(subject, values),
+          body: htmlToPlainText(substituteTagsHtml(bodyHtml, values)),
+          html: substituteTagsHtml(bodyHtml, values),
+          attachments,
+        });
+        sent++;
+      } catch (err) {
+        failed.push({ email: recipient.email, error: err instanceof Error ? err.message : "Unknown error" });
+      }
+    }
+
+    await prisma.receiptEmailLog.create({
+      data: {
+        eventCode,
+        subject,
+        sentByEmail: admin?.email ?? "unknown",
+        sentCount: sent,
+        failedCount: failed.length,
+      },
+    });
+
+    res.json({ sent, failed });
+  })
+);
+
+eventRegistrationsRouter.get(
+  "/:eventCode/receipt-email-logs",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const logs = await prisma.receiptEmailLog.findMany({
+      where: { eventCode: req.params.eventCode },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
+    res.json({ logs });
   })
 );
