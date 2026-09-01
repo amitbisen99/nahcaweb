@@ -5,7 +5,6 @@ import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { speakersSchema } from "../lib/speakers";
 import { createEventCode } from "../lib/eventCodes";
-import { withDbRetry } from "../lib/dbRetry";
 
 // Events now have the same open/members_only visibility rule as Webinars, so
 // this uses the same bespoke-router pattern instead of the generic
@@ -36,7 +35,7 @@ eventsRouter.get(
 
     const where = isAdmin ? undefined : isMember ? { published: true } : { published: true, access: "open" as const };
 
-    const items = await withDbRetry(() => prisma.event.findMany({ where, orderBy: { date: "asc" } }));
+    const items = await prisma.event.findMany({ where, orderBy: { date: "asc" } });
     res.json({ items });
   })
 );
@@ -48,7 +47,7 @@ eventsRouter.get(
     const isAdmin = req.auth?.role === "admin";
     const isMember = Boolean(req.auth);
 
-    const item = await withDbRetry(() => prisma.event.findUnique({ where: { id: Number(req.params.id) } }));
+    const item = await prisma.event.findUnique({ where: { id: Number(req.params.id) } });
     if (!item) return res.status(404).json({ error: "Not found" });
     if (!isAdmin && !item.published) return res.status(404).json({ error: "Not found" });
     if (!isAdmin && !isMember && item.access !== "open") return res.status(404).json({ error: "Not found" });

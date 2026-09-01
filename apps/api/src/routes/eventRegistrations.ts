@@ -10,7 +10,6 @@ import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coup
 import { findEventOrWebinarByCode } from "../lib/eventCodes";
 import { employmentEntrySchema } from "../lib/memberProfile";
 import { buildEventRegistrationReceiptBody, sendAdminNotification, sendEmail } from "../lib/mailer";
-import { withDbRetry } from "../lib/dbRetry";
 
 export const eventRegistrationsRouter = Router();
 
@@ -190,14 +189,12 @@ eventRegistrationsRouter.post(
       return res.status(404).json({ error: "Event not found" });
     }
 
-    const existing = await withDbRetry(() =>
-      prisma.eventRegistration.findFirst({
-        where: { eventCode, userId: req.auth!.userId, status: "active" },
-      })
-    );
+    const existing = await prisma.eventRegistration.findFirst({
+      where: { eventCode, userId: req.auth!.userId, status: "active" },
+    });
     if (existing) return res.status(200).json({ registration: existing });
 
-    const user = await withDbRetry(() => prisma.user.findUnique({ where: { id: req.auth!.userId } }));
+    const user = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const basePriceCents = eventInfo.priceCents ?? 0;
@@ -287,18 +284,16 @@ eventRegistrationsRouter.get(
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
 
-    const [registrations, total] = await withDbRetry(() =>
-      Promise.all([
-        prisma.eventRegistration.findMany({
-          where: { eventCode },
-          include: { user: { select: { id: true, name: true, email: true } }, payment: true },
-          orderBy: { createdAt: "desc" },
-          skip: (page - 1) * pageSize,
-          take: pageSize,
-        }),
-        prisma.eventRegistration.count({ where: { eventCode } }),
-      ])
-    );
+    const [registrations, total] = await Promise.all([
+      prisma.eventRegistration.findMany({
+        where: { eventCode },
+        include: { user: { select: { id: true, name: true, email: true } }, payment: true },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.eventRegistration.count({ where: { eventCode } }),
+    ]);
 
     res.json({ registrations, total, page, pageSize });
   })
@@ -312,12 +307,10 @@ eventRegistrationsRouter.get(
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
 
-    const registration = await withDbRetry(() =>
-      prisma.eventRegistration.findUnique({
-        where: { id },
-        include: { user: { select: { id: true, name: true, email: true } }, payment: true },
-      })
-    );
+    const registration = await prisma.eventRegistration.findUnique({
+      where: { id },
+      include: { user: { select: { id: true, name: true, email: true } }, payment: true },
+    });
     if (!registration) return res.status(404).json({ error: "Not found" });
 
     res.json({ registration });

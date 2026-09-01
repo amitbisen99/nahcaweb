@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { prisma } from "../prisma";
-import { withDbRetry } from "./dbRetry";
 
 // Same unambiguous alphabet used for institution claim codes (no 0/O,
 // 1/I/L) — these get read aloud/typed by hand too (an admin copying it
@@ -19,12 +18,10 @@ function randomSuffix(length: number): string {
 export async function createEventCode(prefix: "EVT" | "WEB", attempt = 0): Promise<string> {
   const code = `${prefix}-${randomSuffix(6)}`;
 
-  const [existingEvent, existingWebinar] = await withDbRetry(() =>
-    Promise.all([
-      prisma.event.findUnique({ where: { eventCode: code } }),
-      prisma.webinar.findUnique({ where: { eventCode: code } }),
-    ])
-  );
+  const [existingEvent, existingWebinar] = await Promise.all([
+    prisma.event.findUnique({ where: { eventCode: code } }),
+    prisma.webinar.findUnique({ where: { eventCode: code } }),
+  ]);
 
   if (existingEvent || existingWebinar) {
     if (attempt >= 5) throw new Error("Failed to generate a unique event code after 5 attempts");
@@ -37,12 +34,10 @@ export async function createEventCode(prefix: "EVT" | "WEB", attempt = 0): Promi
 // Used by the coupon routes to confirm an admin-entered event code
 // actually refers to a real Event or Webinar before saving.
 export async function eventCodeExists(code: string): Promise<boolean> {
-  const [event, webinar] = await withDbRetry(() =>
-    Promise.all([
-      prisma.event.findUnique({ where: { eventCode: code }, select: { id: true } }),
-      prisma.webinar.findUnique({ where: { eventCode: code }, select: { id: true } }),
-    ])
-  );
+  const [event, webinar] = await Promise.all([
+    prisma.event.findUnique({ where: { eventCode: code }, select: { id: true } }),
+    prisma.webinar.findUnique({ where: { eventCode: code }, select: { id: true } }),
+  ]);
   return Boolean(event || webinar);
 }
 
@@ -63,12 +58,10 @@ export interface EventOrWebinarSummary {
 // price for the Stripe line item) without the caller having to know or
 // care whether it's an Event or a Webinar.
 export async function findEventOrWebinarByCode(code: string): Promise<EventOrWebinarSummary | null> {
-  const [event, webinar] = await withDbRetry(() =>
-    Promise.all([
-      prisma.event.findUnique({ where: { eventCode: code } }),
-      prisma.webinar.findUnique({ where: { eventCode: code } }),
-    ])
-  );
+  const [event, webinar] = await Promise.all([
+    prisma.event.findUnique({ where: { eventCode: code } }),
+    prisma.webinar.findUnique({ where: { eventCode: code } }),
+  ]);
 
   if (event) {
     return {
