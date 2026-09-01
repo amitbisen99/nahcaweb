@@ -1,6 +1,7 @@
 import { Coupon } from "@prisma/client";
 import { prisma } from "../prisma";
 import { findEventOrWebinarByCode } from "./eventCodes";
+import { withDbRetry } from "./dbRetry";
 
 export type CouponValidationError = { status: number; message: string };
 
@@ -21,7 +22,7 @@ export async function findValidCoupon(
   code: string,
   context: { planType?: string; eventCode?: string } = {}
 ): Promise<Coupon | CouponValidationError> {
-  const coupon = await prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() } });
+  const coupon = await withDbRetry(() => prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() } }));
 
   if (!coupon || !coupon.published) {
     return { status: 404, message: "Invalid coupon code" };
