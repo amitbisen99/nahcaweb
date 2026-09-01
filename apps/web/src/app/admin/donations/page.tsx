@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getAllDonations } from "@/lib/api";
+import { formatDate } from "@/lib/formatDate";
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
   succeeded: "bg-forest/10 text-forest",
@@ -131,7 +132,7 @@ export default async function DonationsPage({
                         {d.payment?.status ?? "unknown"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-black">{new Date(d.createdAt).toDateString()}</td>
+                    <td className="px-4 py-3 text-black">{formatDate(d.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

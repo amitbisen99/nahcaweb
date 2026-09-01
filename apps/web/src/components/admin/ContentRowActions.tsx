@@ -5,13 +5,11 @@ import Link from "next/link";
 import type { ContentTypeConfig, ContentTypeKey } from "@/lib/contentTypes";
 import { deleteContentItem, publishContentItem } from "@/app/admin/content/actions";
 import { EyeIcon, PencilIcon, TrashIcon, UsersIcon, XIcon, isImageUrl } from "./icons";
+import { formatDate } from "@/lib/formatDate";
 
 function formatValue(value: unknown, type: string): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (type === "date") {
-    const d = new Date(value as string);
-    return Number.isNaN(d.getTime()) ? String(value) : d.toDateString();
-  }
+  if (type === "date") return formatDate(value as string, String(value));
   return String(value);
 }
 

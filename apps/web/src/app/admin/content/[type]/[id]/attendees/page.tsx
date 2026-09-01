@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
 import { getContentItem, listEventRegistrations } from "@/lib/adminApi";
+import { formatDate } from "@/lib/formatDate";
 
 const PAGE_SIZE = 10;
 
@@ -98,7 +99,7 @@ export default async function EventAttendeesPage({
                     <td className="px-4 py-3 text-black">
                       {r.payment ? `$${(r.payment.amountCents / 100).toFixed(2)}` : "—"}
                     </td>
-                    <td className="px-4 py-3 text-black">{new Date(r.createdAt).toDateString()}</td>
+                    <td className="px-4 py-3 text-black">{formatDate(r.createdAt)}</td>
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/content/${config.key}/${id}/attendees/${r.id}`}

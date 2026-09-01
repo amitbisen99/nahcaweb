@@ -3,17 +3,12 @@ import { listContent } from "@/lib/adminApi";
 import type { AdminCoupon } from "@/lib/adminApi";
 import { Button } from "@/components/Button";
 import { CouponRowActions } from "@/components/admin/CouponRowActions";
+import { formatDate } from "@/lib/formatDate";
 
 function formatDiscount(coupon: AdminCoupon): string {
   if (coupon.discountType === "complimentary") return "Free";
   if (coupon.discountType === "fixed_amount") return `$${(coupon.discountValue / 100).toFixed(2)} off`;
   return `${coupon.discountValue}% off`;
-}
-
-function formatDate(value: string | null): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? "—" : d.toDateString();
 }
 
 export default async function CouponsPage() {

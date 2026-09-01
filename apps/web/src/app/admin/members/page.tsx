@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { getAllMemberships } from "@/lib/api";
 import { EyeIcon } from "@/components/admin/icons";
+import { formatDate } from "@/lib/formatDate";
 
 const TIER_LABELS: Record<string, string> = {
   regular: "Regular",
@@ -84,7 +85,7 @@ export default async function MembersPage({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-black">${(m.priceCents / 100).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-black">{new Date(m.createdAt).toDateString()}</td>
+                    <td className="px-4 py-3 text-black">{formatDate(m.createdAt)}</td>
                     <td className="sticky right-0 border-l border-ink/10 bg-white px-4 py-3">
                       <Link
                         href={`/admin/members/${m.id}`}

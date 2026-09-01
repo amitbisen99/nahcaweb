@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { getMyMemberships } from "@/lib/api";
+import { formatDate } from "@/lib/formatDate";
 import { RedeemForm } from "./RedeemForm";
 
 export default async function RedeemCodePage() {
@@ -37,11 +38,11 @@ export default async function RedeemCodePage() {
             </div>
             <div className="flex gap-2">
               <dt className="font-medium">Start date:</dt>
-              <dd>{currentSponsored.startDate ? new Date(currentSponsored.startDate).toDateString() : "—"}</dd>
+              <dd>{formatDate(currentSponsored.startDate)}</dd>
             </div>
             <div className="flex gap-2">
               <dt className="font-medium">End date:</dt>
-              <dd>{currentSponsored.endDate ? new Date(currentSponsored.endDate).toDateString() : "—"}</dd>
+              <dd>{formatDate(currentSponsored.endDate)}</dd>
             </div>
           </dl>
         </div>

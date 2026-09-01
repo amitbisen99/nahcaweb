@@ -4,10 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/Button";
 import { inputClass } from "@/components/MemberProfileFormFields";
 import { quickJoinEvent } from "@/app/(site)/events/actions";
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { formatDate } from "@/lib/formatDate";
 
 // Webinars have no scheduled date and get their own wording; Events keep
 // the "held on" clause. Mirrors buildEventRegistrationReceiptBody on the

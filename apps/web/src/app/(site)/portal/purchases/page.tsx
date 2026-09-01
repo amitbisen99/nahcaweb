@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { getMyPayments } from "@/lib/api";
 import { PAYMENT_STATUS_STYLES } from "@/lib/membershipLabels";
 import { paymentLabel } from "@/lib/paymentLabel";
+import { formatDate } from "@/lib/formatDate";
 
 export default async function PurchasesPage() {
   const session = await auth();
@@ -23,7 +24,7 @@ export default async function PurchasesPage() {
             >
               <div>
                 <p className="font-medium text-ink">{paymentLabel(p)}</p>
-                <p className="text-sm text-black">{new Date(p.createdAt).toDateString()}</p>
+                <p className="text-sm text-black">{formatDate(p.createdAt)}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-ink">${(p.amountCents / 100).toFixed(2)}</span>

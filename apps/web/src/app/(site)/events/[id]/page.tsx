@@ -6,10 +6,7 @@ import { SpeakerCards } from "@/components/SpeakerCards";
 import { JoinButton } from "@/components/JoinButton";
 import { auth } from "@/auth";
 import { getEvent, formatEventFee } from "@/lib/cms";
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
+import { formatDate } from "@/lib/formatDate";
 
 export default async function EventDetailPage({
   params,

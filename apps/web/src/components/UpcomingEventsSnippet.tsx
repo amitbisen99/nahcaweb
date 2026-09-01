@@ -1,17 +1,18 @@
 import Link from "next/link";
 import type { CmsEvent } from "@/lib/cms";
+import { formatDate } from "@/lib/formatDate";
 import { ChevronIcon } from "./icons";
 
+// Feeds the decorative calendar-badge icon (month abbreviation stacked over
+// the day number) — a graphic, not a text date, so intentionally left in
+// its own short format rather than the site-wide MM/DD/YYYY used for
+// actual date text.
 function monthLabel(date: string): string {
   return new Date(date).toLocaleDateString("en-US", { month: "short" }).toUpperCase();
 }
 
 function dayLabel(date: string): string {
   return new Date(date).toLocaleDateString("en-US", { day: "numeric" });
-}
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export function UpcomingEventsSnippet({ events }: { events: CmsEvent[] }) {

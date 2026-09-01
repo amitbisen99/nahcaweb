@@ -1,4 +1,5 @@
 import { getPublishedArticles, getPublishedNewsletters } from "@/lib/api";
+import { formatDate } from "@/lib/formatDate";
 
 interface NewsItem {
   id: string;
@@ -51,7 +52,7 @@ export default async function PortalNewsPage() {
                 <span className="rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
                   {item.meta ?? item.kind}
                 </span>
-                <span className="text-xs text-black">{new Date(item.date).toDateString()}</span>
+                <span className="text-xs text-black">{formatDate(item.date)}</span>
               </div>
               <p className="mt-2 font-heading text-base font-medium text-heading">{item.title}</p>
               {item.excerpt && <p className="mt-1 text-sm leading-relaxed text-black">{item.excerpt}</p>}

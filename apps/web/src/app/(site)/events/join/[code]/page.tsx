@@ -2,11 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { getEventInfoByCode } from "@/lib/cms";
+import { formatDate } from "@/lib/formatDate";
 import { EventJoinForm } from "./EventJoinForm";
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 // Webinars have no scheduled date and get their own wording; Events keep
 // the "held on" clause. Mirrors JoinButton.tsx's confirmationMessage and

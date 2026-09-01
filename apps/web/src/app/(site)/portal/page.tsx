@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getMyMemberships, getMyPayments, getProgrammeCoupons, ApiProgrammeCoupon } from "@/lib/api";
 import { TIER_LABELS, PAYMENT_STATUS_STYLES } from "@/lib/membershipLabels";
 import { paymentLabel } from "@/lib/paymentLabel";
+import { formatDate } from "@/lib/formatDate";
 
 interface Reminder {
   text: string;
@@ -38,7 +39,7 @@ function buildReminders(memberships: Awaited<ReturnType<typeof getMyMemberships>
     const daysLeft = Math.ceil((new Date(active.endDate).getTime() - Date.now()) / 86_400_000);
     if (daysLeft >= 0 && daysLeft <= 30) {
       reminders.push({
-        text: `Your membership expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} (${new Date(active.endDate).toDateString()}). Renew soon to keep your benefits.`,
+        text: `Your membership expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} (${formatDate(active.endDate)}). Renew soon to keep your benefits.`,
         href: "/membership",
         tone: "warning",
       });
@@ -111,7 +112,7 @@ export default async function PortalDashboardPage() {
               >
                 <div>
                   <p className="font-medium text-ink">{paymentLabel(p)}</p>
-                  <p className="text-sm text-black">{new Date(p.createdAt).toDateString()}</p>
+                  <p className="text-sm text-black">{formatDate(p.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-ink">${(p.amountCents / 100).toFixed(2)}</span>

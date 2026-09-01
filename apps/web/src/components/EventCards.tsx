@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { CmsEvent } from "@/lib/cms";
+import { formatDate } from "@/lib/formatDate";
 import { AddToCalendar } from "./AddToCalendar";
 import { SpeakerAvatarStack } from "./SpeakerCards";
 import { RevealGroup, RevealItem } from "./Reveal";
@@ -21,10 +22,10 @@ function excerptOf(html: string, max = EXCERPT_LENGTH): string {
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
+// monthLabel/dayLabel below feed the card's decorative calendar-badge icon
+// (month abbreviation stacked over the day number) — that's a graphic, not
+// a text date, so it's intentionally left in its own short format rather
+// than switched to the site-wide MM/DD/YYYY used for actual date text.
 function monthLabel(date: string): string {
   return new Date(date).toLocaleDateString("en-US", { month: "short" }).toUpperCase();
 }

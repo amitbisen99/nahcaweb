@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
 import { getContentItem, listEventRegistrations, getReceiptEmailLogs } from "@/lib/adminApi";
+import { formatDateTime } from "@/lib/formatDate";
 import { SendReceiptEmailForm } from "./SendReceiptEmailForm";
 
 export default async function SendReceiptEmailPage({
@@ -57,7 +58,7 @@ export default async function SendReceiptEmailPage({
               <div key={log.id} className="rounded-lg border border-ink/10 bg-white p-3 text-sm">
                 <p className="font-medium text-ink">{log.subject}</p>
                 <p className="mt-0.5 text-xs text-black/60">
-                  {new Date(log.createdAt).toLocaleString()} · by {log.sentByEmail} · sent to {log.sentCount}
+                  {formatDateTime(log.createdAt)} · by {log.sentByEmail} · sent to {log.sentCount}
                   {log.failedCount > 0 ? `, ${log.failedCount} failed` : ""}
                 </p>
               </div>

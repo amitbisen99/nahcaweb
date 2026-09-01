@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ApiInstitutionCode } from "@/lib/institutions";
+import { formatDate } from "@/lib/formatDate";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -64,7 +65,7 @@ export function InstitutionCodeList({ codes }: { codes: ApiInstitutionCode[] }) 
               <td className="px-4 py-3 text-black">
                 {c.claimedByUser ? `${c.claimedByUser.name} (${c.claimedByUser.email})` : "—"}
               </td>
-              <td className="px-4 py-3 text-black">{c.claimedAt ? new Date(c.claimedAt).toDateString() : "—"}</td>
+              <td className="px-4 py-3 text-black">{formatDate(c.claimedAt)}</td>
               <td className="px-4 py-3">{!c.claimedAt && <CopyButton text={c.code} />}</td>
             </tr>
           ))}

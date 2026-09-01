@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { getMySponsorship } from "@/lib/institutions";
 import { InstitutionCodeList } from "@/components/InstitutionCodeList";
+import { formatDate } from "@/lib/formatDate";
 
 export default async function InstitutionDashboardPage() {
   const session = await auth();
@@ -25,8 +26,8 @@ export default async function InstitutionDashboardPage() {
         remaining
       </p>
       <p className="mt-1 text-sm text-black">
-        Sponsorship period: {new Date(sponsorship.startDate).toDateString()} –{" "}
-        {new Date(sponsorship.endDate).toDateString()}
+        Sponsorship period: {formatDate(sponsorship.startDate)} –{" "}
+        {formatDate(sponsorship.endDate)}
       </p>
 
       <div className="mt-6">

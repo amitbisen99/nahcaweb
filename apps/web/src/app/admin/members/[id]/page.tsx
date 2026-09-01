@@ -5,6 +5,7 @@ import { getMembershipDetail } from "@/lib/adminApi";
 import { MemberProfileView } from "@/components/admin/MemberProfileView";
 import { MemberActiveToggle } from "@/components/admin/MemberActiveToggle";
 import { InstitutionCodeList } from "@/components/InstitutionCodeList";
+import { formatDate } from "@/lib/formatDate";
 
 const TIER_LABELS: Record<string, string> = {
   regular: "Regular",
@@ -46,8 +47,8 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
           <h2 className="font-heading text-lg font-medium text-heading">Institutional Sponsorship</h2>
           <p className="mt-1 text-sm text-black">
             {membership.user.institutionSponsorship.seatCount} seats · period{" "}
-            {new Date(membership.user.institutionSponsorship.startDate).toDateString()} –{" "}
-            {new Date(membership.user.institutionSponsorship.endDate).toDateString()}
+            {formatDate(membership.user.institutionSponsorship.startDate)} –{" "}
+            {formatDate(membership.user.institutionSponsorship.endDate)}
           </p>
           <div className="mt-4">
             <InstitutionCodeList codes={membership.user.institutionSponsorship.codes} />
