@@ -6,13 +6,28 @@ const openSans = Open_Sans({
   variable: "--font-body",
   // "latin-ext" (accented Central/Eastern European characters) is never
   // actually used anywhere on this English-language site — including it
-  // just adds a second preloaded font file that the browser flags as
-  // unused on every page ("preloaded with link preload was not used
-  // within a few seconds"). Drop it if the site ever needs non-English
-  // content that requires those characters.
+  // just adds preloaded font files the browser flags as unused. Drop it
+  // if the site ever needs non-English content that requires those
+  // characters.
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  // Open Sans ships as a variable font on Google Fonts — requesting a
+  // fixed array of weights (400/500/600/700) makes next/font generate a
+  // *separate* static file per weight/style combination (8 files here),
+  // every one of them preloaded from the root layout regardless of which
+  // weights a given page's text actually uses. That mismatch is exactly
+  // what triggered the recurring "preloaded ... was not used" warning —
+  // trimming the subset only ever addressed half of it. "variable"
+  // collapses this to one file per style (2 total) that covers the whole
+  // weight range, so every weight class already used across the site
+  // (font-medium/semibold/bold, etc.) keeps working with no CSS changes.
+  weight: "variable",
   style: ["normal", "italic"],
+  // Belt-and-suspenders: even the 2 remaining files could still go
+  // "unused" on a page with zero italic text (a plain admin data table,
+  // say). Preloading is a load-order optimization, not a correctness
+  // requirement — skip it and let the browser fetch the font when the
+  // stylesheet actually references it, which never produces this warning.
+  preload: false,
 });
 
 export const metadata: Metadata = {
