@@ -14,6 +14,7 @@ import { redeemCoupon } from "./coupons";
 import { createCodeBatch } from "./institutions";
 import { addOrUpdateBrevoContact } from "./brevoContacts";
 import { findEventOrWebinarByCode } from "./eventCodes";
+import { buildDonationTaxReceiptPdf } from "./taxReceiptPdf";
 
 // Shared by the Stripe webhook (real payments) and the payments-bypass paths
 // (demo/staging without Stripe configured) — marks a Payment succeeded and
@@ -50,10 +51,30 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       data: { paymentId: payment.id, emailBody: body },
     });
 
+    // Tax-deductible donation letter, attached to the donor's own receipt
+    // email. Generated best-effort, same reasoning as the admin
+    // notification below: a PDF-generation bug must never block the
+    // donor's receipt email itself from going out — better a receipt email
+    // without its attachment (loudly logged, so it's not silently missed)
+    // than no email at all.
+    let taxReceiptAttachment: { name: string; content: string } | undefined;
+    try {
+      const taxReceiptPdf = await buildDonationTaxReceiptPdf({
+        donorName: payment.donation.donorName,
+        donorAddress: payment.donation.address,
+        amountCents: payment.amountCents,
+        date: donationDate,
+      });
+      taxReceiptAttachment = { name: "NAHCA Tax Receipt.pdf", content: taxReceiptPdf.toString("base64") };
+    } catch (err) {
+      console.error(`Failed to generate tax receipt PDF for payment ${payment.id}:`, err);
+    }
+
     await sendEmail({
       to: payment.donation.donorEmail,
       subject: "Your donation receipt — NAHCA",
       body,
+      attachments: taxReceiptAttachment ? [taxReceiptAttachment] : undefined,
     });
 
     // Internal notification — best-effort, same reasoning as the membership
