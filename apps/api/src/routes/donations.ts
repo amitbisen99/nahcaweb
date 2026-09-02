@@ -7,6 +7,7 @@ import { requireAuth, requireAdmin } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
+import { formatDate } from "../lib/formatDate";
 import type { Request } from "express";
 
 export const donationsRouter = Router();
@@ -16,6 +17,9 @@ const donationSchema = z.object({
   donorEmail: z.string().email(),
   amountCents: z.number().int().min(100),
   purpose: z.string().optional(),
+  address: z.string().optional(),
+  // No longer sent by the donation form (the "monthly recurring" option was
+  // removed) — still accepted here for backward compat, always false now.
   recurring: z.boolean().default(false),
 });
 
@@ -24,10 +28,10 @@ donationsRouter.post("/", asyncHandler(async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
-  const { donorName, donorEmail, amountCents, purpose, recurring } = parsed.data;
+  const { donorName, donorEmail, amountCents, purpose, address, recurring } = parsed.data;
 
   const donation = await prisma.donation.create({
-    data: { donorName, donorEmail, amountCents, purpose, recurring },
+    data: { donorName, donorEmail, amountCents, purpose, address, recurring },
   });
 
   const payment = await prisma.payment.create({
@@ -132,6 +136,8 @@ donationsRouter.get(
 // Admin — export the (optionally filtered) donation list as an .xlsx file.
 // Same email/from/to filters as the list above, unpaginated — an export is
 // expected to cover every matching donation, not just the current page.
+// Registered before "/:id" below so "export" is never matched as a numeric
+// id there (Express matches routes in registration order).
 donationsRouter.get(
   "/export",
   requireAuth,
@@ -152,7 +158,7 @@ donationsRouter.get(
       { header: "Email", key: "email", width: 32 },
       { header: "Purpose", key: "purpose", width: 24 },
       { header: "Amount", key: "amount", width: 14 },
-      { header: "Recurring", key: "recurring", width: 12 },
+      { header: "Address", key: "address", width: 32 },
       { header: "Status", key: "status", width: 14 },
       { header: "Date", key: "date", width: 16 },
     ];
@@ -164,9 +170,9 @@ donationsRouter.get(
         email: d.donorEmail,
         purpose: d.purpose || "—",
         amount: `$${(d.amountCents / 100).toFixed(2)}`,
-        recurring: d.recurring ? "Monthly" : "One-time",
+        address: d.address || "—",
         status: d.payment?.status ?? "unknown",
-        date: d.createdAt.toDateString(),
+        date: formatDate(d.createdAt),
       });
     }
 
@@ -174,5 +180,25 @@ donationsRouter.get(
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", `attachment; filename="Donations.xlsx"`);
     res.send(Buffer.from(buffer));
+  })
+);
+
+// Admin — single donation, full detail (including purpose/address/recurring,
+// which the list table above no longer shows) for the "View" screen.
+donationsRouter.get(
+  "/:id",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
+
+    const donation = await prisma.donation.findUnique({
+      where: { id },
+      include: { payment: { select: { status: true, stripeRef: true } } },
+    });
+    if (!donation) return res.status(404).json({ error: "Not found" });
+
+    res.json({ donation });
   })
 );

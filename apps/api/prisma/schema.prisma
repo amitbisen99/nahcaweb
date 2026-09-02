@@ -214,7 +214,14 @@ model Donation {
   donorEmail      String
   amountCents     Int
   purpose         String?
+  // No longer collected on the public donation form (client removed the
+  // "monthly recurring" option) — kept on existing rows rather than
+  // migrated away, and the API still accepts it for backward compat, but
+  // it always comes through false from the form now.
   recurring       Boolean  @default(false)
+  // Full mailing address as a single free-text field, per the donation
+  // form's own "full address" field — not split into street/city/state/zip.
+  address         String?  @db.Text
   stripePaymentId String?
   createdAt       DateTime @default(now())
   payment         Payment?

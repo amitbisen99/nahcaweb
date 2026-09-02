@@ -20,6 +20,7 @@ import {
   EmailAttachment,
 } from "../lib/mailer";
 import { htmlToPlainText, substituteTagsHtml, substituteTagsPlain } from "../lib/receiptEmail";
+import { formatDate } from "../lib/formatDate";
 
 export const eventRegistrationsRouter = Router();
 
@@ -371,7 +372,7 @@ eventRegistrationsRouter.get(
         phone: r.user?.profile?.phone ?? r.phone ?? "—",
         type: r.user ? "Member" : "Guest",
         amountPaid: r.payment ? `$${(r.payment.amountCents / 100).toFixed(2)}` : "—",
-        joined: r.createdAt.toDateString(),
+        joined: formatDate(r.createdAt),
       });
     }
 
