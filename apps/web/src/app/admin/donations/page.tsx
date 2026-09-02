@@ -108,11 +108,10 @@ export default async function DonationsPage({
                 <tr>
                   <th className="px-4 py-3">Donor</th>
                   <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Purpose</th>
                   <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Recurring</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -120,9 +119,7 @@ export default async function DonationsPage({
                   <tr key={d.id} className="border-t border-ink/10">
                     <td className="px-4 py-3 font-medium text-ink">{d.donorName}</td>
                     <td className="px-4 py-3 text-black">{d.donorEmail}</td>
-                    <td className="px-4 py-3 text-black">{d.purpose || "—"}</td>
                     <td className="px-4 py-3 text-black">${(d.amountCents / 100).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-black">{d.recurring ? "Monthly" : "One-time"}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
@@ -133,6 +130,14 @@ export default async function DonationsPage({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-black">{formatDate(d.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/admin/donations/${d.id}`}
+                        className="text-sm font-semibold text-brand hover:text-brand-dark"
+                      >
+                        View →
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

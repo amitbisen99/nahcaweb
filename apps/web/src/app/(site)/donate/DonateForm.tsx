@@ -7,7 +7,6 @@ const PRESET_AMOUNTS = [25, 50, 100, 250];
 export function DonateForm() {
   const [amount, setAmount] = useState(50);
   const [customAmount, setCustomAmount] = useState("");
-  const [recurring, setRecurring] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +26,8 @@ export function DonateForm() {
           donorName: formData.get("donorName"),
           donorEmail: formData.get("donorEmail"),
           purpose: formData.get("purpose") || undefined,
+          address: formData.get("address") || undefined,
           amountCents: Math.round(amountDollars * 100),
-          recurring,
         }),
       });
 
@@ -108,13 +107,14 @@ export function DonateForm() {
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={recurring}
-          onChange={(e) => setRecurring(e.target.checked)}
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-black">Address (optional)</span>
+        <textarea
+          name="address"
+          rows={3}
+          placeholder="Street, city, state, ZIP"
+          className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"
         />
-        Make this a monthly recurring donation
       </label>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

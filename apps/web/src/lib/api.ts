@@ -34,6 +34,9 @@ export interface AdminDonation {
   donorEmail: string;
   amountCents: number;
   purpose: string | null;
+  address: string | null;
+  // No longer collected on the public donation form — kept only for rows
+  // created before that option was removed; shown on the detail page only.
   recurring: boolean;
   stripePaymentId: string | null;
   createdAt: string;
@@ -181,6 +184,11 @@ export async function getAllDonations(
   if (opts.to) params.set("to", opts.to);
   const data = await apiFetch<PaginatedDonations>(`/donations?${params}`, token);
   return data ?? { donations: [], total: 0, page, pageSize };
+}
+
+export async function getDonation(id: number, token: string): Promise<AdminDonation | null> {
+  const data = await apiFetch<{ donation: AdminDonation }>(`/donations/${id}`, token);
+  return data?.donation ?? null;
 }
 
 export async function getMyPayments(token: string): Promise<ApiPayment[]> {
