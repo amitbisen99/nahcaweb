@@ -17,7 +17,10 @@ const donationSchema = z.object({
   donorEmail: z.string().email(),
   amountCents: z.number().int().min(100),
   purpose: z.string().optional(),
-  address: z.string().optional(),
+  // Mandatory on the public form now (name/email/address all required) —
+  // used on the tax receipt letter's addressee block, which needs a real
+  // address to be worth anything.
+  address: z.string().min(1),
   // No longer sent by the donation form (the "monthly recurring" option was
   // removed) — still accepted here for backward compat, always false now.
   recurring: z.boolean().default(false),

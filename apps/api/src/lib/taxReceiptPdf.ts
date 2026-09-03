@@ -60,17 +60,18 @@ export function buildDonationTaxReceiptPdf(opts: {
     for (const line of ORG_ADDRESS_LINES) {
       doc.text(line, { align: "center" });
     }
-    // Same ORG_EIN env var the plain-text donation receipt (buildDonation-
-    // ReceiptBody in mailer.ts) already uses — keeping both on one source
-    // of truth rather than a separate hardcoded value here that could
-    // silently drift out of sync with it.
-    doc.text(`EIN ${process.env.ORG_EIN}`, { align: "center" });
+    // Hardcoded per explicit client instruction (same reasoning as the
+    // plain-text receipt in mailer.ts) rather than ORG_EIN, which was found
+    // set to a placeholder in at least one environment.
+    doc.text("EIN 85-1311694", { align: "center" });
 
     doc.moveDown(2);
     doc.fontSize(11).text(dateStr);
 
     doc.moveDown(1.5);
-    doc.text(opts.donorName);
+    // Just the address here, not the donor's name too — it's already right
+    // below in the "Namaste [name]," salutation, so repeating it above the
+    // address was redundant (per explicit client instruction).
     if (opts.donorAddress?.trim()) {
       // A free-text address may itself contain line breaks (the donation
       // form's field is a textarea) — preserve them rather than collapsing

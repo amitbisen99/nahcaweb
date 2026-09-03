@@ -26,7 +26,7 @@ export function DonateForm() {
           donorName: formData.get("donorName"),
           donorEmail: formData.get("donorEmail"),
           purpose: formData.get("purpose") || undefined,
-          address: formData.get("address") || undefined,
+          address: formData.get("address"),
           amountCents: Math.round(amountDollars * 100),
         }),
       });
@@ -108,9 +108,10 @@ export function DonateForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-black">Address (optional)</span>
+        <span className="text-sm font-medium text-black">Address</span>
         <textarea
           name="address"
+          required
           rows={3}
           placeholder="Street, city, state, ZIP"
           className="rounded-lg border border-ink/20 bg-white px-3 py-2 focus:border-brand focus:outline-none"

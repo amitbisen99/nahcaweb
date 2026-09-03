@@ -78,7 +78,11 @@ export function buildDonationReceiptBody(opts: {
   const amount = (opts.amountCents / 100).toFixed(2);
   return [
     `${process.env.ORG_NAME}`,
-    `Tax ID (EIN): ${process.env.ORG_EIN}`,
+    // Hardcoded per explicit client instruction, rather than ORG_EIN — that
+    // env var was found set to a placeholder in at least one environment,
+    // and this exact value is what must appear here regardless of env
+    // config drift.
+    `Tax ID (EIN): 85-1311694`,
     ``,
     `Dear ${opts.donorName},`,
     ``,
