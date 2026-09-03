@@ -69,9 +69,7 @@ export function buildDonationTaxReceiptPdf(opts: {
     doc.fontSize(11).text(dateStr);
 
     doc.moveDown(1.5);
-    // Just the address here, not the donor's name too — it's already right
-    // below in the "Namaste [name]," salutation, so repeating it above the
-    // address was redundant (per explicit client instruction).
+    doc.text(opts.donorName);
     if (opts.donorAddress?.trim()) {
       // A free-text address may itself contain line breaks (the donation
       // form's field is a textarea) — preserve them rather than collapsing
