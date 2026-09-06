@@ -36,10 +36,22 @@ export default async function MembersPage({
 
   return (
     <div>
-      <h1 className="font-heading text-3xl font-medium text-heading">Members ({total})</h1>
-      <p className="mt-1 text-sm text-black">
-        Every registered member and their membership status, price, and join date.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-3xl font-medium text-heading">Members ({total})</h1>
+          <p className="mt-1 text-sm text-black">
+            Every registered member and their membership status, price, and join date.
+          </p>
+        </div>
+        {memberships.length > 0 && (
+          <Link
+            href="/admin/members/export"
+            className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/5"
+          >
+            Export as Excel
+          </Link>
+        )}
+      </div>
 
       {memberships.length === 0 ? (
         <p className="mt-4 text-sm text-black">No memberships have been created yet.</p>
