@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import ExcelJS from "exceljs";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
 import { requireAuth, requireAdmin } from "../middleware/auth";
@@ -11,6 +12,7 @@ import { activatePayment } from "../lib/paymentActivation";
 import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
 import { memberProfileSchema } from "../lib/memberProfile";
 import { addOrUpdateBrevoContact, removeBrevoContactFromList } from "../lib/brevoContacts";
+import { formatDate } from "../lib/formatDate";
 
 export const membershipsRouter = Router();
 
@@ -206,6 +208,77 @@ membershipsRouter.get(
     ]);
 
     res.json({ memberships, total, page, pageSize });
+  })
+);
+
+// Same tier labeling the admin members list (web) uses — duplicated rather
+// than shared since this is purely a display label, not business logic.
+const TIER_LABELS: Record<string, string> = {
+  regular: "Regular",
+  student: "Student",
+  institutional: "Institutional",
+  conference: "Conference",
+};
+
+function tierLabel(m: { type: string; groupId: string | null }): string {
+  if (m.type === "institutional") {
+    return m.groupId === null ? "Institutional (Sponsor)" : "Institutional (Sponsored)";
+  }
+  return TIER_LABELS[m.type] ?? m.type;
+}
+
+// Admin — export every membership as an .xlsx file. No filters on the list
+// page to mirror here (unlike Donations/Attendees), so this is always the
+// full set, unpaginated.
+membershipsRouter.get(
+  "/export",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const memberships = await prisma.membership.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            profile: { select: { phone: true, mailingAddress: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Members");
+    sheet.columns = [
+      { header: "Name", key: "name", width: 28 },
+      { header: "Email", key: "email", width: 32 },
+      { header: "Tier", key: "tier", width: 24 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Price", key: "price", width: 12 },
+      { header: "Joined", key: "joined", width: 14 },
+      { header: "Telephone Number", key: "phone", width: 18 },
+      { header: "Mailing Address", key: "address", width: 36 },
+    ];
+    sheet.getRow(1).font = { bold: true };
+
+    for (const m of memberships) {
+      sheet.addRow({
+        name: m.user.name,
+        email: m.user.email,
+        tier: tierLabel(m),
+        status: m.status,
+        price: `$${(m.priceCents / 100).toFixed(2)}`,
+        joined: formatDate(m.createdAt),
+        phone: m.user.profile?.phone || "—",
+        address: m.user.profile?.mailingAddress || "—",
+      });
+    }
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="Members.xlsx"`);
+    res.send(Buffer.from(buffer));
   })
 );
 
