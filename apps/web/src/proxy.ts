@@ -9,17 +9,26 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (pathname.startsWith("/portal") && !req.auth) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (pathname.startsWith("/portal")) {
+    if (!req.auth) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    // A "general user" (free forum-only account, no Membership ever) has
+    // no reason to be here — the portal is for members. Admin is exempt
+    // (role check, not hasMembership) since admin accounts aren't expected
+    // to hold a Membership of their own.
+    if (role !== "admin" && !req.auth.user.hasMembership) {
+      return NextResponse.redirect(new URL("/forum", req.url));
+    }
   }
 
-  // The forum has no anonymous view at all — even reading requires an
-  // account (a free "general user" one is enough, see /signup).
-  if (pathname.startsWith("/forum") && !req.auth) {
+  // Forum browsing/reading (the index and a topic's own page) is public —
+  // only posting a topic or replying needs an account, gated below.
+  if ((pathname === "/forum/new" || pathname.startsWith("/forum/my-topics")) && !req.auth) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 });
 
 export const config = {
-  matcher: ["/portal/:path*", "/admin/:path*", "/forum/:path*"],
+  matcher: ["/portal/:path*", "/admin/:path*", "/forum/new", "/forum/my-topics"],
 };

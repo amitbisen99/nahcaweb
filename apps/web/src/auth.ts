@@ -6,6 +6,7 @@ interface ApiUser {
   email: string;
   name: string;
   role: "admin" | "member";
+  hasMembership: boolean;
 }
 
 // Thrown instead of returning null so the login form can show "This account
@@ -94,6 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: data.user.email,
           name: data.user.name,
           role: data.user.role,
+          hasMembership: data.user.hasMembership,
           apiToken: data.token,
         };
       },
@@ -103,6 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     jwt({ token, user }) {
       if (user) {
         token.role = (user as { role: "admin" | "member" }).role;
+        token.hasMembership = (user as { hasMembership: boolean }).hasMembership;
         token.apiToken = (user as { apiToken: string }).apiToken;
       }
       return token;
@@ -111,6 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.sub as string;
         session.user.role = token.role as "admin" | "member";
+        session.user.hasMembership = Boolean(token.hasMembership);
       }
       session.apiToken = token.apiToken as string;
       return session;
