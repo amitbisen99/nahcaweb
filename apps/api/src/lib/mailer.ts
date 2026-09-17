@@ -206,6 +206,31 @@ export function buildEventRegistrationReceiptBody(opts: {
   return [`${process.env.ORG_NAME}`, ``, `Dear ${opts.attendeeName},`, ``, confirmation].join("\n");
 }
 
+// Sent once a store purchase is confirmed (via activatePayment). No refunds
+// are offered on digital goods, so this doubles as the receipt telling the
+// buyer that — access itself (the video embed / file download) lives on
+// their Dashboard or Portal, not in this email.
+export function buildProductOrderReceiptBody(opts: {
+  buyerName: string;
+  productTitle: string;
+  amountCents: number;
+  paymentRef: string;
+  date: Date;
+}) {
+  const amount = (opts.amountCents / 100).toFixed(2);
+  return [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.buyerName},`,
+    ``,
+    `Thank you for your purchase of "${opts.productTitle}" ($${amount}).`,
+    `Date: ${opts.date.toDateString()}`,
+    `Payment reference: ${opts.paymentRef}`,
+    ``,
+    `You can access it any time from your account dashboard. All digital product sales are final — no refunds.`,
+  ].join("\n");
+}
+
 // Sent on POST /auth/forgot-password with a single-use, expiring link to
 // /reset-password?token=... — see routes/auth.ts for token generation.
 export function buildPasswordResetEmailBody(opts: { name: string; resetUrl: string; expiresInMinutes: number }) {

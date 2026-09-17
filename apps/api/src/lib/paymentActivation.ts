@@ -6,6 +6,7 @@ import {
   buildInstitutionCodesEmailBody,
   buildMembershipAdminNotificationBody,
   buildMembershipReceiptBody,
+  buildProductOrderReceiptBody,
   sendAdminNotification,
   sendEmail,
 } from "./mailer";
@@ -30,6 +31,7 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       donation: true,
       membership: { include: { user: true } },
       eventRegistration: { include: { user: true } },
+      productOrder: { include: { product: true, buyer: true } },
     },
   });
 
@@ -250,6 +252,36 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
         ].join("\n")
       );
     }
+  }
+
+  // Store purchase — always an existing account (no guest checkout for
+  // digital goods, unlike Donations/Events), so buyer is always resolvable.
+  if (payment.productOrder) {
+    await prisma.productOrder.update({
+      where: { id: payment.productOrder.id },
+      data: { status: "active" },
+    });
+
+    const body = buildProductOrderReceiptBody({
+      buyerName: payment.productOrder.buyer.name,
+      productTitle: payment.productOrder.product.title,
+      amountCents: payment.amountCents,
+      paymentRef: stripeRef,
+      date: new Date(),
+    });
+
+    await prisma.receipt.create({ data: { paymentId: payment.id, emailBody: body } });
+
+    await sendEmail({
+      to: payment.productOrder.buyer.email,
+      subject: `Your purchase — ${payment.productOrder.product.title}`,
+      body,
+    });
+
+    await sendAdminNotification(
+      `New store purchase — ${payment.productOrder.product.title}`,
+      `${payment.productOrder.buyer.name} (${payment.productOrder.buyer.email}) purchased "${payment.productOrder.product.title}" for $${(payment.amountCents / 100).toFixed(2)}.`
+    );
   }
 
   return payment;

@@ -22,6 +22,7 @@ import { webinarsRouter } from "./routes/webinars";
 import { conferenceVideosRouter } from "./routes/conferenceVideos";
 import { eventRegistrationsRouter } from "./routes/eventRegistrations";
 import { forumRouter } from "./routes/forum";
+import { productsRouter } from "./routes/products";
 import { asyncHandler } from "./lib/asyncHandler";
 import { paymentsBypassed } from "./lib/paymentsBypass";
 import { brevoConfigured } from "./lib/mailer";
@@ -113,6 +114,7 @@ app.use("/articles", articlesRouter);
 app.use("/newsletters", newslettersRouter);
 app.use("/board", boardRouter);
 app.use("/forum", forumRouter);
+app.use("/products", productsRouter);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   console.error(`Unhandled error on ${req.method} ${req.originalUrl}:`, err);

@@ -11,7 +11,11 @@ paymentsRouter.get(
   asyncHandler(async (req, res) => {
     const payments = await prisma.payment.findMany({
       where: { userId: req.auth!.userId },
-      include: { membership: true, donation: true },
+      include: {
+        membership: true,
+        donation: true,
+        productOrder: { include: { product: { select: { id: true, title: true, type: true } } } },
+      },
       orderBy: { createdAt: "desc" },
     });
     res.json({ payments });

@@ -37,9 +37,23 @@ enum PaymentType {
   conference
   endorsement
   event
+  product
 }
 
 enum EventRegistrationStatus {
+  pending
+  active
+}
+
+enum ProductType {
+  video
+  file
+}
+
+// Mirrors EventRegistrationStatus's convention exactly: pending until the
+// linked Payment activates it, then active — a buyer only gets the video
+// embed / file download once their order is active.
+enum ProductOrderStatus {
   pending
   active
 }
@@ -96,6 +110,7 @@ model User {
   eventRegistrations     EventRegistration[]
   forumTopics            ForumTopic[]
   forumReplies           ForumReply[]
+  productOrders          ProductOrder[]
 }
 
 // Single-use, expiring token emailed as a link on "forgot password". See
@@ -281,6 +296,8 @@ model Payment {
   membership   Membership?   @relation(fields: [membershipId], references: [id])
   eventRegistrationId Int?               @unique
   eventRegistration   EventRegistration? @relation(fields: [eventRegistrationId], references: [id])
+  productOrderId Int?          @unique
+  productOrder   ProductOrder? @relation(fields: [productOrderId], references: [id])
   couponId     Int?
   coupon       Coupon?       @relation(fields: [couponId], references: [id])
   type         PaymentType
@@ -537,4 +554,46 @@ model ForumReply {
 
   @@index([topicId])
   @@index([authorId])
+}
+
+// Admin-managed digital good — either a `video` (an external Vimeo/YouTube
+// link, embedded for the buyer only; the raw link is never sent to the
+// browser pre-purchase) or a `file` (uploaded to this server, up to 50MB,
+// downloadable by the buyer only once their order is active). Never
+// hard-deleted once it has real orders — see the delete route's own check —
+// so a past buyer's purchase history/access never dangles.
+model Product {
+  id          Int          @id @default(autoincrement())
+  type        ProductType
+  title       String
+  description String       @db.Text
+  priceCents  Int
+  // Exactly one of these is set, matching `type` — enforced in the route,
+  // not the schema (Prisma has no clean way to express "exactly one of A/B
+  // required based on a third column").
+  videoUrl    String?
+  fileUrl     String?
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  orders      ProductOrder[]
+}
+
+// One per purchase attempt — mirrors EventRegistration's own shape/
+// convention exactly (a pending row created up front, a linked Payment
+// activates it to `active`). No guest purchases: buyerId is always set,
+// unlike EventRegistration's optional guest fields, since every store
+// purchase requires a real account.
+model ProductOrder {
+  id        Int                @id @default(autoincrement())
+  productId Int
+  product   Product            @relation(fields: [productId], references: [id])
+  buyerId   Int
+  buyer     User               @relation(fields: [buyerId], references: [id])
+  status    ProductOrderStatus @default(pending)
+  createdAt DateTime           @default(now())
+  payment   Payment?
+
+  @@index([productId])
+  @@index([buyerId])
 }
