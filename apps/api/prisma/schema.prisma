@@ -51,6 +51,17 @@ enum PaymentStatus {
   refunded
 }
 
+enum ForumTopicStatus {
+  pending
+  published
+  rejected
+}
+
+enum ForumVisibility {
+  public
+  members_only
+}
+
 enum ArticleCategory {
   Podcast
   Presentation
@@ -83,6 +94,8 @@ model User {
   claimedCodes           InstitutionClaimCode[]
   passwordResetTokens    PasswordResetToken[]
   eventRegistrations     EventRegistration[]
+  forumTopics            ForumTopic[]
+  forumReplies           ForumReply[]
 }
 
 // Single-use, expiring token emailed as a link on "forgot password". See
@@ -457,4 +470,71 @@ model Board {
   updatedAt DateTime @updatedAt
 
   @@index([published])
+}
+
+// Admin-managed, shipped with a starter set (see the matching migration's
+// seed insert) — General Discussion, Chaplaincy Practice, Events &
+// Programs, Announcements. No admin CRUD UI for categories yet (out of
+// scope for this first pass); add/rename directly in the DB if needed
+// until that's built.
+model ForumCategory {
+  id        Int          @id @default(autoincrement())
+  name      String
+  slug      String       @unique
+  createdAt DateTime     @default(now())
+  topics    ForumTopic[]
+}
+
+// A topic always starts `pending` and is invisible to everyone but its
+// author and admin until an admin approves it (-> `published`) or rejects
+// it (-> `rejected`, with rejectionReason set — still visible only to the
+// author, who sees why; admin can permanently delete a rejected topic from
+// the moderation view whenever they choose). Replies are NOT moderated —
+// pre-approving every reply would make live discussion impossible; only
+// new topics go through the queue.
+model ForumTopic {
+  id              Int              @id @default(autoincrement())
+  categoryId      Int
+  category        ForumCategory    @relation(fields: [categoryId], references: [id])
+  authorId        Int
+  author          User             @relation(fields: [authorId], references: [id])
+  title           String
+  body            String           @db.Text
+  // `members_only` is only creatable by a member/admin (enforced in the
+  // route, not here) and is filtered out of every list/search/detail
+  // response for anyone who isn't a member or admin — general users never
+  // see it exists at all.
+  visibility      ForumVisibility  @default(public)
+  status          ForumTopicStatus @default(pending)
+  rejectionReason String?          @db.Text
+  // Admin moderation flags — pin to the top of listings, or lock to block
+  // new replies while keeping the topic itself visible/readable.
+  pinned          Boolean          @default(false)
+  locked          Boolean          @default(false)
+  // Soft-delete (admin "delete/hide") — filtered out of every query rather
+  // than actually removed, so content isn't unrecoverable by accident.
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  replies         ForumReply[]
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([status])
+  @@index([visibility])
+}
+
+model ForumReply {
+  id        Int        @id @default(autoincrement())
+  topicId   Int
+  topic     ForumTopic @relation(fields: [topicId], references: [id])
+  authorId  Int
+  author    User       @relation(fields: [authorId], references: [id])
+  body      String     @db.Text
+  // Soft-delete (admin "delete/hide"), same convention as ForumTopic.
+  deletedAt DateTime?
+  createdAt DateTime   @default(now())
+
+  @@index([topicId])
+  @@index([authorId])
 }
