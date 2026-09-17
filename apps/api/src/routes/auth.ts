@@ -59,8 +59,19 @@ authRouter.post("/login", asyncHandler(async (req, res) => {
     return res.status(403).json({ error: "This account has been deactivated. Contact NAHCA for help." });
   }
 
+  // Whether this account has ever purchased/held a Membership at all
+  // (any status — pending/active/expired all count) — used by the web app
+  // to decide whether a "general user" (free account, no Membership ever)
+  // can land on the Member Portal at all. Deliberately not "active only":
+  // someone with an expired or still-pending membership should still reach
+  // their own portal to see/renew it.
+  const hasMembership = (await prisma.membership.findFirst({ where: { userId: user.id }, select: { id: true } })) !== null;
+
   const token = signToken(user.id, user.role);
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+  res.json({
+    token,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role, hasMembership },
+  });
 }));
 
 authRouter.get(

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { isActiveMember } from "../lib/forumAccess";
 
@@ -10,9 +10,13 @@ export const forumRouter = Router();
 
 const authorSelect = { select: { id: true, name: true } };
 
-// Every forum route below requires requireAuth — reading is gated behind
-// having an account (even a free "general user" one), not just posting.
-// A visitor with no account sees nothing here at all.
+// Browsing/reading (categories, the topic list, a single topic + its
+// replies) is public — no account needed at all, via optionalAuth. Posting
+// a topic or a reply, my-topics, and every admin route still require a
+// real account (requireAuth). req.auth may be undefined below wherever
+// optionalAuth is used — an anonymous reader is never a member or admin,
+// and never a topic's own author, so every "can this viewer see X" check
+// already degrades correctly by just checking req.auth first.
 //
 // "member" for forum purposes means an active Membership record, checked
 // via isActiveMember() — separate from the User.role field, which is just
@@ -21,7 +25,6 @@ const authorSelect = { select: { id: true, name: true } };
 
 forumRouter.get(
   "/categories",
-  requireAuth,
   asyncHandler(async (_req, res) => {
     const categories = await prisma.forumCategory.findMany({ orderBy: { id: "asc" } });
     res.json({ categories });
@@ -36,14 +39,16 @@ const DEFAULT_PAGE_SIZE = 20;
 // "fully hidden" requirement) rather than shown-but-locked.
 forumRouter.get(
   "/topics",
-  requireAuth,
+  optionalAuth,
   asyncHandler(async (req, res) => {
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
     const categoryId = Number(req.query.categoryId) || undefined;
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
 
-    const canSeeMembersOnly = req.auth!.role === "admin" || (await isActiveMember(req.auth!.userId));
+    const canSeeMembersOnly = req.auth
+      ? req.auth.role === "admin" || (await isActiveMember(req.auth.userId))
+      : false;
 
     const where: Prisma.ForumTopicWhereInput = {
       status: "published",
@@ -88,7 +93,7 @@ forumRouter.get(
 
 forumRouter.get(
   "/topics/:id",
-  requireAuth,
+  optionalAuth,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -107,17 +112,18 @@ forumRouter.get(
     });
     if (!topic || topic.deletedAt) return res.status(404).json({ error: "Topic not found" });
 
-    const isOwnerOrAdmin = req.auth!.role === "admin" || topic.authorId === req.auth!.userId;
+    const isOwnerOrAdmin = req.auth ? req.auth.role === "admin" || topic.authorId === req.auth.userId : false;
 
     // A pending/rejected topic is only visible to its own author or admin —
-    // everyone else gets the same 404 as a nonexistent topic, not a 403
-    // (never confirm a pending/rejected topic even exists to a stranger).
+    // everyone else (including an anonymous reader) gets the same 404 as a
+    // nonexistent topic, not a 403 (never confirm a pending/rejected topic
+    // even exists to someone who shouldn't see it).
     if (topic.status !== "published" && !isOwnerOrAdmin) {
       return res.status(404).json({ error: "Topic not found" });
     }
 
     if (topic.status === "published" && topic.visibility === "members_only" && !isOwnerOrAdmin) {
-      const canSee = await isActiveMember(req.auth!.userId);
+      const canSee = req.auth ? await isActiveMember(req.auth.userId) : false;
       if (!canSee) return res.status(404).json({ error: "Topic not found" });
     }
 
@@ -150,10 +156,13 @@ forumRouter.post(
       }
     }
 
-    // New topics always start pending — visible only to the author and
-    // admin until admin approves it (see /admin/topics/:id/approve below).
+    // New topics start pending — visible only to the author and admin
+    // until admin approves it (see /admin/topics/:id/approve below) —
+    // except when admin is the one posting, in which case there's no one
+    // to approve it and it publishes immediately.
+    const status = req.auth!.role === "admin" ? "published" : "pending";
     const topic = await prisma.forumTopic.create({
-      data: { categoryId, title, body, visibility, authorId: req.auth!.userId, status: "pending" },
+      data: { categoryId, title, body, visibility, authorId: req.auth!.userId, status },
     });
 
     res.status(201).json({ topic });
