@@ -14,6 +14,7 @@ export interface ForumAuthor {
 export interface ForumTopicSummary {
   id: number;
   title: string;
+  body: string;
   visibility: "public" | "members_only";
   status: "pending" | "published" | "rejected";
   pinned: boolean;

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { listAdminForumTopics } from "@/lib/adminForum";
 import { formatDate } from "@/lib/formatDate";
-import { ForumTopicRowActions } from "@/components/admin/ForumTopicRowActions";
 
 const TABS: { value: "pending" | "published" | "rejected"; label: string }[] = [
   { value: "pending", label: "Pending review" },
@@ -31,27 +30,22 @@ export default async function AdminForumPage({
         <div>
           <h1 className="font-heading text-3xl font-medium text-heading">Forum Moderation</h1>
           <p className="mt-1 text-sm text-black">
-            Every new topic is held for review before it appears in the forum. Replies aren&rsquo;t moderated —
-            delete one directly from its topic thread if needed.
+            Every new topic (except one admin posts directly — that publishes right away) is held for review
+            before it appears in the forum. Approve, reject, pin, lock, or delete a topic from its own page —
+            click a title below to open it.
           </p>
         </div>
-        {/* This page is only the moderation queue — to post a topic or read/
-            reply on any existing one (as any user can, admin included),
-            that happens on the public forum pages linked here. */}
-        <div className="flex flex-none gap-2">
-          <Link
-            href="/forum"
-            className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/5"
-          >
-            Browse Forum
-          </Link>
-          <Link
-            href="/forum/new"
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-          >
-            New Topic
-          </Link>
-        </div>
+        {/* This page is only the moderation queue — posting a topic or
+            reading/replying on any existing one happens on the public
+            forum, opened in its own tab so the queue stays where it was. */}
+        <Link
+          href="/forum"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-none rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/5"
+        >
+          Browse Forum ↗
+        </Link>
       </div>
 
       <div className="mt-4 flex gap-2">
@@ -101,7 +95,12 @@ export default async function AdminForumPage({
                   <td className="px-4 py-3 text-black">{t.visibility === "members_only" ? "Members only" : "Everyone"}</td>
                   <td className="px-4 py-3 text-black">{formatDate(t.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <ForumTopicRowActions topic={t} />
+                    <Link
+                      href={`/forum/${t.id}`}
+                      className="text-sm font-semibold text-brand hover:text-brand-dark"
+                    >
+                      View →
+                    </Link>
                   </td>
                 </tr>
               ))}

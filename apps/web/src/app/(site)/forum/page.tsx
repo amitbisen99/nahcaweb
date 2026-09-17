@@ -5,6 +5,7 @@ import { getForumCategories, listForumTopics } from "@/lib/forum";
 import { formatDate } from "@/lib/formatDate";
 
 const PAGE_SIZE = 20;
+const EXCERPT_WORDS = 20;
 
 function buildQuery(params: Record<string, string | undefined>) {
   const search = new URLSearchParams();
@@ -13,6 +14,14 @@ function buildQuery(params: Record<string, string | undefined>) {
   }
   const query = search.toString();
   return query ? `?${query}` : "";
+}
+
+// Topic bodies are rich-text HTML — strip tags before truncating so the
+// list preview never shows raw markup or cuts off mid-tag.
+function excerptOf(html: string, maxWords = EXCERPT_WORDS): string {
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const words = text.split(" ").filter(Boolean);
+  return words.length > maxWords ? `${words.slice(0, maxWords).join(" ")}…` : text;
 }
 
 export default async function ForumPage({
@@ -45,18 +54,29 @@ export default async function ForumPage({
             </p>
           </div>
           <div className="flex gap-2">
-            <Link
-              href="/forum/my-topics"
-              className="rounded-lg border border-ink/20 px-4 py-2 text-sm font-semibold text-black hover:border-brand"
-            >
-              My Topics
-            </Link>
-            <Link
-              href="/forum/new"
-              className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-            >
-              New Topic
-            </Link>
+            {session?.apiToken ? (
+              <>
+                <Link
+                  href="/forum/my-topics"
+                  className="rounded-lg border border-ink/20 px-4 py-2 text-sm font-semibold text-black hover:border-brand"
+                >
+                  My Topics
+                </Link>
+                <Link
+                  href="/forum/new"
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+                >
+                  New Topic
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+              >
+                Log in to post a topic
+              </Link>
+            )}
           </div>
         </div>
 
@@ -134,7 +154,8 @@ export default async function ForumPage({
                       </span>
                     </div>
                     <p className="mt-1 font-medium text-ink">{t.title}</p>
-                    <p className="mt-0.5 text-xs text-black/60">
+                    <p className="mt-1 text-sm text-black/70">{excerptOf(t.body)}</p>
+                    <p className="mt-1 text-xs text-black/60">
                       by {t.author.name} · {formatDate(t.createdAt)}
                     </p>
                   </div>

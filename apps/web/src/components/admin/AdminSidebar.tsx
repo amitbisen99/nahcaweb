@@ -11,12 +11,6 @@ const NAV_ITEMS = [
   { label: "Donations", href: "/admin/donations" },
   { label: "Membership Plans", href: "/admin/membership-plans" },
   { label: "Coupons", href: "/admin/coupons" },
-  // Admin can already post/read/reply on any topic like anyone else — that
-  // happens on the public forum pages, not in the admin panel, so this
-  // links straight there. /admin/forum below is the separate moderation
-  // queue (approve/reject/pin/lock) — easy to miss the distinction without
-  // both being one click away from here.
-  { label: "Forum", href: "/forum" },
   { label: "Forum Moderation", href: "/admin/forum" },
 ];
 

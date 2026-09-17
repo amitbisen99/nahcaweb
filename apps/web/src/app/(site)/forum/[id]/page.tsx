@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { getForumTopic } from "@/lib/forum";
 import { formatDate } from "@/lib/formatDate";
 import { ForumReplyDeleteButton } from "@/components/admin/ForumReplyDeleteButton";
+import { ForumTopicAdminPanel } from "@/components/admin/ForumTopicAdminPanel";
 import { ReplyForm } from "./ReplyForm";
 
 export default async function ForumTopicPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,8 @@ export default async function ForumTopicPage({ params }: { params: Promise<{ id:
             {topic.rejectionReason && <p className="mt-1">{topic.rejectionReason}</p>}
           </div>
         )}
+
+        {session?.user?.role === "admin" && <ForumTopicAdminPanel topic={topic} />}
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {topic.pinned && (
@@ -79,10 +82,25 @@ export default async function ForumTopicPage({ params }: { params: Promise<{ id:
         )}
 
         <div className="mt-6">
-          {topic.status === "published" && !topic.locked && <ReplyForm topicId={topic.id} />}
           {topic.status === "published" && topic.locked && (
             <p className="text-sm text-black/60">This topic is locked — no new replies are being accepted.</p>
           )}
+          {topic.status === "published" &&
+            !topic.locked &&
+            (session?.apiToken ? (
+              <ReplyForm topicId={topic.id} />
+            ) : (
+              <p className="text-sm text-black">
+                <Link href="/login" className="font-semibold text-brand hover:text-brand-dark">
+                  Log in
+                </Link>{" "}
+                or{" "}
+                <Link href="/signup" className="font-semibold text-brand hover:text-brand-dark">
+                  create a free account
+                </Link>{" "}
+                to reply.
+              </p>
+            ))}
         </div>
       </div>
     </Container>

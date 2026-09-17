@@ -12,13 +12,19 @@ export function ForumReplyDeleteButton({ replyId, topicId }: { replyId: number; 
     if (!window.confirm("Delete this reply?")) return;
     setPending(true);
     setError(null);
-    const result = await deleteForumReply(replyId, topicId);
-    setPending(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await deleteForumReply(replyId, topicId);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setDeleted(true);
+    } catch (err) {
+      console.error("Failed to delete reply:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setPending(false);
     }
-    setDeleted(true);
   }
 
   if (deleted) return null;
