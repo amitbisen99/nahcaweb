@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { getMyPayments } from "@/lib/api";
 import { PAYMENT_STATUS_STYLES } from "@/lib/membershipLabels";
@@ -25,6 +26,14 @@ export default async function PurchasesPage() {
               <div>
                 <p className="font-medium text-ink">{paymentLabel(p)}</p>
                 <p className="text-sm text-black">{formatDate(p.createdAt)}</p>
+                {p.productOrder?.status === "active" && (
+                  <Link
+                    href={`/store/${p.productOrder.product.id}`}
+                    className="text-sm font-semibold text-brand hover:text-brand-dark"
+                  >
+                    {p.productOrder.product.type === "video" ? "Watch" : "Download"} →
+                  </Link>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-ink">${(p.amountCents / 100).toFixed(2)}</span>

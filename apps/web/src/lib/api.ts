@@ -52,12 +52,13 @@ export interface PaginatedDonations {
 
 export interface ApiPayment {
   id: number;
-  type: "membership" | "donation" | "conference" | "endorsement";
+  type: "membership" | "donation" | "conference" | "endorsement" | "event" | "product";
   amountCents: number;
   status: "pending" | "succeeded" | "failed" | "refunded";
   createdAt: string;
   membership: { type: ApiMembership["type"]; groupId: string | null } | null;
   donation: { purpose: string | null } | null;
+  productOrder: { status: "pending" | "active"; product: { id: number; title: string; type: "video" | "file" } } | null;
 }
 
 export interface ApiNewsletter {
