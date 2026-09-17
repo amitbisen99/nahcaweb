@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { label: "Donations", href: "/admin/donations" },
   { label: "Membership Plans", href: "/admin/membership-plans" },
   { label: "Coupons", href: "/admin/coupons" },
+  { label: "Forum Moderation", href: "/admin/forum" },
 ];
 
 function linkClasses(active: boolean) {

@@ -52,6 +52,7 @@ export const NAV: NavItem[] = [
     ],
   },
   { label: "Membership", href: "/membership" },
+  { label: "Forum", href: "/forum" },
   { label: "Member Portal", href: "/portal" },
 ];
 

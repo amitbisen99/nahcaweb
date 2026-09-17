@@ -12,8 +12,14 @@ export default auth((req) => {
   if (pathname.startsWith("/portal") && !req.auth) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
+
+  // The forum has no anonymous view at all — even reading requires an
+  // account (a free "general user" one is enough, see /signup).
+  if (pathname.startsWith("/forum") && !req.auth) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 });
 
 export const config = {
-  matcher: ["/portal/:path*", "/admin/:path*"],
+  matcher: ["/portal/:path*", "/admin/:path*", "/forum/:path*"],
 };
