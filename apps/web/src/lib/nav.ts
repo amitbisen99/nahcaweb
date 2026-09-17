@@ -49,10 +49,6 @@ export const NAV: NavItem[] = [
   { label: "Membership", href: "/membership" },
   { label: "Forum", href: "/forum" },
   { label: "Member Portal", href: "/portal" },
-  // A general user's (free account, no Membership) equivalent of the
-  // Member Portal — shown to everyone the same way Member Portal is;
-  // visiting it while actually a member just shows the same page, harmless.
-  { label: "Dashboard", href: "/dashboard" },
 ];
 
 export const FOOTER_LINKS: NavChild[] = [

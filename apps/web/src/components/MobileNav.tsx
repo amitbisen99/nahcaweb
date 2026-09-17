@@ -7,13 +7,9 @@ import { NAV } from "@/lib/nav";
 
 export function MobileNav({
   isAdmin,
-  isLoggedIn,
-  signOutAction,
   transparent = false,
 }: {
   isAdmin: boolean;
-  isLoggedIn: boolean;
-  signOutAction: () => Promise<void>;
   transparent?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -88,14 +84,6 @@ export function MobileNav({
           );
         })}
       </ul>
-
-      {isLoggedIn && (
-        <form action={signOutAction} className="pt-4">
-          <button type="submit" className="text-sm font-medium text-black">
-            Sign out
-          </button>
-        </form>
-      )}
     </div>
   );
 

@@ -49,13 +49,20 @@ export default async function AdminStorePage() {
                   <td className="px-4 py-3 text-black capitalize">{p.type}</td>
                   <td className="px-4 py-3 text-black">${(p.priceCents / 100).toFixed(2)}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        p.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"
-                      }`}
-                    >
-                      {p.published ? "Published" : "Draft"}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          p.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"
+                        }`}
+                      >
+                        {p.published ? "Published" : "Draft"}
+                      </span>
+                      {p.membersOnly && (
+                        <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand-dark">
+                          Members Only
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-black">{formatDate(p.createdAt)}</td>
                   <td className="px-4 py-3">

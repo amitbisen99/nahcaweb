@@ -45,11 +45,14 @@ export default async function StoreProductPage({
           {product.type === "video" ? "Video" : "Download"}
         </span>
         <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{product.title}</h1>
-        <p className="mt-3 whitespace-pre-line text-base text-black">{product.description}</p>
+        <div
+          className="mt-3 text-base text-black [&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+          dangerouslySetInnerHTML={{ __html: product.description }}
+        />
 
-        <div className="mt-6 rounded-xl border border-ink/10 bg-white p-6">
-          {owned ? (
-            product.type === "video" ? (
+        {owned ? (
+          <div className="mt-6 rounded-xl border border-ink/10 bg-white p-6">
+            {product.type === "video" ? (
               product.videoUrl && toVideoEmbedUrl(product.videoUrl) ? (
                 <div className="aspect-video w-full overflow-hidden rounded-lg">
                   <iframe
@@ -71,25 +74,27 @@ export default async function StoreProductPage({
               >
                 Download
               </a>
-            )
-          ) : session?.apiToken ? (
+            )}
+          </div>
+        ) : session?.apiToken ? (
+          <div className="mt-6">
             <PurchaseButton productId={product.id} priceCents={product.priceCents} />
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-lg font-semibold text-heading">${(product.priceCents / 100).toFixed(2)}</p>
-              <p className="text-sm text-black">
-                <Link href="/login" className="font-semibold text-brand hover:text-brand-dark">
-                  Log in
-                </Link>{" "}
-                or{" "}
-                <Link href="/signup" className="font-semibold text-brand hover:text-brand-dark">
-                  create a free account
-                </Link>{" "}
-                to purchase.
-              </p>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="mt-6 flex flex-col gap-2">
+            <p className="text-lg font-semibold text-heading">${(product.priceCents / 100).toFixed(2)}</p>
+            <p className="text-sm text-black">
+              <Link href="/login" className="font-semibold text-brand hover:text-brand-dark">
+                Log in
+              </Link>{" "}
+              or{" "}
+              <Link href="/signup" className="font-semibold text-brand hover:text-brand-dark">
+                create a free account
+              </Link>{" "}
+              to purchase.
+            </p>
+          </div>
+        )}
       </div>
     </Container>
   );

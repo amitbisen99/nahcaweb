@@ -29,13 +29,9 @@ function UserIcon(props: SVGProps<SVGSVGElement>) {
 export function HeaderChrome({
   portalHref,
   isAdmin,
-  isLoggedIn,
-  signOutAction,
 }: {
   portalHref: string;
   isAdmin: boolean;
-  isLoggedIn: boolean;
-  signOutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -137,17 +133,6 @@ export function HeaderChrome({
           </nav>
 
           <div className="flex items-center gap-3">
-            {isLoggedIn && (
-              <form action={signOutAction} className="hidden sm:block">
-                <button
-                  type="submit"
-                  className={`text-sm font-medium transition-colors duration-300 hover:text-brand ${chromeTextColor}`}
-                >
-                  Sign out
-                </button>
-              </form>
-            )}
-
             <Link
               href={portalHref}
               aria-label="Member Portal"
@@ -170,12 +155,7 @@ export function HeaderChrome({
               Donate
             </Button>
 
-            <MobileNav
-              isAdmin={isAdmin}
-              isLoggedIn={isLoggedIn}
-              signOutAction={signOutAction}
-              transparent={transparent}
-            />
+            <MobileNav isAdmin={isAdmin} transparent={transparent} />
           </div>
         </div>
       </Container>

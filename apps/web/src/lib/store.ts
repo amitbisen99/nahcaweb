@@ -11,6 +11,8 @@ export interface StoreProduct {
   title: string;
   description: string;
   priceCents: number;
+  thumbnailUrl?: string | null;
+  membersOnly: boolean;
   published: boolean;
   createdAt: string;
   videoUrl?: string | null;
@@ -48,6 +50,13 @@ export async function getProduct(
 export async function getMyOrders(token: string): Promise<StoreOrder[]> {
   const data = await storeFetch<{ orders: StoreOrder[] }>("/products/me/orders", token);
   return data?.orders ?? [];
+}
+
+// Members-only products — free for any active member, surfaced on the
+// Portal's Resources page instead of the public Store.
+export async function getMemberResources(token: string): Promise<StoreProduct[]> {
+  const data = await storeFetch<{ products: StoreProduct[] }>("/products/resources", token);
+  return data?.products ?? [];
 }
 
 // Converts a plain Vimeo/YouTube URL (whatever an admin naturally pastes)

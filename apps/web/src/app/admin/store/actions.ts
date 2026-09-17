@@ -34,27 +34,96 @@ function extractErrorMessage(data: unknown, fallback: string): string {
   return fallback;
 }
 
-// Same upload-then-attach flow the Receipt Email feature already
-// established (POST /products/admin/upload here instead of the generic
-// /uploads, since this needs the 50MB/broader-file-type policy that
-// endpoint doesn't have) — the file is uploaded first, then its URL is sent
-// along with the rest of the product fields.
-async function uploadProductFile(file: File, token: string): Promise<string | null> {
-  const formData = new FormData();
-  formData.append("file", file);
+export interface UploadState {
+  url?: string;
+  error?: string;
+}
+
+// Uploads on its own, called directly from ProductForm's file input the
+// moment a file is chosen — kept out of the create/update form entirely so
+// that form never submits as multipart. A form with a real <input
+// type="file"> forces Next.js to fall back to a full-page multipart POST
+// for progressive enhancement, which reloads the page and wipes every
+// other field on any error (wrong price, blocked extension, whatever) —
+// confusing enough on its own that it read as "the file upload doesn't
+// work" even though the upload itself succeeded fine. Uploading ahead of
+// time via its own action means the main form only ever carries the
+// resulting URL as a plain hidden text field, so it stays a fast
+// client-side transition like every other admin form.
+export async function uploadProductFile(_prevState: UploadState, formData: FormData): Promise<UploadState> {
+  let token: string;
   try {
-    const res = await fetch(`${process.env.API_URL}/products/admin/upload`, {
+    token = await requireAdminToken();
+  } catch {
+    return { error: "You're not authorized to do that — try signing in again." };
+  }
+
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) {
+    return { error: "Please choose a file." };
+  }
+
+  const upload = new FormData();
+  upload.append("file", file);
+
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/products/admin/upload`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
-      body: formData,
+      body: upload,
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return (data.url as string) ?? null;
   } catch (err) {
     console.error("uploadProductFile: request failed:", err);
-    return null;
+    return { error: "Couldn't reach the server. Please try again." };
   }
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    return { error: extractErrorMessage(data, "Couldn't upload the file.") };
+  }
+
+  return { url: data.url as string };
+}
+
+// Goes through the same generic image endpoint the rest of the admin panel
+// already uses for content photos (image/PDF only, 10MB) rather than the
+// product file endpoint's "any file, 50MB" policy — a thumbnail is always
+// just a preview image, no reason to widen that policy for it.
+export async function uploadProductThumbnail(_prevState: UploadState, formData: FormData): Promise<UploadState> {
+  let token: string;
+  try {
+    token = await requireAdminToken();
+  } catch {
+    return { error: "You're not authorized to do that — try signing in again." };
+  }
+
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) {
+    return { error: "Please choose an image." };
+  }
+
+  const upload = new FormData();
+  upload.append("file", file);
+
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/uploads`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: upload,
+    });
+  } catch (err) {
+    console.error("uploadProductThumbnail: request failed:", err);
+    return { error: "Couldn't reach the server. Please try again." };
+  }
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    return { error: extractErrorMessage(data, "Couldn't upload the image.") };
+  }
+
+  return { url: data.url as string };
 }
 
 function readCommonFields(formData: FormData) {
@@ -63,8 +132,11 @@ function readCommonFields(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim();
   const priceDollars = Number(formData.get("price"));
   const published = formData.get("published") === "on";
+  const membersOnly = formData.get("membersOnly") === "on";
   const videoUrl = String(formData.get("videoUrl") ?? "").trim();
-  return { type, title, description, priceDollars, published, videoUrl };
+  const fileUrl = String(formData.get("fileUrl") ?? "").trim();
+  const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
+  return { type, title, description, priceDollars, published, membersOnly, videoUrl, fileUrl, thumbnailUrl };
 }
 
 // A "use server" function bound to <form action={...}> must never throw on
@@ -78,23 +150,15 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
     return { error: "You're not authorized to do that — try signing in again." };
   }
 
-  const { type, title, description, priceDollars, published, videoUrl } = readCommonFields(formData);
+  const { type, title, description, priceDollars, published, membersOnly, videoUrl, fileUrl, thumbnailUrl } =
+    readCommonFields(formData);
   if (!title || !description || !Number.isFinite(priceDollars) || priceDollars <= 0) {
     return { error: "Please fill in a title, description, and a price greater than $0." };
   }
-
-  let fileUrl: string | undefined;
-  if (type === "file") {
-    const file = formData.get("file") as File | null;
-    if (!file || file.size === 0) {
-      return { error: "Please choose a file to upload." };
-    }
-    const uploaded = await uploadProductFile(file, token);
-    if (!uploaded) {
-      return { error: "Couldn't upload the file. Please try again (max 50MB)." };
-    }
-    fileUrl = uploaded;
-  } else if (!videoUrl) {
+  if (type === "file" && !fileUrl) {
+    return { error: "Please upload a file." };
+  }
+  if (type === "video" && !videoUrl) {
     return { error: "Please enter a Vimeo or YouTube link." };
   }
 
@@ -109,7 +173,9 @@ export async function createProduct(_prevState: ProductFormState, formData: Form
         description,
         priceCents: Math.round(priceDollars * 100),
         published,
+        membersOnly,
         ...(type === "video" ? { videoUrl } : { fileUrl }),
+        ...(thumbnailUrl ? { thumbnailUrl } : {}),
       }),
     });
   } catch (err) {
@@ -138,22 +204,15 @@ export async function updateProduct(
     return { error: "You're not authorized to do that — try signing in again." };
   }
 
-  const { type, title, description, priceDollars, published, videoUrl } = readCommonFields(formData);
+  const { type, title, description, priceDollars, published, membersOnly, videoUrl, fileUrl, thumbnailUrl } =
+    readCommonFields(formData);
   if (!title || !description || !Number.isFinite(priceDollars) || priceDollars <= 0) {
     return { error: "Please fill in a title, description, and a price greater than $0." };
   }
-
-  let fileUrl: string | undefined;
-  if (type === "file") {
-    const file = formData.get("file") as File | null;
-    if (file && file.size > 0) {
-      const uploaded = await uploadProductFile(file, token);
-      if (!uploaded) {
-        return { error: "Couldn't upload the file. Please try again (max 50MB)." };
-      }
-      fileUrl = uploaded;
-    }
-  } else if (!videoUrl) {
+  if (type === "file" && !fileUrl) {
+    return { error: "Please upload a file." };
+  }
+  if (type === "video" && !videoUrl) {
     return { error: "Please enter a Vimeo or YouTube link." };
   }
 
@@ -168,7 +227,9 @@ export async function updateProduct(
         description,
         priceCents: Math.round(priceDollars * 100),
         published,
-        ...(type === "video" ? { videoUrl, fileUrl: null } : fileUrl ? { fileUrl, videoUrl: null } : {}),
+        membersOnly,
+        ...(type === "video" ? { videoUrl, fileUrl: null } : { fileUrl, videoUrl: null }),
+        ...(thumbnailUrl ? { thumbnailUrl } : {}),
       }),
     });
   } catch (err) {
