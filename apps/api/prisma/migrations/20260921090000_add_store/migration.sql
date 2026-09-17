@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `payment` ADD COLUMN `productOrderId` INTEGER NULL,
+ALTER TABLE `Payment` ADD COLUMN `productOrderId` INTEGER NULL,
     MODIFY `type` ENUM('membership', 'donation', 'conference', 'endorsement', 'event', 'product') NOT NULL;
 
 -- CreateTable
