@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { getForumCategories, listForumTopics } from "@/lib/forum";
 import { formatDate } from "@/lib/formatDate";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const EXCERPT_WORDS = 20;
 
 function buildQuery(params: Record<string, string | undefined>) {

@@ -46,5 +46,11 @@ export async function createForumTopic(_prevState: NewTopicState, formData: Form
     return { error: message };
   }
 
-  redirect("/forum/my-topics?posted=1");
+  // Tells my-topics which banner to show — an admin's own topic comes back
+  // already "published" (no queue to wait in), everyone else's comes back
+  // "pending". Read from the actual response rather than just checking the
+  // poster's role here, so the banner always matches what really happened.
+  const data = await res.json().catch(() => null);
+  const status = data?.topic?.status === "published" ? "published" : "pending";
+  redirect(`/forum/my-topics?posted=${status}`);
 }

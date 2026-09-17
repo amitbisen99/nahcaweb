@@ -21,9 +21,15 @@ export default async function ForumTopicPage({ params }: { params: Promise<{ id:
   return (
     <Container>
       <div className="mx-auto max-w-3xl py-12">
-        <Link href="/forum" className="text-sm font-semibold text-brand hover:text-brand-dark">
-          ← Forum
-        </Link>
+        {session?.user?.role === "admin" ? (
+          <Link href="/admin/forum" className="text-sm font-semibold text-brand hover:text-brand-dark">
+            ← Back to topics
+          </Link>
+        ) : (
+          <Link href="/forum" className="text-sm font-semibold text-brand hover:text-brand-dark">
+            ← Forum
+          </Link>
+        )}
 
         {topic.status === "pending" && (
           <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-black">

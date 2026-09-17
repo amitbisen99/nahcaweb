@@ -10,11 +10,14 @@ import {
 } from "@/app/admin/forum/actions";
 import { ForumTopicDetail } from "@/lib/forum";
 
-// Approve/reject/delete are offered regardless of the topic's current
-// status (per explicit request — moderation shouldn't be a one-way street:
-// a rejected topic can be reconsidered, a published one can be pulled back).
-// Pin/lock only make sense once something is actually published, so those
-// stay conditional.
+// Approve and Reject each become a plain non-clickable "Approved"/
+// "Rejected" label once the topic is already in that state — showing an
+// actionable "Approve" button on an already-published topic was confusing
+// (per explicit feedback). They're still clickable from any *other* state,
+// since moderation isn't one-way: a rejected topic can be reconsidered
+// (Approve), and a published one can be pulled back (Reject). Pin/lock
+// only make sense once something is actually published, so those stay
+// conditional on that.
 export function ForumTopicAdminPanel({ topic }: { topic: ForumTopicDetail }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -60,22 +63,30 @@ export function ForumTopicAdminPanel({ topic }: { topic: ForumTopicDetail }) {
     <div className="mt-4 flex flex-col gap-2 rounded-lg border border-ink/15 bg-sand/30 p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Admin</p>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => run(() => approveForumTopic(topic.id))}
-          className="rounded-lg bg-forest px-3 py-1.5 text-xs font-semibold text-white hover:bg-forest/90 disabled:opacity-50"
-        >
-          Approve
-        </button>
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={handleReject}
-          className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-        >
-          Reject
-        </button>
+        {topic.status === "published" ? (
+          <span className="rounded-lg bg-forest/10 px-3 py-1.5 text-xs font-semibold text-forest">Approved</span>
+        ) : (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => run(() => approveForumTopic(topic.id))}
+            className="rounded-lg bg-forest px-3 py-1.5 text-xs font-semibold text-white hover:bg-forest/90 disabled:opacity-50"
+          >
+            Approve
+          </button>
+        )}
+        {topic.status === "rejected" ? (
+          <span className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700">Rejected</span>
+        ) : (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={handleReject}
+            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+          >
+            Reject
+          </button>
+        )}
         {topic.status === "published" && (
           <>
             <button

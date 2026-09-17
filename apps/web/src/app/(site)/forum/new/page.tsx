@@ -25,7 +25,11 @@ export default async function NewForumTopicPage() {
         </Link>
         <h1 className="mt-1 font-heading text-3xl font-medium text-heading">New Topic</h1>
         <div className="mt-6">
-          <NewTopicForm categories={categories} canPostMembersOnly={canPostMembersOnly} />
+          <NewTopicForm
+            categories={categories}
+            canPostMembersOnly={canPostMembersOnly}
+            isAdmin={session?.user?.role === "admin"}
+          />
         </div>
       </div>
     </Container>

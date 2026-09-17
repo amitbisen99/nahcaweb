@@ -8,7 +8,17 @@ import { createForumTopic, NewTopicState } from "./actions";
 
 const initialState: NewTopicState = {};
 
-export function NewTopicForm({ categories, canPostMembersOnly }: { categories: ForumCategory[]; canPostMembersOnly: boolean }) {
+export function NewTopicForm({
+  categories,
+  canPostMembersOnly,
+  isAdmin,
+}: {
+  categories: ForumCategory[];
+  canPostMembersOnly: boolean;
+  // Admin's own topics publish immediately — no queue to wait in — so the
+  // button/copy shouldn't imply a review step that isn't going to happen.
+  isAdmin: boolean;
+}) {
   const [state, formAction, isPending] = useActionState(createForumTopic, initialState);
 
   return (
@@ -55,15 +65,17 @@ export function NewTopicForm({ categories, canPostMembersOnly }: { categories: F
         </div>
       )}
 
-      <p className="text-xs text-black/60">
-        New topics are reviewed by an admin before they go live — you&rsquo;ll see it under{" "}
-        <span className="font-medium">My Topics</span> once it&rsquo;s approved (or if it needs changes).
-      </p>
+      {!isAdmin && (
+        <p className="text-xs text-black/60">
+          New topics are reviewed by an admin before they go live — you&rsquo;ll see it under{" "}
+          <span className="font-medium">My Topics</span> once it&rsquo;s approved (or if it needs changes).
+        </p>
+      )}
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
       <Button type="submit" variant="solid" className="self-start" disabled={isPending}>
-        {isPending ? "Posting…" : "Submit for review"}
+        {isPending ? "Posting…" : isAdmin ? "Submit" : "Submit for review"}
       </Button>
     </form>
   );
