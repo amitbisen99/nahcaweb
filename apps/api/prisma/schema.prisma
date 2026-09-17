@@ -573,6 +573,15 @@ model Product {
   // required based on a third column").
   videoUrl    String?
   fileUrl     String?
+  // Video-only preview image for the Store grid — derived server-side from
+  // videoUrl (YouTube's predictable thumbnail URL, or Vimeo's oEmbed
+  // response) when the product is saved, never uploaded directly.
+  thumbnailUrl String?
+  // A membersOnly product isn't sold in the public Store at all — any
+  // member (same `hasMembership` check as portal access) gets it for free,
+  // surfaced on the Portal's Resources page instead of requiring a
+  // ProductOrder/Payment.
+  membersOnly Boolean      @default(false)
   published   Boolean      @default(false)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt

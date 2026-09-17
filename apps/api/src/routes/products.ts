@@ -10,6 +10,8 @@ import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
+import { deriveVideoThumbnail } from "../lib/videoThumbnail";
+import { isActiveMember } from "../lib/forumAccess";
 
 export const productsRouter = Router();
 
@@ -22,6 +24,7 @@ const publicProductSelect = {
   title: true,
   description: true,
   priceCents: true,
+  thumbnailUrl: true,
   published: true,
   createdAt: true,
 } as const;
@@ -31,8 +34,29 @@ const publicProductSelect = {
 productsRouter.get(
   "/",
   asyncHandler(async (_req, res) => {
+    // membersOnly products aren't for public sale — they're free for members
+    // and surfaced on the Portal's Resources page instead (see /resources
+    // below).
     const products = await prisma.product.findMany({
-      where: { published: true },
+      where: { published: true, membersOnly: false },
+      select: publicProductSelect,
+      orderBy: { createdAt: "desc" },
+    });
+    res.json({ products });
+  })
+);
+
+// A member gets every published membersOnly product for free, no
+// ProductOrder/Payment involved — same `isActiveMember` check the Forum
+// already uses for its own members-only visibility gating.
+productsRouter.get(
+  "/resources",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    if (!(await isActiveMember(req.auth!.userId))) return res.json({ products: [] });
+
+    const products = await prisma.product.findMany({
+      where: { published: true, membersOnly: true },
       select: publicProductSelect,
       orderBy: { createdAt: "desc" },
     });
@@ -66,7 +90,18 @@ productsRouter.get(
     const isAdmin = req.auth?.role === "admin";
     if (!product.published && !isAdmin) return res.status(404).json({ error: "Product not found" });
 
-    const owned = req.auth ? isAdmin || (await hasActiveOrder(req.auth.userId, id)) : false;
+    const isMember = req.auth && !isAdmin ? await isActiveMember(req.auth.userId) : false;
+
+    // A membersOnly product isn't part of the public Store — only an admin
+    // or an active member (who gets it for free, no order needed) may even
+    // see it; everyone else gets the same 404 as an unpublished product.
+    if (product.membersOnly && !isAdmin && !isMember) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    const owned = req.auth
+      ? isAdmin || (product.membersOnly && isMember) || (await hasActiveOrder(req.auth.userId, id))
+      : false;
 
     const { videoUrl, fileUrl, ...publicFields } = product;
     res.json({ product: owned ? product : publicFields, owned });
@@ -113,6 +148,9 @@ productsRouter.post(
 
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product || !product.published) return res.status(404).json({ error: "Product not found" });
+    if (product.membersOnly) {
+      return res.status(400).json({ error: "This is a members-only resource, not something you buy." });
+    }
 
     const existing = await prisma.productOrder.findFirst({
       where: { productId: id, buyerId: req.auth!.userId, status: "active" },
@@ -203,6 +241,11 @@ const createProductSchema = z
     priceCents: z.number().int().min(1),
     videoUrl: z.string().url().optional(),
     fileUrl: z.string().min(1).optional(),
+    // An admin-uploaded thumbnail always wins; leaving it out falls back to
+    // an auto-derived one for a video (or no thumbnail at all for a file,
+    // which the Store/Resources pages render as a generic file icon).
+    thumbnailUrl: z.string().min(1).optional(),
+    membersOnly: z.boolean().default(false),
     published: z.boolean().default(false),
   })
   .refine((data) => (data.type === "video" ? !!data.videoUrl : !!data.fileUrl), {
@@ -217,7 +260,9 @@ productsRouter.post(
     const parsed = createProductSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-    const product = await prisma.product.create({ data: parsed.data });
+    const { thumbnailUrl: manualThumbnail, ...data } = parsed.data;
+    const thumbnailUrl = manualThumbnail ?? (data.videoUrl ? await deriveVideoThumbnail(data.videoUrl) : null);
+    const product = await prisma.product.create({ data: { ...data, thumbnailUrl } });
     res.status(201).json({ product });
   })
 );
@@ -229,6 +274,12 @@ const updateProductSchema = z.object({
   priceCents: z.number().int().min(1).optional(),
   videoUrl: z.string().url().nullable().optional(),
   fileUrl: z.string().min(1).nullable().optional(),
+  // Present (non-empty) means the admin uploaded/kept a specific image —
+  // always wins. Left out means "no manual choice this save": re-derive
+  // from videoUrl if that's present, otherwise leave whatever's already
+  // stored untouched (e.g. a save that only changed the price).
+  thumbnailUrl: z.string().min(1).optional(),
+  membersOnly: z.boolean().optional(),
   published: z.boolean().optional(),
 });
 
@@ -246,7 +297,14 @@ productsRouter.patch(
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) return res.status(404).json({ error: "Product not found" });
 
-    const updated = await prisma.product.update({ where: { id }, data: parsed.data });
+    const { thumbnailUrl: manualThumbnail, ...data } = parsed.data;
+    const thumbnailUrl =
+      manualThumbnail ?? ("videoUrl" in data ? (data.videoUrl ? await deriveVideoThumbnail(data.videoUrl) : null) : undefined);
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { ...data, ...(thumbnailUrl !== undefined ? { thumbnailUrl } : {}) },
+    });
     res.json({ product: updated });
   })
 );
