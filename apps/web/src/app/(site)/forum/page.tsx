@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
+import { EventBanner } from "@/components/EventBanner";
 import { auth } from "@/auth";
 import { getForumCategories, listForumTopics } from "@/lib/forum";
 import { formatDate } from "@/lib/formatDate";
@@ -44,15 +45,14 @@ export default async function ForumPage({
   const filters = { categoryId, search };
 
   return (
-    <Container>
+    <>
+      <EventBanner title="Forum" image="/chaplaincy/lotus-flower-candle-holder.webp" />
+      <Container>
       <div className="py-12">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-3xl font-medium text-heading">Forum</h1>
-            <p className="mt-1 text-sm text-black">
-              Discuss with other NAHCA members and general users. New topics are reviewed before they go live.
-            </p>
-          </div>
+          <p className="max-w-xl text-sm text-black">
+            Discuss with other NAHCA members and general users. New topics are reviewed before they go live.
+          </p>
           <div className="flex gap-2">
             {session?.apiToken ? (
               <>
@@ -198,6 +198,7 @@ export default async function ForumPage({
           </>
         )}
       </div>
-    </Container>
+      </Container>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
+import { EventBanner } from "@/components/EventBanner";
 import { listProducts } from "@/lib/store";
 import { FileIcon } from "@/components/admin/icons";
 
@@ -23,10 +24,11 @@ export default async function StorePage() {
   const products = await listProducts();
 
   return (
-    <Container>
+    <>
+      <EventBanner title="Store" image="/chaplaincy/colorful-palm-leaf-books.jpg" />
+      <Container>
       <div className="py-12">
-        <h1 className="font-heading text-3xl font-medium text-heading">Store</h1>
-        <p className="mt-1 text-sm text-black">
+        <p className="text-sm text-black">
           Videos and downloadable resources from NAHCA. Browse freely — you&rsquo;ll need to sign in to purchase.
         </p>
 
@@ -73,6 +75,7 @@ export default async function StorePage() {
           </div>
         )}
       </div>
-    </Container>
+      </Container>
+    </>
   );
 }
