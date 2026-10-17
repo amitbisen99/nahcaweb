@@ -216,6 +216,36 @@ productsRouter.get(
   })
 );
 
+// Every purchase attempt, newest first — registered ahead of /admin/:id so
+// "orders" isn't read as a product id. Includes pending/abandoned checkouts
+// (the payment status says which is which) rather than hiding them, so an
+// admin can also see a buyer who started checkout but never finished.
+productsRouter.get(
+  "/admin/orders",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 10));
+
+    const [orders, total] = await Promise.all([
+      prisma.productOrder.findMany({
+        include: {
+          buyer: { select: { id: true, name: true, email: true } },
+          product: { select: { id: true, title: true, type: true } },
+          payment: { select: { status: true, amountCents: true, stripeRef: true, createdAt: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.productOrder.count(),
+    ]);
+
+    res.json({ orders, total, page, pageSize });
+  })
+);
+
 productsRouter.get(
   "/admin/:id",
   requireAuth,

@@ -15,12 +15,20 @@ export default async function AdminStorePage() {
           <h1 className="font-heading text-3xl font-medium text-heading">Store</h1>
           <p className="mt-1 text-sm text-black">Digital products for sale — videos (streamed only) and files.</p>
         </div>
-        <Link
-          href="/admin/store/new"
-          className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-        >
-          + New Product
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/store/purchases"
+            className="rounded-lg border border-brand px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/5"
+          >
+            Purchases
+          </Link>
+          <Link
+            href="/admin/store/new"
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          >
+            + New Product
+          </Link>
+        </div>
       </div>
 
       {products.length === 0 ? (
