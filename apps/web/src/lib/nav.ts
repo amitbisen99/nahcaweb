@@ -13,12 +13,16 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { label: "Home", href: "/" },
   {
-    label: "What Is Hindu Chaplaincy?",
+    label: "Resources",
     href: "/what-is-hindu-chaplaincy",
     children: [
-      { label: "Higher Education", href: "/what-is-hindu-chaplaincy/higher-education" },
-      { label: "Healthcare", href: "/what-is-hindu-chaplaincy/healthcare" },
-      { label: "Community", href: "/what-is-hindu-chaplaincy/community" },
+      { label: "What Is Hindu Chaplaincy?", href: "/what-is-hindu-chaplaincy" },
+      { label: "Hindu Spiritual Care Resources", href: "/about/resources" },
+      { label: "Resources for Chaplains", href: "/resources/chaplains" },
+      { label: "Resources for Students", href: "/resources/students" },
+      { label: "Resources for Community", href: "/resources/community" },
+      { label: "Articles", href: "/articles" },
+      { label: "Newsletters", href: "/newsletters" },
     ],
   },
   {

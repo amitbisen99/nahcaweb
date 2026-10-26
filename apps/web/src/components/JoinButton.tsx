@@ -139,7 +139,7 @@ export function JoinButton({
   if (!isLoggedIn) {
     return (
       <Button href={`/events/join/${eventCode}`} variant="solid" size={size}>
-        Join
+        Register
       </Button>
     );
   }
@@ -149,7 +149,7 @@ export function JoinButton({
   return (
     <div className="flex flex-col items-start gap-2">
       <Button type="button" variant="solid" size={size} onClick={handleJoinClick} disabled={pending}>
-        {pending ? "Joining…" : "Join"}
+        {pending ? "Registering…" : "Register"}
       </Button>
       {error && !showCouponModal && <p className="max-w-sm text-sm text-red-600 break-words">{error}</p>}
 

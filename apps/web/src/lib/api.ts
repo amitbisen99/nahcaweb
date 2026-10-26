@@ -81,13 +81,27 @@ export interface ApiMemberProfileEmployment {
 
 export interface ApiMemberProfile {
   preferredPronouns: string | null;
+  // Legacy free-text address — only set on rows saved before the address was split.
   mailingAddress: string | null;
+  addressStreet: string | null;
+  addressState: string | null;
+  addressCountry: string | null;
+  addressPostalCode: string | null;
   phone: string | null;
   usesWhatsapp: boolean | null;
+  whatsappNumber: string | null;
   whatsappContactOk: boolean | null;
   religiousTraditions: string[] | null;
   religiousTraditionOther: string | null;
   primaryRole: "chaplain" | "student" | null;
+  primaryRoleSetting: string | null;
+  primaryRoleSettingOther: string | null;
+  interestedIn: string | null;
+  interestedInOther: string | null;
+  spiritualCareRole: string | null;
+  affiliatedOrganizations: string | null;
+  studyProgram: string | null;
+  // Legacy repeating rows — no longer collected, shown read-only for older members.
   employment: ApiMemberProfileEmployment[] | null;
   hearAboutUs: string | null;
   hearAboutUsOther: string | null;
@@ -210,6 +224,11 @@ export async function getPublishedNewsletters(): Promise<ApiNewsletter[]> {
 export async function getPublishedArticles(): Promise<ApiArticle[]> {
   const data = await publicFetch<{ items: ApiArticle[] }>("/articles");
   return data?.items ?? [];
+}
+
+export async function getPublishedArticle(id: number): Promise<ApiArticle | null> {
+  const data = await publicFetch<{ item: ApiArticle }>(`/articles/${id}`);
+  return data?.item ?? null;
 }
 
 export interface ApiProgrammeCoupon {
