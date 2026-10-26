@@ -5,6 +5,7 @@ import cors from "cors";
 import cron from "node-cron";
 import { prisma } from "./prisma";
 import { runMembershipExpirySweep } from "./lib/membershipExpirySweep";
+import { runEventReminders } from "./lib/eventReminders";
 import { authRouter } from "./routes/auth";
 import { donationsRouter } from "./routes/donations";
 import { webhooksRouter } from "./routes/webhooks";
@@ -166,6 +167,14 @@ async function start() {
   runMembershipExpirySweep().catch((err) => console.error("[membershipExpirySweep] Startup run failed:", err));
   cron.schedule("0 3 * * *", () => {
     runMembershipExpirySweep().catch((err) => console.error("[membershipExpirySweep] Scheduled run failed:", err));
+  });
+
+  // "3 days before" reminder emails to event/webinar attendees — see
+  // lib/eventReminders.ts. Daily at 14:00 UTC (mid-morning in the US), plus a
+  // catch-up run at startup; reminderSentAt prevents repeats.
+  runEventReminders().catch((err) => console.error("[eventReminders] Startup run failed:", err));
+  cron.schedule("0 14 * * *", () => {
+    runEventReminders().catch((err) => console.error("[eventReminders] Scheduled run failed:", err));
   });
 }
 

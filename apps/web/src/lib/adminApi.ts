@@ -96,6 +96,9 @@ export interface AdminMemberProfile {
   primaryRoleSettingOther: string | null;
   interestedIn: string | null;
   interestedInOther: string | null;
+  // Rows from "Places of employment and/or study"; null until a member saves them.
+  placesOfEmploymentStudy: { spiritualCareRole?: string; affiliatedOrganizations?: string; studyProgram?: string }[] | null;
+  // Single-row answers saved before several rows were allowed.
   spiritualCareRole: string | null;
   affiliatedOrganizations: string | null;
   studyProgram: string | null;

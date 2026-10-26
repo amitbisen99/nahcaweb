@@ -34,6 +34,13 @@ export function formatProfileAddress(p: {
   return structured || p.mailingAddress?.trim() || "";
 }
 
+// One row of "Places of employment and/or study" — a member can add several.
+export const placeOfEmploymentStudySchema = z.object({
+  spiritualCareRole: z.string().optional(),
+  affiliatedOrganizations: z.string().optional(),
+  studyProgram: z.string().optional(),
+});
+
 export const memberProfileSchema = z.object({
   preferredPronouns: z.string().optional(),
   addressStreet: z.string().optional(),
@@ -54,9 +61,7 @@ export const memberProfileSchema = z.object({
   primaryRoleSettingOther: z.string().optional(),
   interestedIn: z.string().optional(),
   interestedInOther: z.string().optional(),
-  spiritualCareRole: z.string().optional(),
-  affiliatedOrganizations: z.string().optional(),
-  studyProgram: z.string().optional(),
+  placesOfEmploymentStudy: z.array(placeOfEmploymentStudySchema).optional(),
   hearAboutUs: z.string().optional(),
   hearAboutUsOther: z.string().optional(),
   careContexts: z.array(z.string()).optional(),

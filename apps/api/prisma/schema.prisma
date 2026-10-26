@@ -183,7 +183,13 @@ model MemberProfile {
   // "What are you interested in?" — same option list as primaryRoleSetting.
   interestedIn            String?
   interestedInOther       String?
-  // Replaces the old repeating employment rows with three plain inputs.
+  // { spiritualCareRole, affiliatedOrganizations, studyProgram }[] — the
+  // "Places of employment and/or study" section, as many rows as the member
+  // adds.
+  placesOfEmploymentStudy Json?
+  // LEGACY: the same three answers as single columns, from the short stretch
+  // when the section was one row. No longer written — read only as a fallback
+  // for members saved during that time.
   spiritualCareRole       String?
   affiliatedOrganizations String?
   studyProgram            String?
@@ -397,6 +403,10 @@ model Event {
 model Webinar {
   id                Int           @id @default(autoincrement())
   title             String
+  // Optional — webinars didn't always have one. Needed for the "3 days
+  // before" reminder email, so a webinar without a date gets no reminder.
+  date              DateTime?
+  time              String?
   description       String?       @db.Text
   zoomOrYoutubeLink String?
   // Optional fee to join, in cents — null/0 means free. Collected via
@@ -446,6 +456,9 @@ model EventRegistration {
   hearAboutUsOther        String?
   status    EventRegistrationStatus @default(pending)
   createdAt DateTime @default(now())
+  // Set when the "3 days before" reminder email goes out (see
+  // lib/eventReminders.ts), so nobody is reminded twice.
+  reminderSentAt DateTime?
   payment   Payment?
 
   @@index([eventCode])

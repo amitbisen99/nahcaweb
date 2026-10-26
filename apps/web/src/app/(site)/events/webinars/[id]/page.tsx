@@ -5,6 +5,7 @@ import { SpeakerCards } from "@/components/SpeakerCards";
 import { JoinButton } from "@/components/JoinButton";
 import { auth } from "@/auth";
 import { getOpenWebinar, formatEventFee } from "@/lib/cms";
+import { formatDate } from "@/lib/formatDate";
 
 export default async function WebinarDetailPage({
   params,
@@ -39,7 +40,12 @@ export default async function WebinarDetailPage({
                 Members Only
               </span>
             )}
-            <h1 className="font-heading text-3xl font-medium text-heading">{webinar.title}</h1>
+            {webinar.date && (
+              <p className="text-sm text-black">
+                {formatDate(webinar.date)} {webinar.time ? `· ${webinar.time}` : ""}
+              </p>
+            )}
+            <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{webinar.title}</h1>
             {formatEventFee(webinar.priceCents) && (
               <p className="mt-1 text-sm font-semibold text-brand-dark">{formatEventFee(webinar.priceCents)}</p>
             )}
@@ -66,7 +72,7 @@ export default async function WebinarDetailPage({
               <JoinButton
                 eventCode={webinar.eventCode}
                 eventTitle={webinar.title}
-                eventDate={null}
+                eventDate={webinar.date}
                 priceCents={webinar.priceCents}
                 isLoggedIn={Boolean(session?.apiToken)}
                 type="webinar"

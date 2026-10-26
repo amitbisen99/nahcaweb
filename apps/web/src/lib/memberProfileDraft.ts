@@ -82,6 +82,18 @@ export const POSTAL_CODE_ERROR = "Please enter a valid US ZIP code (e.g. 12345 o
 
 export type YesNo = "" | "yes" | "no";
 
+// One row of "Places of employment and/or study" — a member can add as many
+// as they need.
+export interface PlaceRow {
+  spiritualCareRole: string;
+  affiliatedOrganizations: string;
+  studyProgram: string;
+}
+
+export function emptyPlace(): PlaceRow {
+  return { spiritualCareRole: "", affiliatedOrganizations: "", studyProgram: "" };
+}
+
 // Everything the questionnaire edits, held as plain strings/arrays so a form
 // can keep it in one useState and the shared sections can patch it.
 export interface ProfileDraft {
@@ -101,9 +113,7 @@ export interface ProfileDraft {
   primaryRoleSettingOther: string;
   interestedIn: string;
   interestedInOther: string;
-  spiritualCareRole: string;
-  affiliatedOrganizations: string;
-  studyProgram: string;
+  places: PlaceRow[];
   hearAboutUs: string;
   hearAboutUsOther: string;
   careContexts: string[];
@@ -133,9 +143,7 @@ export function emptyProfileDraft(): ProfileDraft {
     primaryRoleSettingOther: "",
     interestedIn: "",
     interestedInOther: "",
-    spiritualCareRole: "",
-    affiliatedOrganizations: "",
-    studyProgram: "",
+    places: [emptyPlace()],
     hearAboutUs: "",
     hearAboutUsOther: "",
     careContexts: [],
@@ -179,6 +187,8 @@ export interface SavedProfile {
   primaryRoleSettingOther: string | null;
   interestedIn: string | null;
   interestedInOther: string | null;
+  placesOfEmploymentStudy: { spiritualCareRole?: string; affiliatedOrganizations?: string; studyProgram?: string }[] | null;
+  // Single-row answers saved before multiple rows were supported.
   spiritualCareRole: string | null;
   affiliatedOrganizations: string | null;
   studyProgram: string | null;
@@ -191,6 +201,30 @@ export interface SavedProfile {
   endorsedBy: string | null;
   orgMemberships: string[] | null;
   orgMembershipOther: string | null;
+}
+
+// The member's saved rows. Only if rows have never been saved (null, not just
+// empty) do the older single-row columns apply — otherwise a member who
+// deliberately cleared everything would see their old answers come back.
+// Always returns at least one (possibly blank) row so the form has something
+// to show.
+function placesFromSaved(profile: SavedProfile): PlaceRow[] {
+  if (profile.placesOfEmploymentStudy) {
+    const rows = profile.placesOfEmploymentStudy.map((r) => ({
+      spiritualCareRole: r.spiritualCareRole ?? "",
+      affiliatedOrganizations: r.affiliatedOrganizations ?? "",
+      studyProgram: r.studyProgram ?? "",
+    }));
+    return rows.length ? rows : [emptyPlace()];
+  }
+
+  return [
+    {
+      spiritualCareRole: profile.spiritualCareRole ?? "",
+      affiliatedOrganizations: profile.affiliatedOrganizations ?? "",
+      studyProgram: profile.studyProgram ?? "",
+    },
+  ];
 }
 
 // Starting draft for the portal "edit my profile" form.
@@ -214,9 +248,7 @@ export function profileDraftFromSaved(profile: SavedProfile | null): ProfileDraf
     primaryRoleSettingOther: profile.primaryRoleSettingOther ?? "",
     interestedIn: profile.interestedIn ?? "",
     interestedInOther: profile.interestedInOther ?? "",
-    spiritualCareRole: profile.spiritualCareRole ?? "",
-    affiliatedOrganizations: profile.affiliatedOrganizations ?? "",
-    studyProgram: profile.studyProgram ?? "",
+    places: placesFromSaved(profile),
     hearAboutUs: profile.hearAboutUs ?? "",
     hearAboutUsOther: profile.hearAboutUsOther ?? "",
     careContexts: profile.careContexts ?? [],
@@ -268,9 +300,15 @@ export function profileDraftToPayload(d: ProfileDraft) {
       isChaplain && d.primaryRoleSetting === "Other" ? trimmed(d.primaryRoleSettingOther) : undefined,
     interestedIn: d.interestedIn || undefined,
     interestedInOther: d.interestedIn === "Other" ? trimmed(d.interestedInOther) : undefined,
-    spiritualCareRole: trimmed(d.spiritualCareRole),
-    affiliatedOrganizations: trimmed(d.affiliatedOrganizations),
-    studyProgram: trimmed(d.studyProgram),
+    // Blank rows are dropped. Always sent (even as []) so that removing every
+    // row on the edit form actually clears them rather than being ignored.
+    placesOfEmploymentStudy: d.places
+      .map((row) => ({
+        spiritualCareRole: trimmed(row.spiritualCareRole),
+        affiliatedOrganizations: trimmed(row.affiliatedOrganizations),
+        studyProgram: trimmed(row.studyProgram),
+      }))
+      .filter((row) => row.spiritualCareRole || row.affiliatedOrganizations || row.studyProgram),
     hearAboutUs: d.hearAboutUs || undefined,
     hearAboutUsOther: HEAR_ABOUT_OTHER_TRIGGERS.includes(d.hearAboutUs) ? trimmed(d.hearAboutUsOther) : undefined,
     careContexts: d.careContexts.length ? d.careContexts : undefined,

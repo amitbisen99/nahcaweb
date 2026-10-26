@@ -56,6 +56,9 @@ export interface CmsWebinar {
   eventCode: string;
   title: string;
   description: string | null;
+  // Optional — set by the admin; also what the 3-day reminder email counts back from.
+  date: string | null;
+  time: string | null;
   zoomOrYoutubeLink: string | null;
   // Cents — null/0 means free. Display-only for now, no payment collected.
   priceCents: number | null;

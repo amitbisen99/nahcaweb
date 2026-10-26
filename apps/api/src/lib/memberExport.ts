@@ -59,6 +59,47 @@ const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
   volunteer: "Volunteer",
 };
 
+interface PlaceRow {
+  spiritualCareRole: string;
+  affiliatedOrganizations: string;
+  studyProgram: string;
+}
+
+// The member's "Places of employment and/or study" rows. Members saved in the
+// short window when this was one set of columns have their answers there
+// instead, so fall back to those as a single row — but only if rows were never
+// saved at all (null); an empty list means they cleared them on purpose.
+function readPlaces(p: MemberProfile): PlaceRow[] {
+  const trimmed = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+
+  if (Array.isArray(p.placesOfEmploymentStudy)) {
+    return p.placesOfEmploymentStudy
+      .map((row) => {
+        const r = (row ?? {}) as Record<string, unknown>;
+        return {
+          spiritualCareRole: trimmed(r.spiritualCareRole),
+          affiliatedOrganizations: trimmed(r.affiliatedOrganizations),
+          studyProgram: trimmed(r.studyProgram),
+        };
+      })
+      .filter((r) => r.spiritualCareRole || r.affiliatedOrganizations || r.studyProgram);
+  }
+
+  const legacy = {
+    spiritualCareRole: trimmed(p.spiritualCareRole),
+    affiliatedOrganizations: trimmed(p.affiliatedOrganizations),
+    studyProgram: trimmed(p.studyProgram),
+  };
+  return legacy.spiritualCareRole || legacy.affiliatedOrganizations || legacy.studyProgram ? [legacy] : [];
+}
+
+// One cell per column, one entry per row, in the same order — so with
+// several places, the 1st role lines up with the 1st organization. A row
+// that left one answer blank shows a dash there to keep that alignment.
+function placeColumn(rows: PlaceRow[], key: keyof PlaceRow): string {
+  return rows.length ? rows.map((r) => r[key] || EMPTY).join("; ") : EMPTY;
+}
+
 function legacyEmployment(value: unknown): string {
   if (!Array.isArray(value)) return EMPTY;
   const rows = value
@@ -78,6 +119,7 @@ export function profileExportValues(p: MemberProfile | null | undefined): Record
   if (!p) return Object.fromEntries(PROFILE_EXPORT_COLUMNS.map((c) => [c.key, EMPTY]));
 
   const hasStructuredAddress = Boolean(p.addressStreet || p.addressState || p.addressPostalCode);
+  const places = readPlaces(p);
 
   const traditions = list(p.religiousTraditions).map((t) =>
     t === "Something else" && p.religiousTraditionOther?.trim() ? `Something else: ${p.religiousTraditionOther.trim()}` : t
@@ -107,9 +149,9 @@ export function profileExportValues(p: MemberProfile | null | undefined): Record
     primaryRole: p.primaryRole ? (ROLE_LABELS[p.primaryRole] ?? p.primaryRole) : EMPTY,
     primaryRoleSetting: choice(p.primaryRoleSetting, p.primaryRoleSettingOther),
     interestedIn: choice(p.interestedIn, p.interestedInOther),
-    spiritualCareRole: text(p.spiritualCareRole),
-    affiliatedOrganizations: text(p.affiliatedOrganizations),
-    studyProgram: text(p.studyProgram),
+    spiritualCareRole: placeColumn(places, "spiritualCareRole"),
+    affiliatedOrganizations: placeColumn(places, "affiliatedOrganizations"),
+    studyProgram: placeColumn(places, "studyProgram"),
     legacyEmployment: legacyEmployment(p.employment),
     hearAboutUs: heard,
     careContexts: list(p.careContexts).join("; ") || EMPTY,

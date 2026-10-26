@@ -56,7 +56,7 @@ export function NewTopicForm({
           <span className="text-sm font-medium text-black">Who can see this topic?</span>
           <label className="flex items-center gap-2 text-sm text-black">
             <input type="radio" name="visibility" value="public" defaultChecked />
-            Everyone (general users, members, and admin)
+            Everyone (general users and members)
           </label>
           <label className="flex items-center gap-2 text-sm text-black">
             <input type="radio" name="visibility" value="members_only" />

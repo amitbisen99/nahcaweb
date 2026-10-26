@@ -14,6 +14,10 @@ export const webinarsRouter = Router();
 
 const webinarSchema = z.object({
   title: z.string().min(1),
+  // Optional: older webinars have none. A webinar needs one to get the
+  // "3 days before" reminder email.
+  date: z.coerce.date().optional(),
+  time: z.string().optional(),
   description: z.string().optional(),
   zoomOrYoutubeLink: z.string().optional(),
   priceCents: z.number().int().min(0).nullable().optional(),

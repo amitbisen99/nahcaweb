@@ -19,9 +19,11 @@ import {
 } from "@/lib/memberProfileFields";
 import {
   POSTAL_CODE_ERROR,
+  PlaceRow,
   ProfileDraft,
   SPIRITUAL_CARE_SETTINGS,
   US_STATES,
+  emptyPlace,
   isValidUsPostalCode,
 } from "@/lib/memberProfileDraft";
 import { CheckboxGrid, Section, YesNoRadio, fieldLabelClass, inputClass, toggleInArray } from "./MemberProfileFormFields";
@@ -233,6 +235,10 @@ function SettingSelect({
 
 // Everything below "Basic information".
 export function QuestionnaireSections({ draft, update }: DraftProps) {
+  function updatePlace(index: number, patch: Partial<PlaceRow>) {
+    update({ places: draft.places.map((place, i) => (i === index ? { ...place, ...patch } : place)) });
+  }
+
   return (
     <>
       <Section title="Religious/spiritual tradition">
@@ -293,33 +299,55 @@ export function QuestionnaireSections({ draft, update }: DraftProps) {
       </Section>
 
       <Section title="Places of employment and/or study">
-        <label className="flex flex-col gap-1">
-          <span className={fieldLabelClass()}>Primary role in spiritual care</span>
-          <input
-            type="text"
-            value={draft.spiritualCareRole}
-            onChange={(e) => update({ spiritualCareRole: e.target.value })}
-            className={inputClass()}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={fieldLabelClass()}>Affiliated organizations</span>
-          <input
-            type="text"
-            value={draft.affiliatedOrganizations}
-            onChange={(e) => update({ affiliatedOrganizations: e.target.value })}
-            className={inputClass()}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className={fieldLabelClass()}>Role/Program of Study</span>
-          <input
-            type="text"
-            value={draft.studyProgram}
-            onChange={(e) => update({ studyProgram: e.target.value })}
-            className={inputClass()}
-          />
-        </label>
+        <div className="flex flex-col gap-4">
+          {draft.places.map((place, i) => (
+            <div key={i} className="flex flex-col gap-3 rounded-lg border border-ink/10 p-4">
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>Primary role in spiritual care</span>
+                <input
+                  type="text"
+                  value={place.spiritualCareRole}
+                  onChange={(e) => updatePlace(i, { spiritualCareRole: e.target.value })}
+                  className={inputClass()}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>Affiliated organizations</span>
+                <input
+                  type="text"
+                  value={place.affiliatedOrganizations}
+                  onChange={(e) => updatePlace(i, { affiliatedOrganizations: e.target.value })}
+                  className={inputClass()}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>Role/Program of Study</span>
+                <input
+                  type="text"
+                  value={place.studyProgram}
+                  onChange={(e) => updatePlace(i, { studyProgram: e.target.value })}
+                  className={inputClass()}
+                />
+              </label>
+              {draft.places.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => update({ places: draft.places.filter((_, index) => index !== i) })}
+                  className="self-start text-xs font-semibold text-red-600 hover:text-red-700"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update({ places: [...draft.places, emptyPlace()] })}
+            className="self-start rounded-lg border border-ink/20 px-4 py-2 text-sm font-medium text-black hover:border-brand"
+          >
+            + Add another
+          </button>
+        </div>
       </Section>
 
       <Section title="How did you hear about NAHCA?">

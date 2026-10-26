@@ -84,6 +84,13 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
     titleField: "title",
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
+      {
+        name: "date",
+        label: "Date",
+        type: "date",
+        helpText: "Attendees are emailed a reminder 3 days before this date. A webinar with no date gets no reminder.",
+      },
+      { name: "time", label: "Time", type: "time" },
       { name: "description", label: "Description", type: "richtext" },
       { name: "zoomOrYoutubeLink", label: "Zoom / YouTube Link", type: "text" },
       {

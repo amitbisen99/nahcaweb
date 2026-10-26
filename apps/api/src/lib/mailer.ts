@@ -250,6 +250,68 @@ export function buildEventRegistrationReceiptBody(opts: {
   return [`${process.env.ORG_NAME}`, ``, `Dear ${opts.attendeeName},`, ``, confirmation].join("\n");
 }
 
+// Event/webinar dates are stored as a bare calendar day (midnight UTC from the
+// admin's date picker), so format in UTC — formatting in the server's own
+// timezone would show the previous day on a US server.
+function formatEventDay(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+// The "3 days before" reminder to each registered attendee — see
+// lib/eventReminders.ts. `link` is the webinar's Zoom/YouTube link (only
+// registered attendees ever receive this email) or the event's page.
+export function buildEventReminderEmail(opts: {
+  attendeeName: string;
+  type: "event" | "webinar";
+  title: string;
+  date: Date;
+  time: string | null;
+  link: string | null;
+}) {
+  const kind = opts.type === "webinar" ? "webinar" : "event";
+  const subject = `Reminder: ${opts.title} is coming up on ${formatEventDay(opts.date)}`;
+
+  const body = [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.attendeeName},`,
+    ``,
+    `This is a friendly reminder that you're registered for the ${kind} '${opts.title}', happening on ${formatEventDay(opts.date)}${opts.time ? ` at ${opts.time}` : ""}.`,
+    ...(opts.link
+      ? [``, opts.type === "webinar" ? `Join here: ${opts.link}` : `Event details: ${opts.link}`]
+      : []),
+    ``,
+    `We look forward to seeing you there.`,
+  ].join("\n");
+
+  return { subject, body };
+}
+
+// Sent to the author when an admin approves their forum topic.
+export function buildTopicApprovedEmail(opts: { authorName: string; topicTitle: string; topicUrl: string }) {
+  const subject = "Your NAHCA forum topic has been approved";
+
+  const body = [
+    `${process.env.ORG_NAME}`,
+    ``,
+    `Dear ${opts.authorName},`,
+    ``,
+    `Good news — your topic '${opts.topicTitle}' has been approved and is now visible on the NAHCA website:`,
+    ``,
+    opts.topicUrl,
+    ``,
+    `Thank you for contributing to the community.`,
+  ].join("\n");
+
+  return { subject, body };
+}
+
 // Sent once a store purchase is confirmed (via activatePayment). No refunds
 // are offered on digital goods, so this doubles as the receipt telling the
 // buyer that — access itself (the video embed / file download) lives on

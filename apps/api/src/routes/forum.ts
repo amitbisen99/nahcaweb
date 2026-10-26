@@ -5,6 +5,7 @@ import { prisma } from "../prisma";
 import { requireAuth, requirePermission, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { isActiveMember } from "../lib/forumAccess";
+import { buildTopicApprovedEmail, sendEmail } from "../lib/mailer";
 
 export const forumRouter = Router();
 
@@ -241,13 +242,33 @@ forumRouter.post(
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
 
-    const topic = await prisma.forumTopic.findUnique({ where: { id } });
+    const topic = await prisma.forumTopic.findUnique({
+      where: { id },
+      include: { author: { select: { name: true, email: true } } },
+    });
     if (!topic || topic.deletedAt) return res.status(404).json({ error: "Topic not found" });
 
     const updated = await prisma.forumTopic.update({
       where: { id },
       data: { status: "published", rejectionReason: null },
     });
+
+    // Tell the author it's live — but only the first time it goes live, so
+    // approving an already-published topic again doesn't email them twice. A
+    // failed email never undoes the approval itself.
+    if (topic.status !== "published") {
+      try {
+        const { subject, body } = buildTopicApprovedEmail({
+          authorName: topic.author.name,
+          topicTitle: topic.title,
+          topicUrl: `${process.env.WEB_ORIGIN}/forum/${topic.id}`,
+        });
+        await sendEmail({ to: topic.author.email, subject, body });
+      } catch (err) {
+        console.error(`Couldn't email the author of forum topic ${topic.id} about its approval:`, err);
+      }
+    }
+
     res.json({ topic: updated });
   })
 );

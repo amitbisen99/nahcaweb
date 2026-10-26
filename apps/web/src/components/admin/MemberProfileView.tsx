@@ -64,6 +64,18 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
     profile.addressStreet || profile.addressState || profile.addressPostalCode
   );
 
+  // The member's rows; the single-row columns only apply to someone whose rows
+  // were never saved (null) — an empty list means they cleared them.
+  const places = (
+    profile.placesOfEmploymentStudy ?? [
+      {
+        spiritualCareRole: profile.spiritualCareRole ?? undefined,
+        affiliatedOrganizations: profile.affiliatedOrganizations ?? undefined,
+        studyProgram: profile.studyProgram ?? undefined,
+      },
+    ]
+  ).filter((p) => p.spiritualCareRole || p.affiliatedOrganizations || p.studyProgram);
+
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
       <Section title="Basic information" divider={false}>
@@ -132,9 +144,19 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
       </Section>
 
       <Section title="Places of employment and/or study">
-        <Field label="Primary role in spiritual care" value={profile.spiritualCareRole} />
-        <Field label="Affiliated organizations" value={profile.affiliatedOrganizations} />
-        <Field label="Role/Program of Study" value={profile.studyProgram} />
+        {places.length === 0 ? (
+          <p className="text-sm text-ink">—</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {places.map((place, i) => (
+              <div key={i} className="flex flex-col gap-3 rounded-lg border border-ink/10 p-4">
+                <Field label="Primary role in spiritual care" value={place.spiritualCareRole} />
+                <Field label="Affiliated organizations" value={place.affiliatedOrganizations} />
+                <Field label="Role/Program of Study" value={place.studyProgram} />
+              </div>
+            ))}
+          </div>
+        )}
 
         {profile.employment && profile.employment.length > 0 && (
           <div className="flex flex-col gap-3 border-t border-ink/10 pt-4">
