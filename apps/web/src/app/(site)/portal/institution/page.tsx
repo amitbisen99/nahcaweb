@@ -38,7 +38,7 @@ export default async function InstitutionDashboardPage() {
           portal.
         </p>
         <div className="mt-4">
-          <InstitutionCodeList codes={sponsorship.codes} />
+          <InstitutionCodeList codes={sponsorship.codes} canEmail />
         </div>
       </div>
     </div>

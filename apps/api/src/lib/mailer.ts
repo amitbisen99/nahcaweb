@@ -167,6 +167,50 @@ export function buildInstitutionCodesEmailBody(opts: {
   ].join("\n");
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// The invitation an institution emails to a student alongside their claim
+// code — sent from the institution's dashboard (POST
+// /institutions/codes/:id/send-email). `claimUrl` already carries the code, so
+// the claim page opens with it filled in. The sign-off is the Membership
+// Chair's, as supplied by NAHCA — change it here if that role changes hands.
+export function buildClaimInvitationEmail(opts: { institutionName: string; claimUrl: string }) {
+  const subject = "Welcome to NAHCA, your membership is ready";
+
+  const paragraphs = [
+    `Welcome! ${opts.institutionName} has sponsored your membership in the North American Hindu Chaplains’ Association (NAHCA), and we’re so glad to have you with us.`,
+    `NAHCA brings together Hindu chaplains, spiritual care providers, students, and community members from across North America to learn from one another, share resources, and support the growth of Hindu spiritual care. Your membership gives you a place in that community.`,
+    `To get started, just click below:`,
+  ];
+  const afterLink = `If you have any questions along the way, simply reply to this email and we’ll be happy to help.`;
+  const signOff = [`Warm regards,`, `Bindu Gupta`, `Membership Chair`, `North American Hindu Chaplains’ Association`];
+
+  const text = [
+    `Dear Student,`,
+    ``,
+    ...paragraphs.flatMap((p) => [p, ``]),
+    `Click Here to Claim Your Membership: ${opts.claimUrl}`,
+    ``,
+    afterLink,
+    ``,
+    ...signOff,
+  ].join("\n");
+
+  const html = [
+    `<div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color: #222;">`,
+    `<p>Dear Student,</p>`,
+    ...paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`),
+    `<p style="margin: 24px 0;"><a href="${escapeHtml(opts.claimUrl)}" style="background-color: #c84869; color: #ffffff; text-decoration: none; padding: 12px 22px; border-radius: 6px; font-weight: bold; display: inline-block;">Click Here to Claim Your Membership</a></p>`,
+    `<p>${escapeHtml(afterLink)}</p>`,
+    `<p>${signOff.map(escapeHtml).join("<br>")}</p>`,
+    `</div>`,
+  ].join("\n");
+
+  return { subject, text, html };
+}
+
 // Sent to a student the moment they successfully claim/redeem a sponsorship code.
 export function buildInstitutionClaimReceiptBody(opts: {
   memberName: string;

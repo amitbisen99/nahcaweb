@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ApiInstitutionCode } from "@/lib/institutions";
 import { formatDate } from "@/lib/formatDate";
+import { EmailClaimCodeButton } from "./EmailClaimCodeButton";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -31,8 +32,9 @@ function CopyButton({ text }: { text: string }) {
 
 // Bare list view — code, claimed/unclaimed, who claimed it and when. Used
 // by both the institution's own portal dashboard and the admin member
-// detail page (read-only in both places).
-export function InstitutionCodeList({ codes }: { codes: ApiInstitutionCode[] }) {
+// detail page. `canEmail` adds the "Email" action — on only for the
+// institution's own dashboard, since only the institution sends its codes.
+export function InstitutionCodeList({ codes, canEmail = false }: { codes: ApiInstitutionCode[]; canEmail?: boolean }) {
   if (codes.length === 0) {
     return <p className="text-sm text-black">No codes yet.</p>;
   }
@@ -66,7 +68,14 @@ export function InstitutionCodeList({ codes }: { codes: ApiInstitutionCode[] }) 
                 {c.claimedByUser ? `${c.claimedByUser.name} (${c.claimedByUser.email})` : "—"}
               </td>
               <td className="px-4 py-3 text-black">{formatDate(c.claimedAt)}</td>
-              <td className="px-4 py-3">{!c.claimedAt && <CopyButton text={c.code} />}</td>
+              <td className="px-4 py-3">
+                {!c.claimedAt && (
+                  <div className="flex items-center gap-4">
+                    <CopyButton text={c.code} />
+                    {canEmail && <EmailClaimCodeButton codeId={c.id} code={c.code} />}
+                  </div>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

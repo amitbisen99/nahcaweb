@@ -6,7 +6,12 @@ import { requireAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { memberProfileSchema } from "../lib/memberProfile";
 import { TIER_TERM_MONTHS } from "../lib/membershipTiers";
-import { buildInstitutionClaimReceiptBody, sendAdminNotification, sendEmail } from "../lib/mailer";
+import {
+  buildClaimInvitationEmail,
+  buildInstitutionClaimReceiptBody,
+  sendAdminNotification,
+  sendEmail,
+} from "../lib/mailer";
 import { addOrUpdateBrevoContact } from "../lib/brevoContacts";
 import { signToken } from "./auth";
 
@@ -29,6 +34,50 @@ institutionsRouter.get(
     });
     if (!sponsorship) return res.status(404).json({ error: "No sponsorship found" });
     res.json({ sponsorship });
+  })
+);
+
+// Emails a student their claim code from the institution's dashboard. The
+// link in the email carries the code, so /membership/claim opens with it
+// already filled in. Only the institution that owns the code can send it, and
+// only while it's still unclaimed.
+institutionsRouter.post(
+  "/codes/:id/send-email",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid code" });
+
+    const parsed = z.object({ email: z.string().trim().email("Please enter a valid email address.") }).safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Please enter a valid email address." });
+    }
+
+    const code = await prisma.institutionClaimCode.findUnique({
+      where: { id },
+      include: { sponsorship: { include: { user: { select: { id: true, name: true } } } } },
+    });
+    if (!code || code.sponsorship.user.id !== req.auth!.userId) {
+      return res.status(404).json({ error: "Claim code not found" });
+    }
+    if (code.claimedAt) {
+      return res.status(400).json({ error: "This code has already been claimed, so there's no need to send it." });
+    }
+
+    const claimUrl = `${process.env.WEB_ORIGIN}/membership/claim?code=${encodeURIComponent(code.code)}`;
+    const { subject, text, html } = buildClaimInvitationEmail({
+      institutionName: code.sponsorship.user.name,
+      claimUrl,
+    });
+
+    try {
+      await sendEmail({ to: parsed.data.email, subject, body: text, html });
+    } catch (err) {
+      console.error(`Failed to email claim code ${code.id}:`, err);
+      return res.status(502).json({ error: "We couldn't send the email right now. Please try again." });
+    }
+
+    res.json({ ok: true });
   })
 );
 
