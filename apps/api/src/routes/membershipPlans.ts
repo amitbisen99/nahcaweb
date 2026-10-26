@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 
 export const membershipPlansRouter = Router();
@@ -43,7 +43,7 @@ const updateSchema = z.object({
 membershipPlansRouter.put(
   "/:type",
   requireAuth,
-  requireAdmin,
+  requirePermission("membership_plans"),
   asyncHandler(async (req, res) => {
     const parsed = updateSchema.safeParse(req.body);
     if (!parsed.success) {

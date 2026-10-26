@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 
 // Conference videos are member-portal-only content — unlike the other
@@ -45,7 +45,7 @@ conferenceVideosRouter.get(
 conferenceVideosRouter.post(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = conferenceVideoSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -57,7 +57,7 @@ conferenceVideosRouter.post(
 conferenceVideosRouter.put(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = conferenceVideoSchema.partial().safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -69,7 +69,7 @@ conferenceVideosRouter.put(
 conferenceVideosRouter.delete(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     await prisma.conferenceVideo.delete({ where: { id: Number(req.params.id) } });
     res.status(204).send();

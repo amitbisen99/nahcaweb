@@ -23,6 +23,9 @@ import { conferenceVideosRouter } from "./routes/conferenceVideos";
 import { eventRegistrationsRouter } from "./routes/eventRegistrations";
 import { forumRouter } from "./routes/forum";
 import { productsRouter } from "./routes/products";
+import { adminUsersRouter } from "./routes/adminUsers";
+import { activityLogRouter } from "./routes/activityLog";
+import { activityLogger } from "./lib/activityLog";
 import { usersRouter } from "./routes/users";
 import { asyncHandler } from "./lib/asyncHandler";
 import { paymentsBypassed } from "./lib/paymentsBypass";
@@ -63,6 +66,7 @@ app.use(cors({ origin: process.env.WEB_ORIGIN }));
 app.use("/webhooks", express.raw({ type: "application/json" }), webhooksRouter);
 
 app.use(express.json());
+app.use(activityLogger);
 
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
@@ -117,6 +121,8 @@ app.use("/board", boardRouter);
 app.use("/forum", forumRouter);
 app.use("/products", productsRouter);
 app.use("/users", usersRouter);
+app.use("/admin-users", adminUsersRouter);
+app.use("/activity-log", activityLogRouter);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   console.error(`Unhandled error on ${req.method} ${req.originalUrl}:`, err);

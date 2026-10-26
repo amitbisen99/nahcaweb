@@ -6,7 +6,7 @@ import ExcelJS from "exceljs";
 import { EventRegistrationStatus } from "@prisma/client";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
@@ -287,7 +287,7 @@ const DEFAULT_PAGE_SIZE = 10;
 eventRegistrationsRouter.get(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const eventCode = typeof req.query.eventCode === "string" ? req.query.eventCode : "";
     if (!eventCode) return res.status(400).json({ error: "eventCode is required" });
@@ -335,7 +335,7 @@ eventRegistrationsRouter.get(
 eventRegistrationsRouter.get(
   "/export",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const eventCode = typeof req.query.eventCode === "string" ? req.query.eventCode : "";
     if (!eventCode) return res.status(400).json({ error: "eventCode is required" });
@@ -389,7 +389,7 @@ eventRegistrationsRouter.get(
 eventRegistrationsRouter.get(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -424,7 +424,7 @@ const sendReceiptEmailSchema = z.object({
 eventRegistrationsRouter.post(
   "/:eventCode/send-receipt-email",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = sendReceiptEmailSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -515,7 +515,7 @@ eventRegistrationsRouter.post(
 eventRegistrationsRouter.get(
   "/:eventCode/receipt-email-logs",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const logs = await prisma.receiptEmailLog.findMany({
       where: { eventCode: req.params.eventCode },

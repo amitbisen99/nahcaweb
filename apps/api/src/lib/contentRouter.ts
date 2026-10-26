@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
+import { requireAuth, requirePermission, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "./asyncHandler";
 
 // Loosely typed on purpose — this wires up any Prisma model delegate
@@ -54,7 +54,7 @@ export function createContentRouter(opts: {
   router.post(
     "/",
     requireAuth,
-    requireAdmin,
+    requirePermission("website_content"),
     asyncHandler(async (req, res) => {
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) {
@@ -68,7 +68,7 @@ export function createContentRouter(opts: {
   router.put(
     "/:id",
     requireAuth,
-    requireAdmin,
+    requirePermission("website_content"),
     asyncHandler(async (req, res) => {
       const parsed = schema.partial().safeParse(req.body);
       if (!parsed.success) {
@@ -85,7 +85,7 @@ export function createContentRouter(opts: {
   router.delete(
     "/:id",
     requireAuth,
-    requireAdmin,
+    requirePermission("website_content"),
     asyncHandler(async (req, res) => {
       await delegate.delete({ where: { id: Number(req.params.id) } });
       res.status(204).send();

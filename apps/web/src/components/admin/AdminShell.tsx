@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { ReactNode, useState } from "react";
 import { AdminSidebar } from "./AdminSidebar";
+import { AdminAccess } from "@/lib/adminPermissions";
 
 export function AdminShell({
   children,
   email,
+  access,
   signOutAction,
 }: {
   children: ReactNode;
   email?: string | null;
+  access: AdminAccess;
   signOutAction: () => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
@@ -39,11 +42,12 @@ export function AdminShell({
         </Link>
 
         <div className="flex-1 overflow-y-auto">
-          <AdminSidebar onNavigate={() => setOpen(false)} />
+          <AdminSidebar access={access} onNavigate={() => setOpen(false)} />
         </div>
 
         <div className="flex-none border-t border-white/10 p-4">
           <p className="truncate text-xs text-white/50">{email}</p>
+          <p className="text-xs font-semibold text-white/70">{access.isSuperAdmin ? "Super Admin" : "Admin"}</p>
           <div className="mt-2 flex flex-col gap-2">
             <Link href="/" className="text-sm font-medium text-white/70 hover:text-white">
               ← Back to Website

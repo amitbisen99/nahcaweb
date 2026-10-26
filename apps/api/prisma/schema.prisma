@@ -98,6 +98,11 @@ model User {
   // deleting the account or its purchase history. Checked at login only
   // (doesn't invalidate an already-issued JWT mid-session).
   isActive     Boolean      @default(true)
+  // Admin accounts only (role = admin). A super admin can do everything and
+  // manage other admins; any other admin can only open the admin areas listed
+  // in adminPermissions (a string[] of keys from lib/adminPermissions.ts).
+  isSuperAdmin     Boolean  @default(false)
+  adminPermissions Json?
   createdAt    DateTime     @default(now())
   memberships  Membership[]
   payments     Payment[]
@@ -111,6 +116,23 @@ model User {
   forumTopics            ForumTopic[]
   forumReplies           ForumReply[]
   productOrders          ProductOrder[]
+}
+
+// One row per admin add/edit/delete (see lib/activityLog.ts). adminId is
+// deliberately NOT a relation: the log has to outlive the admin account it
+// describes, so deleting an admin must neither block on nor erase their
+// history — the name/email snapshot is what the Activity Log page shows.
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  adminId    Int?
+  adminName  String
+  adminEmail String
+  action     String
+  details    String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([adminId])
 }
 
 // Single-use, expiring token emailed as a link on "forgot password". See
@@ -139,14 +161,34 @@ model MemberProfile {
   preferredPronouns       String?
   mailingAddress          String?  @db.Text
   phone                   String?
+  // Structured US address — replaces the single mailingAddress text box.
+  // mailingAddress is kept only so rows saved before this change still show
+  // their old free-text address; nothing writes to it anymore.
+  addressStreet           String?
+  addressState            String?
+  addressCountry          String?
+  addressPostalCode       String?
   usesWhatsapp            Boolean?
+  whatsappNumber          String?
   whatsappContactOk       Boolean?
   // string[] of selected traditions (see MEMBER_FORM_OPTIONS on the frontend)
   religiousTraditions     Json?
   religiousTraditionOther String?
   // "chaplain" | "student"
   primaryRole             String?
-  // { employerName, jobTitle, employmentType }[]
+  // Only asked when primaryRole is "chaplain" — the setting they work in
+  // (Higher Ed, Hospital, ...); the Other text only when that's "Other".
+  primaryRoleSetting      String?
+  primaryRoleSettingOther String?
+  // "What are you interested in?" — same option list as primaryRoleSetting.
+  interestedIn            String?
+  interestedInOther       String?
+  // Replaces the old repeating employment rows with three plain inputs.
+  spiritualCareRole       String?
+  affiliatedOrganizations String?
+  studyProgram            String?
+  // LEGACY: { employerName, jobTitle, employmentType }[] — no longer
+  // collected, kept so older members' answers still show in the admin view.
   employment              Json?
   hearAboutUs             String?
   hearAboutUsOther        String?
@@ -179,6 +221,9 @@ model Membership {
   groupId              String?
   // Institutional only: seats purchased. Used to size each claim-code batch.
   studentCount         Int?
+  // Institutional only: the person at the institution to contact — the
+  // account's own name is the institution's name, not a person.
+  contactPersonName    String?
   createdAt            DateTime         @default(now())
   payment              Payment?
 

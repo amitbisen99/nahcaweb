@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { findValidCoupon, isCouponError, listActiveProgrammeCoupons } from "../lib/coupons";
 import { eventCodeExists } from "../lib/eventCodes";
@@ -70,7 +70,7 @@ const couponUpdateSchema = z
 couponsRouter.get(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("coupons"),
   asyncHandler(async (_req, res) => {
     const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
     res.json({ items: coupons });
@@ -93,7 +93,7 @@ couponsRouter.get(
 couponsRouter.get(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("coupons"),
   asyncHandler(async (req, res) => {
     const coupon = await prisma.coupon.findUnique({ where: { id: Number(req.params.id) } });
     if (!coupon) return res.status(404).json({ error: "Not found" });
@@ -113,7 +113,7 @@ async function checkEventCode(eventCode: string | undefined) {
 couponsRouter.post(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("coupons"),
   asyncHandler(async (req, res) => {
     const parsed = couponSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -135,7 +135,7 @@ couponsRouter.post(
 couponsRouter.put(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("coupons"),
   asyncHandler(async (req, res) => {
     const parsed = couponUpdateSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -166,7 +166,7 @@ couponsRouter.put(
 couponsRouter.delete(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("coupons"),
   asyncHandler(async (req, res) => {
     await prisma.coupon.delete({ where: { id: Number(req.params.id) } });
     res.status(204).send();

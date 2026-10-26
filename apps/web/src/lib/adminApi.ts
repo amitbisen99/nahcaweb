@@ -79,13 +79,27 @@ export interface AdminMemberProfileEmployment {
 
 export interface AdminMemberProfile {
   preferredPronouns: string | null;
+  // Legacy free-text address — only set on rows saved before the address was split.
   mailingAddress: string | null;
+  addressStreet: string | null;
+  addressState: string | null;
+  addressCountry: string | null;
+  addressPostalCode: string | null;
   phone: string | null;
   usesWhatsapp: boolean | null;
+  whatsappNumber: string | null;
   whatsappContactOk: boolean | null;
   religiousTraditions: string[] | null;
   religiousTraditionOther: string | null;
   primaryRole: "chaplain" | "student" | null;
+  primaryRoleSetting: string | null;
+  primaryRoleSettingOther: string | null;
+  interestedIn: string | null;
+  interestedInOther: string | null;
+  spiritualCareRole: string | null;
+  affiliatedOrganizations: string | null;
+  studyProgram: string | null;
+  // Legacy repeating rows — no longer collected, shown read-only for older members.
   employment: AdminMemberProfileEmployment[] | null;
   hearAboutUs: string | null;
   hearAboutUsOther: string | null;
@@ -107,6 +121,8 @@ export interface AdminMembershipDetail {
   // sponsored student's — see the same convention noted on the Prisma
   // schema's Membership model.
   groupId: string | null;
+  // Institutional sponsor only — the person to contact at the institution.
+  contactPersonName: string | null;
   createdAt: string;
   user: {
     id: number;

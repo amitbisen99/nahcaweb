@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
+import { requireAuth, requirePermission, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { isActiveMember } from "../lib/forumAccess";
 
@@ -208,7 +208,7 @@ forumRouter.post(
 forumRouter.get(
   "/admin/topics",
   requireAuth,
-  requireAdmin,
+  requirePermission("forum_moderation"),
   asyncHandler(async (req, res) => {
     const statusParam = req.query.status;
     const status = ["pending", "published", "rejected"].includes(statusParam as string)
@@ -236,7 +236,7 @@ forumRouter.get(
 forumRouter.post(
   "/admin/topics/:id/approve",
   requireAuth,
-  requireAdmin,
+  requirePermission("forum_moderation"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -257,7 +257,7 @@ const rejectSchema = z.object({ reason: z.string().min(1) });
 forumRouter.post(
   "/admin/topics/:id/reject",
   requireAuth,
-  requireAdmin,
+  requirePermission("forum_moderation"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -284,7 +284,7 @@ const moderateTopicSchema = z.object({
 forumRouter.patch(
   "/admin/topics/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("forum_moderation"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -309,7 +309,7 @@ forumRouter.patch(
 forumRouter.delete(
   "/admin/topics/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("forum_moderation"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -325,7 +325,7 @@ forumRouter.delete(
 forumRouter.delete(
   "/admin/replies/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("forum_moderation"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });

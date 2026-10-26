@@ -6,7 +6,7 @@ import fs from "fs";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
-import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
+import { requireAuth, requirePermission, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
@@ -209,7 +209,7 @@ productsRouter.post(
 productsRouter.get(
   "/admin/all",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   asyncHandler(async (_req, res) => {
     const products = await prisma.product.findMany({ orderBy: { createdAt: "desc" } });
     res.json({ products });
@@ -223,7 +223,7 @@ productsRouter.get(
 productsRouter.get(
   "/admin/orders",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   asyncHandler(async (req, res) => {
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 10));
@@ -249,7 +249,7 @@ productsRouter.get(
 productsRouter.get(
   "/admin/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -285,7 +285,7 @@ const createProductSchema = z
 productsRouter.post(
   "/admin",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   asyncHandler(async (req, res) => {
     const parsed = createProductSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -316,7 +316,7 @@ const updateProductSchema = z.object({
 productsRouter.patch(
   "/admin/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -347,7 +347,7 @@ productsRouter.patch(
 productsRouter.delete(
   "/admin/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
@@ -411,7 +411,7 @@ const productUpload = multer({
 productsRouter.post(
   "/admin/upload",
   requireAuth,
-  requireAdmin,
+  requirePermission("store"),
   (req, res, next) => {
     productUpload.single("file")(req, res, (err) => {
       if (err) return res.status(400).json({ error: err.message || "Upload failed." });

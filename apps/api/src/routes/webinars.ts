@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
+import { requireAuth, requirePermission, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { speakersSchema } from "../lib/speakers";
 import { createEventCode } from "../lib/eventCodes";
@@ -57,7 +57,7 @@ webinarsRouter.get(
 webinarsRouter.post(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = webinarSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -70,7 +70,7 @@ webinarsRouter.post(
 webinarsRouter.put(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = webinarSchema.partial().safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -82,7 +82,7 @@ webinarsRouter.put(
 webinarsRouter.delete(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     await prisma.webinar.delete({ where: { id: Number(req.params.id) } });
     res.status(204).send();

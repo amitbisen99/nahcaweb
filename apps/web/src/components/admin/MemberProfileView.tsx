@@ -49,7 +49,8 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
 
   if (!profile) {
     return (
-      <div className="rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
+      <div className="flex flex-col gap-4 rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
+        {isInstitutionSponsor && <Field label="Contact person" value={membership.contactPersonName} />}
         <p className="text-sm text-black">
           {isInstitutionSponsor
             ? "Institutional sponsors are billing/admin contacts, not chaplains — there's no membership questionnaire on file for them."
@@ -59,6 +60,10 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
     );
   }
 
+  const hasStructuredAddress = Boolean(
+    profile.addressStreet || profile.addressState || profile.addressPostalCode
+  );
+
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
       <Section title="Basic information" divider={false}>
@@ -66,11 +71,21 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
           <Field label="Name" value={membership.user.name} />
           <Field label="Email" value={membership.user.email} />
           <Field label="Preferred pronouns" value={profile.preferredPronouns} />
-          <Field label="Telephone number" value={profile.phone} />
+          <Field label="Contact number" value={profile.phone} />
         </div>
-        <Field label="Mailing address" value={profile.mailingAddress} />
+        {hasStructuredAddress ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Street Address" value={profile.addressStreet} />
+            <Field label="State/Territory" value={profile.addressState} />
+            <Field label="Country" value={profile.addressCountry} />
+            <Field label="Postal Code" value={profile.addressPostalCode} />
+          </div>
+        ) : (
+          <Field label="Mailing address" value={profile.mailingAddress} />
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <YesNoField label="Uses WhatsApp?" value={profile.usesWhatsapp} />
+          {profile.usesWhatsapp && <Field label="WhatsApp mobile number" value={profile.whatsappNumber} />}
           <YesNoField label="May NAHCA contact via WhatsApp?" value={profile.whatsappContactOk} />
         </div>
       </Section>
@@ -93,11 +108,39 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
                 : undefined
           }
         />
+        {profile.primaryRole === "chaplain" && (
+          <Field
+            label="Setting"
+            value={
+              profile.primaryRoleSetting === "Other"
+                ? `Other — ${profile.primaryRoleSettingOther ?? "not specified"}`
+                : profile.primaryRoleSetting
+            }
+          />
+        )}
+      </Section>
+
+      <Section title="What are they interested in?">
+        <Field
+          label="Interested in"
+          value={
+            profile.interestedIn === "Other"
+              ? `Other — ${profile.interestedInOther ?? "not specified"}`
+              : profile.interestedIn
+          }
+        />
       </Section>
 
       <Section title="Places of employment and/or study">
-        {profile.employment && profile.employment.length > 0 ? (
-          <div className="flex flex-col gap-3">
+        <Field label="Primary role in spiritual care" value={profile.spiritualCareRole} />
+        <Field label="Affiliated organizations" value={profile.affiliatedOrganizations} />
+        <Field label="Role/Program of Study" value={profile.studyProgram} />
+
+        {profile.employment && profile.employment.length > 0 && (
+          <div className="flex flex-col gap-3 border-t border-ink/10 pt-4">
+            <p className="text-sm font-medium text-black">
+              Earlier answers (from before this section was simplified)
+            </p>
             {profile.employment.map((row, i) => (
               <div key={i} className="rounded-lg border border-ink/10 p-4">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -111,8 +154,6 @@ export function MemberProfileView({ membership }: { membership: AdminMembershipD
               </div>
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-ink">—</p>
         )}
       </Section>
 

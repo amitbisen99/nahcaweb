@@ -3,7 +3,7 @@ import { z } from "zod";
 import ExcelJS from "exceljs";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
@@ -115,7 +115,7 @@ function buildDonationsWhere(req: Request): { donorEmail?: { contains: string };
 donationsRouter.get(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("donations"),
   asyncHandler(async (req, res) => {
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
@@ -144,7 +144,7 @@ donationsRouter.get(
 donationsRouter.get(
   "/export",
   requireAuth,
-  requireAdmin,
+  requirePermission("donations"),
   asyncHandler(async (req, res) => {
     const where = buildDonationsWhere(req);
 
@@ -191,7 +191,7 @@ donationsRouter.get(
 donationsRouter.get(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("donations"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });

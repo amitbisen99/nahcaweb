@@ -3,7 +3,6 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { getMembershipDetail } from "@/lib/adminApi";
 import { MemberProfileView } from "@/components/admin/MemberProfileView";
-import { MemberActiveToggle } from "@/components/admin/MemberActiveToggle";
 import { InstitutionCodeList } from "@/components/InstitutionCodeList";
 import { formatDate } from "@/lib/formatDate";
 
@@ -37,10 +36,6 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
             ? `Institutional membership by ${membership.sponsoringInstitution.name}`
             : `${TIER_LABELS[membership.type] ?? membership.type} membership`}
       </p>
-
-      <div className="mt-6">
-        <MemberActiveToggle membershipId={membership.id} initialActive={membership.user.isActive} />
-      </div>
 
       {membership.type === "institutional" && !membership.groupId && membership.user.institutionSponsorship && (
         <div className="mt-8">

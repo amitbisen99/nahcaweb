@@ -4,14 +4,14 @@ import { z } from "zod";
 import ExcelJS from "exceljs";
 import { prisma } from "../prisma";
 import { stripe } from "../lib/stripe";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { INSTITUTIONAL_MIN_STUDENTS, getMembershipPlan } from "../lib/membershipTiers";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
 import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
 import { memberProfileSchema } from "../lib/memberProfile";
-import { addOrUpdateBrevoContact, removeBrevoContactFromList } from "../lib/brevoContacts";
+import { PROFILE_EXPORT_COLUMNS, profileExportValues } from "../lib/memberExport";
 import { formatDate } from "../lib/formatDate";
 
 export const membershipsRouter = Router();
@@ -26,6 +26,7 @@ const membershipSignupSchema = z
     password: z.string().min(8),
     type: z.enum(["regular", "student", "institutional", "conference"]),
     studentCount: z.number().int().min(1).optional(),
+    contactPersonName: z.string().trim().min(1).optional(),
     couponCode: z.string().optional(),
     profile: memberProfileSchema.optional(),
   })
@@ -41,7 +42,7 @@ membershipsRouter.post(
     if (!parsed.success) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
-    const { name, email, password, type, studentCount, couponCode, profile } = parsed.data;
+    const { name, email, password, type, studentCount, contactPersonName, couponCode, profile } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -89,6 +90,7 @@ membershipsRouter.post(
         status: "pending",
         priceCents,
         studentCount: type === "institutional" ? studentCount : undefined,
+        contactPersonName: type === "institutional" ? contactPersonName : undefined,
       },
     });
 
@@ -187,7 +189,7 @@ const DEFAULT_PAGE_SIZE = 10;
 membershipsRouter.get(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("members"),
   asyncHandler(async (req, res) => {
     const page = Math.max(1, Number(req.query.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || DEFAULT_PAGE_SIZE));
@@ -227,24 +229,17 @@ function tierLabel(m: { type: string; groupId: string | null }): string {
   return TIER_LABELS[m.type] ?? m.type;
 }
 
-// Admin — export every membership as an .xlsx file. No filters on the list
-// page to mirror here (unlike Donations/Attendees), so this is always the
-// full set, unpaginated.
+// Admin — export every membership as an .xlsx file, with everything each
+// member filled in on the membership form. No filters on the list page to
+// mirror here (unlike Donations/Attendees), so this is always the full set,
+// unpaginated.
 membershipsRouter.get(
   "/export",
   requireAuth,
-  requireAdmin,
+  requirePermission("members"),
   asyncHandler(async (req, res) => {
     const memberships = await prisma.membership.findMany({
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            profile: { select: { phone: true, mailingAddress: true } },
-          },
-        },
-      },
+      include: { user: { select: { name: true, email: true, profile: true } } },
       orderBy: { createdAt: "desc" },
     });
 
@@ -252,26 +247,26 @@ membershipsRouter.get(
     const sheet = workbook.addWorksheet("Members");
     sheet.columns = [
       { header: "Name", key: "name", width: 28 },
+      { header: "Contact Person", key: "contactPerson", width: 24 },
       { header: "Email", key: "email", width: 32 },
       { header: "Tier", key: "tier", width: 24 },
       { header: "Status", key: "status", width: 12 },
       { header: "Price", key: "price", width: 12 },
       { header: "Joined", key: "joined", width: 14 },
-      { header: "Telephone Number", key: "phone", width: 18 },
-      { header: "Mailing Address", key: "address", width: 36 },
+      ...PROFILE_EXPORT_COLUMNS,
     ];
     sheet.getRow(1).font = { bold: true };
 
     for (const m of memberships) {
       sheet.addRow({
         name: m.user.name,
+        contactPerson: m.contactPersonName || "—",
         email: m.user.email,
         tier: tierLabel(m),
         status: m.status,
         price: `$${(m.priceCents / 100).toFixed(2)}`,
         joined: formatDate(m.createdAt),
-        phone: m.user.profile?.phone || "—",
-        address: m.user.profile?.mailingAddress || "—",
+        ...profileExportValues(m.user.profile),
       });
     }
 
@@ -290,7 +285,7 @@ membershipsRouter.get(
 membershipsRouter.get(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("members"),
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid membership id" });
@@ -332,56 +327,5 @@ membershipsRouter.get(
     }
 
     res.json({ membership: { ...membership, sponsoringInstitution } });
-  })
-);
-
-const setActiveSchema = z.object({
-  isActive: z.boolean(),
-});
-
-// Blocks/unblocks the member's ability to log in (see User.isActive and the
-// check in POST /auth/login) without deleting their account or history.
-membershipsRouter.patch(
-  "/:id/active",
-  requireAuth,
-  requireAdmin,
-  asyncHandler(async (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid membership id" });
-
-    const parsed = setActiveSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten() });
-    }
-
-    const membership = await prisma.membership.findUnique({ where: { id } });
-    if (!membership) return res.status(404).json({ error: "Membership not found" });
-
-    if (membership.userId === req.auth!.userId) {
-      return res.status(400).json({ error: "You cannot deactivate your own account." });
-    }
-
-    await prisma.user.update({
-      where: { id: membership.userId },
-      data: { isActive: parsed.data.isActive },
-    });
-
-    const updated = await prisma.membership.findUnique({
-      where: { id },
-      include: { user: { include: { profile: true } } },
-    });
-
-    // Keep the Brevo newsletter list's member tag in sync with the login
-    // gate — skipped for an institutional sponsor's own row, who was never
-    // added as a member in the first place (see paymentActivation.ts).
-    if (updated && !(updated.type === "institutional" && !updated.groupId)) {
-      if (parsed.data.isActive) {
-        await addOrUpdateBrevoContact(updated.user.email, { name: updated.user.name, isMember: true });
-      } else {
-        await removeBrevoContactFromList(updated.user.email);
-      }
-    }
-
-    res.json({ membership: updated });
   })
 );

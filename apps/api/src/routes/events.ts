@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma";
-import { requireAuth, requireAdmin, optionalAuth } from "../middleware/auth";
+import { requireAuth, requirePermission, optionalAuth } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { speakersSchema } from "../lib/speakers";
 import { createEventCode } from "../lib/eventCodes";
@@ -59,7 +59,7 @@ eventsRouter.get(
 eventsRouter.post(
   "/",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = eventSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -72,7 +72,7 @@ eventsRouter.post(
 eventsRouter.put(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     const parsed = eventSchema.partial().safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
@@ -84,7 +84,7 @@ eventsRouter.put(
 eventsRouter.delete(
   "/:id",
   requireAuth,
-  requireAdmin,
+  requirePermission("website_content"),
   asyncHandler(async (req, res) => {
     await prisma.event.delete({ where: { id: Number(req.params.id) } });
     res.status(204).send();
