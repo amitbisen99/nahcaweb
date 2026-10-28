@@ -97,7 +97,7 @@ export async function updateCoupon(
 
   revalidatePath("/admin/coupons");
   revalidatePath(`/admin/coupons/${id}`);
-  redirect("/admin/coupons");
+  redirect(`/admin/coupons/${id}`);
 }
 
 export async function deleteCoupon(id: string) {

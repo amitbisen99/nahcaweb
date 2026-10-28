@@ -4,7 +4,7 @@ import { prisma } from "../prisma";
 import { requireAuth, requirePermission } from "../middleware/auth";
 import { asyncHandler } from "../lib/asyncHandler";
 import { findValidCoupon, isCouponError, listActiveProgrammeCoupons } from "../lib/coupons";
-import { eventCodeExists } from "../lib/eventCodes";
+import { eventCodeExists, findEventOrWebinarByCode } from "../lib/eventCodes";
 
 export const couponsRouter = Router();
 
@@ -98,6 +98,89 @@ couponsRouter.get(
     const coupon = await prisma.coupon.findUnique({ where: { id: Number(req.params.id) } });
     if (!coupon) return res.status(404).json({ error: "Not found" });
     res.json({ item: coupon });
+  })
+);
+
+const MEMBERSHIP_TYPE_LABELS: Record<string, string> = {
+  regular: "Regular membership",
+  student: "Student membership",
+  institutional: "Institutional membership",
+  conference: "Conference membership",
+};
+
+// Everyone who has actually used this coupon — one row per successful
+// payment that carried it, which is exactly what usedCount counts (a coupon
+// is only redeemed once its payment succeeds, see activatePayment). Newest
+// first. The person is resolved from whatever the payment is attached to,
+// since an event/webinar registration can be a guest with no account.
+couponsRouter.get(
+  "/:id/usages",
+  requireAuth,
+  requirePermission("coupons"),
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: "Invalid id" });
+
+    const coupon = await prisma.coupon.findUnique({ where: { id }, select: { id: true, eventCode: true } });
+    if (!coupon) return res.status(404).json({ error: "Not found" });
+
+    const payments = await prisma.payment.findMany({
+      where: { couponId: id, status: "succeeded" },
+      orderBy: { createdAt: "desc" },
+      take: 1000,
+      include: {
+        user: { select: { name: true, email: true } },
+        membership: { select: { type: true, user: { select: { name: true, email: true } } } },
+        eventRegistration: {
+          select: { eventCode: true, name: true, email: true, user: { select: { name: true, email: true } } },
+        },
+        productOrder: { select: { product: { select: { title: true } }, buyer: { select: { name: true, email: true } } } },
+      },
+    });
+
+    const eventInfoByCode = new Map<string, Awaited<ReturnType<typeof findEventOrWebinarByCode>>>();
+    async function eventInfo(code: string) {
+      if (!eventInfoByCode.has(code)) eventInfoByCode.set(code, await findEventOrWebinarByCode(code));
+      return eventInfoByCode.get(code) ?? null;
+    }
+
+    const usages = [];
+    for (const p of payments) {
+      let person = p.user;
+      let usedFor = "—";
+
+      if (p.membership) {
+        person = p.membership.user;
+        usedFor = MEMBERSHIP_TYPE_LABELS[p.membership.type] ?? "Membership";
+      } else if (p.eventRegistration) {
+        const reg = p.eventRegistration;
+        person = {
+          name: reg.name ?? reg.user?.name ?? "—",
+          email: reg.email ?? reg.user?.email ?? "—",
+        };
+        const info = await eventInfo(reg.eventCode);
+        usedFor = info ? `${info.type === "webinar" ? "Webinar" : "Event"}: ${info.title}` : `Event ${reg.eventCode}`;
+      } else if (p.productOrder) {
+        person = p.productOrder.buyer;
+        usedFor = `Store: ${p.productOrder.product.title}`;
+      }
+
+      usages.push({
+        paymentId: p.id,
+        name: person?.name ?? "—",
+        email: person?.email ?? "—",
+        usedFor,
+        amountCents: p.amountCents,
+        usedAt: p.createdAt,
+      });
+    }
+
+    const programme = coupon.eventCode ? await eventInfo(coupon.eventCode) : null;
+
+    res.json({
+      usages,
+      programme: programme ? { type: programme.type, title: programme.title } : null,
+    });
   })
 );
 

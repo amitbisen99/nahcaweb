@@ -20,7 +20,6 @@ export const newslettersRouter = createContentRouter({
   schema: z.object({
     title: z.string().min(1),
     fileUrl: z.string().nullable().optional(),
-    mailchimpCampaignUrl: z.string().optional(),
     publishedDate: dateInput.optional(),
     published: z.boolean().optional(),
   }),

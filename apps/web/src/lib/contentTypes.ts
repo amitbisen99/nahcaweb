@@ -139,7 +139,7 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
     titleField: "title",
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
-      { name: "richTextBody", label: "Body", type: "textarea" },
+      { name: "richTextBody", label: "Body", type: "richtext" },
       {
         name: "category",
         label: "Category",
@@ -158,7 +158,6 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
       { name: "fileUrl", label: "PDF / File", type: "file" },
-      { name: "mailchimpCampaignUrl", label: "Mailchimp Campaign URL", type: "text" },
       { name: "publishedDate", label: "Published Date", type: "date" },
       { name: "published", label: "Published", type: "checkbox" },
     ],

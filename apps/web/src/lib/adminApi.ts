@@ -39,6 +39,30 @@ export interface AdminCoupon {
   createdAt: string;
 }
 
+// One successful use of a coupon — mirrors GET /coupons/:id/usages.
+export interface AdminCouponUsage {
+  paymentId: number;
+  name: string;
+  email: string;
+  usedFor: string;
+  amountCents: number;
+  usedAt: string;
+}
+
+export async function getCouponUsages(
+  id: string,
+  token: string
+): Promise<{ usages: AdminCouponUsage[]; programme: { type: "event" | "webinar"; title: string } | null }> {
+  const data = await fetchJson<{
+    usages: AdminCouponUsage[];
+    programme: { type: "event" | "webinar"; title: string } | null;
+  }>(`${process.env.API_URL}/coupons/${id}/usages`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: "no-store",
+  });
+  return { usages: data?.usages ?? [], programme: data?.programme ?? null };
+}
+
 export interface AdminMembershipPlan {
   id: number;
   type: "regular" | "student" | "institutional" | "conference";

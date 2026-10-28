@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { listContent } from "@/lib/adminApi";
 import type { AdminCoupon } from "@/lib/adminApi";
@@ -34,7 +35,9 @@ export default async function CouponsPage() {
           >
             <div>
               <div className="flex items-center gap-2">
-                <p className="font-medium text-ink">{coupon.name}</p>
+                <Link href={`/admin/coupons/${coupon.id}`} className="font-medium text-ink hover:text-brand">
+                  {coupon.name}
+                </Link>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                     coupon.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"

@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import Link from "next/link";
 import { deleteCoupon } from "@/app/admin/coupons/actions";
-import { PencilIcon, TrashIcon } from "./icons";
+import { EyeIcon, PencilIcon, TrashIcon } from "./icons";
 
 export function CouponRowActions({ id, name }: { id: number; name: string }) {
   const [isPending, startTransition] = useTransition();
@@ -19,6 +19,14 @@ export function CouponRowActions({ id, name }: { id: number; name: string }) {
     <div className="flex items-center gap-3">
       <Link
         href={`/admin/coupons/${id}`}
+        aria-label="View"
+        title="View"
+        className="text-black transition-colors hover:text-brand"
+      >
+        <EyeIcon className="h-[18px] w-[18px]" />
+      </Link>
+      <Link
+        href={`/admin/coupons/${id}/edit`}
         aria-label="Edit"
         title="Edit"
         className="text-black transition-colors hover:text-brand"

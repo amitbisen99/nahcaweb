@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/Container";
 import { auth } from "@/auth";
 import { getForumTopic } from "@/lib/forum";
-import { formatDate } from "@/lib/formatDate";
+import { LocalDateTime } from "@/components/LocalDateTime";
 import { ForumReplyDeleteButton } from "@/components/admin/ForumReplyDeleteButton";
 import { ForumTopicAdminPanel } from "@/components/admin/ForumTopicAdminPanel";
 import { ReplyForm } from "./ReplyForm";
@@ -60,7 +60,7 @@ export default async function ForumTopicPage({ params }: { params: Promise<{ id:
 
         <h1 className="mt-1 font-heading text-3xl font-medium text-heading">{topic.title}</h1>
         <p className="mt-1 text-sm text-black/60">
-          by {topic.author.name} · {formatDate(topic.createdAt)}
+          by {topic.author.name} · <LocalDateTime value={topic.createdAt} />
         </p>
 
         <div
@@ -77,7 +77,7 @@ export default async function ForumTopicPage({ params }: { params: Promise<{ id:
               <div key={r.id} className="rounded-xl border border-ink/10 bg-white p-4">
                 <p className="whitespace-pre-line text-sm text-black">{r.body}</p>
                 <p className="mt-2 text-xs text-black/60">
-                  {r.author.name} · {formatDate(r.createdAt)}
+                  {r.author.name} · <LocalDateTime value={r.createdAt} />
                   {session?.user?.role === "admin" && (
                     <ForumReplyDeleteButton replyId={r.id} topicId={topic.id} />
                   )}
