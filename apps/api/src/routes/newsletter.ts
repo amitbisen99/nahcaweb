@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../lib/asyncHandler";
 import { prisma } from "../prisma";
-import { addOrUpdateBrevoContact } from "../lib/brevoContacts";
+import { syncNewsletterSubscriberToBrevo } from "../lib/brevoContacts";
 
 export const newsletterRouter = Router();
 
@@ -28,9 +28,9 @@ newsletterRouter.post(
       create: { email },
     });
 
-    // isMember intentionally omitted — see addOrUpdateBrevoContact's doc
-    // comment on why that matters if this email already belongs to a member.
-    await addOrUpdateBrevoContact(email);
+    // Goes on the newsletter list only — a member who also subscribes stays on
+    // the members list too.
+    await syncNewsletterSubscriberToBrevo(email);
 
     res.status(201).json({ ok: true });
   })

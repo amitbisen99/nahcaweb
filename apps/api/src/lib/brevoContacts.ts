@@ -4,7 +4,30 @@ import { brevoConfigured } from "./mailer";
 // transactional email. API reference: https://developers.brevo.com/reference/createcontact
 const BREVO_CONTACTS_URL = "https://api.brevo.com/v3/contacts";
 
-const newsletterListId = process.env.BREVO_LIST_ID ? Number(process.env.BREVO_LIST_ID) : undefined;
+// Three contact lists in the Brevo account, one per kind of person. Read from
+// the environment on every call (list IDs belong to a Brevo account, so they
+// change whenever the account does). BREVO_LIST_ID_7 is set aside for future
+// use and deliberately not referenced here.
+//
+//   members     (list 4) — people with an active paid/sponsored membership
+//   newsletter  (list 5) — footer "monthly newsletter" sign-ups
+//   general     (list 6) — free accounts with no active membership
+//
+// Someone can be on more than one at once (a member who also subscribes via
+// the footer is on members + newsletter).
+type BrevoList = "members" | "newsletter" | "general";
+
+const LIST_ENV_VARS: Record<BrevoList, string> = {
+  members: "BREVO_LIST_ID_4",
+  newsletter: "BREVO_LIST_ID_5",
+  general: "BREVO_LIST_ID_6",
+};
+
+function listIdFor(list: BrevoList): number | undefined {
+  const raw = process.env[LIST_ENV_VARS[list]];
+  const id = raw ? Number(raw) : NaN;
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
 
 function brevoHeaders() {
   return {
@@ -21,73 +44,83 @@ function splitName(name: string): { firstName?: string; lastName?: string } {
   return { firstName, lastName: rest.join(" ") || undefined };
 }
 
-// Adds a contact to the configured newsletter list, or updates them if they
-// already exist. Best-effort — logs and swallows failures so a Brevo hiccup
-// can never fail the signup/activation flow that triggered it.
-//
-// `isMember` implements the "List + Tagging" design: pass true when this
-// call comes from an actual membership activating, so the IS_MEMBER contact
-// attribute can be used to segment members from newsletter-only subscribers
-// within the one list. Omit it entirely (e.g. from the plain footer signup)
-// rather than passing false — omitting means the attribute isn't sent at
-// all, so an existing member's IS_MEMBER=true tag is never overwritten by a
-// later, unrelated newsletter signup from the same email.
-export async function addOrUpdateBrevoContact(email: string, opts: { name?: string; isMember?: boolean } = {}) {
-  if (!brevoConfigured || !newsletterListId) {
-    console.log(`[brevo] Not configured — skipping contact sync for ${email}`);
+// Adds a contact to one list, or updates them if they already exist.
+// Best-effort — logs and swallows failures so a Brevo hiccup can never fail
+// the signup/activation flow that triggered it.
+async function addToList(list: BrevoList, email: string, name?: string) {
+  const listId = listIdFor(list);
+  if (!brevoConfigured || !listId) {
+    console.log(`[brevo] Not configured — skipping ${list} list sync for ${email}`);
     return;
   }
 
-  const { firstName, lastName } = opts.name ? splitName(opts.name) : {};
+  const { firstName, lastName } = name ? splitName(name) : {};
   const attributes: Record<string, unknown> = {};
   if (firstName) attributes.FIRSTNAME = firstName;
   if (lastName) attributes.LASTNAME = lastName;
-  if (opts.isMember !== undefined) attributes.IS_MEMBER = opts.isMember;
 
   try {
     const res = await fetch(BREVO_CONTACTS_URL, {
       method: "POST",
       headers: brevoHeaders(),
-      body: JSON.stringify({
-        email,
-        attributes,
-        listIds: [newsletterListId],
-        updateEnabled: true,
-      }),
+      body: JSON.stringify({ email, attributes, listIds: [listId], updateEnabled: true }),
     });
 
     if (!res.ok) {
       const errorBody = await res.text().catch(() => "");
-      console.error(`[brevo] Failed to add/update contact ${email} (${res.status}): ${errorBody}`);
+      console.error(`[brevo] Failed to add/update contact ${email} on the ${list} list (${res.status}): ${errorBody}`);
     }
   } catch (err) {
-    console.error(`[brevo] Failed to add/update contact ${email}:`, err);
+    console.error(`[brevo] Failed to add/update contact ${email} on the ${list} list:`, err);
   }
 }
 
-// Unsubscribes a contact from the newsletter list (doesn't delete the
-// contact from Brevo entirely). Used when a member is deactivated by an
-// admin, or their last active membership expires. Best-effort, same
-// reasoning as above — and a "contact not on this list" response from
-// Brevo is an expected no-op here, not a real failure.
-export async function removeBrevoContactFromList(email: string) {
-  if (!brevoConfigured || !newsletterListId) {
-    console.log(`[brevo] Not configured — skipping list removal for ${email}`);
+// Takes a contact off one list (doesn't delete them from Brevo entirely).
+// Best-effort, same reasoning as above — and Brevo answering that the contact
+// isn't on the list (or doesn't exist) is an expected no-op, not a failure.
+async function removeFromList(list: BrevoList, email: string) {
+  const listId = listIdFor(list);
+  if (!brevoConfigured || !listId) {
+    console.log(`[brevo] Not configured — skipping ${list} list removal for ${email}`);
     return;
   }
 
   try {
-    const res = await fetch(`${BREVO_CONTACTS_URL}/lists/${newsletterListId}/contacts/remove`, {
+    const res = await fetch(`${BREVO_CONTACTS_URL}/lists/${listId}/contacts/remove`, {
       method: "POST",
       headers: brevoHeaders(),
       body: JSON.stringify({ emails: [email] }),
     });
 
-    if (!res.ok) {
+    if (!res.ok && res.status !== 400 && res.status !== 404) {
       const errorBody = await res.text().catch(() => "");
-      console.warn(`[brevo] Could not remove ${email} from list (${res.status}): ${errorBody}`);
+      console.warn(`[brevo] Could not remove ${email} from the ${list} list (${res.status}): ${errorBody}`);
     }
   } catch (err) {
-    console.error(`[brevo] Failed to remove contact ${email} from list:`, err);
+    console.error(`[brevo] Failed to remove contact ${email} from the ${list} list:`, err);
   }
+}
+
+// A free account was just created — goes on the general users list.
+export async function syncGeneralUserToBrevo(email: string, name?: string) {
+  await addToList("general", email, name);
+}
+
+// Someone subscribed through the footer form — goes on the newsletter list
+// (and stays wherever else they already are).
+export async function syncNewsletterSubscriberToBrevo(email: string) {
+  await addToList("newsletter", email);
+}
+
+// A membership just became active — they're a member now, so they move from
+// the general users list (if they were on it) to the members list.
+export async function syncMemberToBrevo(email: string, name?: string) {
+  await addToList("members", email, name);
+  await removeFromList("general", email);
+}
+
+// Their last active membership ended — back to being a general user.
+export async function syncFormerMemberToBrevo(email: string, name?: string) {
+  await removeFromList("members", email);
+  await addToList("general", email, name);
 }

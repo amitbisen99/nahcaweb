@@ -13,7 +13,7 @@ import {
 import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTiers";
 import { redeemCoupon } from "./coupons";
 import { createCodeBatch } from "./institutions";
-import { addOrUpdateBrevoContact } from "./brevoContacts";
+import { syncMemberToBrevo } from "./brevoContacts";
 import { findEventOrWebinarByCode } from "./eventCodes";
 import { buildDonationTaxReceiptPdf } from "./taxReceiptPdf";
 
@@ -162,16 +162,13 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       }
     }
 
-    // Newsletter list sync — everyone EXCEPT an institutional sponsor, who
+    // Members list sync — everyone EXCEPT an institutional sponsor, who
     // is a billing/admin contact rather than a chaplaincy member (see the
     // groupId convention below). Sponsored students get synced separately
     // from POST /institutions/claim or /redeem, since they never reach
     // activatePayment at all.
     if (payment.membership.type !== "institutional") {
-      await addOrUpdateBrevoContact(payment.membership.user.email, {
-        name: payment.membership.user.name,
-        isMember: true,
-      });
+      await syncMemberToBrevo(payment.membership.user.email, payment.membership.user.name);
     }
 
     // Institutional-only: this is always the institution's own payment —

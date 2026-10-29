@@ -8,6 +8,7 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { requireAuth } from "../middleware/auth";
 import { memberProfileSchema } from "../lib/memberProfile";
 import { sendEmail, buildPasswordResetEmailBody } from "../lib/mailer";
+import { syncGeneralUserToBrevo } from "../lib/brevoContacts";
 
 export const authRouter = Router();
 
@@ -33,6 +34,9 @@ authRouter.post("/register", asyncHandler(async (req, res) => {
   const user = await prisma.user.create({
     data: { email, passwordHash, name },
   });
+
+  // A free account is a general user until they buy a membership.
+  await syncGeneralUserToBrevo(user.email, user.name);
 
   const token = signToken(user.id, user.role);
   res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });

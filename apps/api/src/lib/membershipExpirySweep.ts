@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { removeBrevoContactFromList } from "./brevoContacts";
+import { syncFormerMemberToBrevo } from "./brevoContacts";
 
 // Runs on a daily schedule (see index.ts) plus once at server startup.
 // Nothing in this app previously flipped Membership.status to "expired" —
@@ -7,7 +7,7 @@ import { removeBrevoContactFromList } from "./brevoContacts";
 // members list's "expired" filter had nothing to show. This sweep both
 // fixes that and drives the Brevo-list-removal requirement: when a member
 // is deactivated by an admin or their last active membership expires, they
-// come off the newsletter list's member segment.
+// move from the Brevo members list back to the general users list.
 export async function runMembershipExpirySweep() {
   const now = new Date();
 
@@ -28,13 +28,13 @@ export async function runMembershipExpirySweep() {
 
     // A user can hold more than one Membership row over time (e.g. a
     // sponsored code claimed on top of an existing membership) — only pull
-    // them off the Brevo list once none of their memberships are active.
+    // them off the members list once none of their memberships are active.
     const stillHasActive = await prisma.membership.count({
       where: { userId: membership.userId, status: "active" },
     });
 
     if (stillHasActive === 0) {
-      await removeBrevoContactFromList(membership.user.email);
+      await syncFormerMemberToBrevo(membership.user.email, membership.user.name);
     }
   }
 }

@@ -12,7 +12,7 @@ import {
   sendAdminNotification,
   sendEmail,
 } from "../lib/mailer";
-import { addOrUpdateBrevoContact } from "../lib/brevoContacts";
+import { syncMemberToBrevo } from "../lib/brevoContacts";
 import { signToken } from "./auth";
 
 export const institutionsRouter = Router();
@@ -114,7 +114,7 @@ async function notifyClaim(memberName: string, memberEmail: string, startDate: D
   );
   // Sponsored students are real chaplaincy members (unlike the institution
   // itself, which is a billing contact — see paymentActivation.ts).
-  await addOrUpdateBrevoContact(memberEmail, { name: memberName, isMember: true });
+  await syncMemberToBrevo(memberEmail, memberName);
 }
 
 // New student registering with a code — no login required, no payment.
