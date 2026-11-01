@@ -40,6 +40,7 @@ export function JoinButton({
   priceCents,
   isLoggedIn,
   type,
+  alreadyJoined = false,
   size = "md",
 }: {
   eventCode: string;
@@ -48,6 +49,8 @@ export function JoinButton({
   priceCents: number | null;
   isLoggedIn: boolean;
   type: "event" | "webinar";
+  // The logged-in user already has a confirmed registration for this one.
+  alreadyJoined?: boolean;
   size?: "sm" | "md";
 }) {
   const baseCents = priceCents ?? 0;
@@ -132,6 +135,14 @@ export function JoinButton({
     return (
       <p className="max-w-sm rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest break-words">
         {confirmationMessage(type, eventTitle, eventDate)}
+      </p>
+    );
+  }
+
+  if (alreadyJoined) {
+    return (
+      <p className="max-w-sm rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest break-words">
+        You have already joined this {type}.
       </p>
     );
   }

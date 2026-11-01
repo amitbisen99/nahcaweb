@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { getMyMemberships, getMyPayments, getProgrammeCoupons, ApiProgrammeCoupon } from "@/lib/api";
+import {
+  getMyEventRegistrations,
+  getMyMemberships,
+  getMyPayments,
+  getProgrammeCoupons,
+  ApiProgrammeCoupon,
+} from "@/lib/api";
+import { MyEventCard } from "@/components/MyEventCard";
 import { TIER_LABELS, PAYMENT_STATUS_STYLES } from "@/lib/membershipLabels";
 import { paymentLabel } from "@/lib/paymentLabel";
 import { formatDate } from "@/lib/formatDate";
@@ -71,12 +78,19 @@ function buildCouponReminders(coupons: ApiProgrammeCoupon[]): Reminder[] {
 export default async function PortalDashboardPage() {
   const session = await auth();
   const token = session?.apiToken ?? "";
-  const [memberships, payments, programmeCoupons] = await Promise.all([
+  const [memberships, payments, programmeCoupons, eventRegistrations] = await Promise.all([
     getMyMemberships(token),
     getMyPayments(token),
     getProgrammeCoupons(token),
+    getMyEventRegistrations(token),
   ]);
   const recentPurchases = payments.slice(0, 5);
+  // The next few confirmed events/webinars — dated ones that haven't passed yet, soonest first.
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = eventRegistrations
+    .filter((r) => r.status === "active" && r.date !== null && r.date.slice(0, 10) >= today)
+    .sort((a, b) => (a.date as string).localeCompare(b.date as string))
+    .slice(0, 3);
   const reminders = [...buildReminders(memberships), ...buildCouponReminders(programmeCoupons)];
   // Set only for a sponsored student's active membership (see the groupId
   // convention on ApiMembership) — they never have a Payment, so the
@@ -123,6 +137,27 @@ export default async function PortalDashboardPage() {
                   </span>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <div className="flex items-center justify-between">
+          <h2 className="font-heading text-xl font-medium text-heading">My Events &amp; Webinars</h2>
+          {eventRegistrations.length > 0 && (
+            <Link href="/portal/events" className="text-sm font-semibold text-brand hover:text-brand-dark">
+              View all →
+            </Link>
+          )}
+        </div>
+
+        {upcomingEvents.length === 0 ? (
+          <p className="mt-3 text-sm text-black">No upcoming events or webinars.</p>
+        ) : (
+          <div className="mt-4 flex flex-col gap-3">
+            {upcomingEvents.map((item) => (
+              <MyEventCard key={item.registrationId} item={item} />
             ))}
           </div>
         )}

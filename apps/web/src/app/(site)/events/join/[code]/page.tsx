@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
+import { auth } from "@/auth";
 import { getEventInfoByCode } from "@/lib/cms";
+import { hasJoinedEvent } from "@/lib/api";
 import { formatDate } from "@/lib/formatDate";
 import { EventJoinForm } from "./EventJoinForm";
 
@@ -27,6 +29,9 @@ export default async function EventJoinPage({
   const eventInfo = await getEventInfoByCode(code);
   if (!eventInfo) notFound();
 
+  const session = await auth();
+  const alreadyJoined = session?.apiToken ? await hasJoinedEvent(session.apiToken, code) : false;
+
   const backHref = eventInfo.type === "webinar" ? "/events/webinars" : "/events";
   const backLabel = eventInfo.type === "webinar" ? "All Webinars" : "All Events";
 
@@ -40,7 +45,11 @@ export default async function EventJoinPage({
 
           <h1 className="mt-6 font-heading text-3xl font-medium text-heading">{eventInfo.title}</h1>
 
-          {status === "success" ? (
+          {alreadyJoined && status !== "success" ? (
+            <p className="mt-6 max-w-xl rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest">
+              You have already joined this {eventInfo.type}.
+            </p>
+          ) : status === "success" ? (
             <p className="mt-6 max-w-xl rounded-lg border border-forest/30 bg-forest/5 px-4 py-3 text-sm font-medium text-forest">
               {confirmationMessage(eventInfo.type, eventInfo.title, eventInfo.date)}
             </p>

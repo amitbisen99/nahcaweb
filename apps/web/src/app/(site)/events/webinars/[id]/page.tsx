@@ -5,6 +5,7 @@ import { SpeakerCards } from "@/components/SpeakerCards";
 import { JoinButton } from "@/components/JoinButton";
 import { auth } from "@/auth";
 import { getOpenWebinar, formatEventFee } from "@/lib/cms";
+import { hasJoinedEvent } from "@/lib/api";
 import { formatDate } from "@/lib/formatDate";
 
 export default async function WebinarDetailPage({
@@ -16,6 +17,7 @@ export default async function WebinarDetailPage({
   const session = await auth();
   const webinar = await getOpenWebinar(id, session?.apiToken);
   if (!webinar) notFound();
+  const alreadyJoined = session?.apiToken ? await hasJoinedEvent(session.apiToken, webinar.eventCode) : false;
 
   return (
     <div className="bg-white">
@@ -76,6 +78,7 @@ export default async function WebinarDetailPage({
                 priceCents={webinar.priceCents}
                 isLoggedIn={Boolean(session?.apiToken)}
                 type="webinar"
+                alreadyJoined={alreadyJoined}
                 size="sm"
               />
             </div>

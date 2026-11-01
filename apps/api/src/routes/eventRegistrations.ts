@@ -24,6 +24,23 @@ import { formatDate } from "../lib/formatDate";
 
 export const eventRegistrationsRouter = Router();
 
+function alreadyJoinedMessage(type: "event" | "webinar") {
+  return `You have already joined this ${type}.`;
+}
+
+// A confirmed registration for this event/webinar under this email — whether
+// it was made as a guest or from the person's account. A pending one (payment
+// never finished) doesn't count, so they can still try again.
+function findConfirmedRegistration(eventCode: string, email: string, userId?: number) {
+  return prisma.eventRegistration.findFirst({
+    where: {
+      eventCode,
+      status: "active",
+      OR: [{ email }, { user: { email } }, ...(userId ? [{ userId }] : [])],
+    },
+  });
+}
+
 // Public — resolves an eventCode into the details the join page/form need
 // (title, date, fee) without exposing anything but that. Used by both
 // events/join/[code]/page.tsx and (indirectly, via param) EventJoinForm.
@@ -114,6 +131,10 @@ eventRegistrationsRouter.post(
       return res.status(404).json({ error: "Event not found" });
     }
 
+    if (await findConfirmedRegistration(eventCode, email)) {
+      return res.status(409).json({ error: alreadyJoinedMessage(eventInfo.type) });
+    }
+
     const basePriceCents = eventInfo.priceCents ?? 0;
 
     let couponId: number | null = null;
@@ -200,13 +221,12 @@ eventRegistrationsRouter.post(
       return res.status(404).json({ error: "Event not found" });
     }
 
-    const existing = await prisma.eventRegistration.findFirst({
-      where: { eventCode, userId: req.auth!.userId, status: "active" },
-    });
-    if (existing) return res.status(200).json({ registration: existing });
-
     const user = await prisma.user.findUnique({ where: { id: req.auth!.userId } });
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (await findConfirmedRegistration(eventCode, user.email, user.id)) {
+      return res.status(409).json({ error: alreadyJoinedMessage(eventInfo.type) });
+    }
 
     const basePriceCents = eventInfo.priceCents ?? 0;
 
@@ -277,6 +297,83 @@ eventRegistrationsRouter.post(
     });
 
     res.status(201).json({ checkoutUrl: session.url });
+  })
+);
+
+// The logged-in user's own registrations — every event and webinar they
+// signed up for, for the member portal's "Events & Webinars" page. Covers
+// both their account's quick-joins and any guest registration made earlier
+// with the same email address. Registered under /me, before the admin /:id
+// route below, so "me" is never read as an id.
+eventRegistrationsRouter.get(
+  "/me",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth!.userId },
+      select: { email: true },
+    });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const registrations = await prisma.eventRegistration.findMany({
+      where: { OR: [{ userId: req.auth!.userId }, { email: user.email }] },
+      orderBy: { createdAt: "desc" },
+    });
+    if (registrations.length === 0) return res.json({ items: [] });
+
+    const codes = [...new Set(registrations.map((r) => r.eventCode))];
+    const [events, webinars] = await Promise.all([
+      prisma.event.findMany({ where: { eventCode: { in: codes }, published: true } }),
+      prisma.webinar.findMany({ where: { eventCode: { in: codes }, published: true } }),
+    ]);
+    const eventByCode = new Map(events.map((e) => [e.eventCode, e]));
+    const webinarByCode = new Map(webinars.map((w) => [w.eventCode, w]));
+
+    // One row per event/webinar even if they somehow registered twice —
+    // the confirmed registration wins over a pending one.
+    const seen = new Map<string, (typeof registrations)[number]>();
+    for (const r of registrations) {
+      const prev = seen.get(r.eventCode);
+      if (!prev || (prev.status !== "active" && r.status === "active")) seen.set(r.eventCode, r);
+    }
+
+    const items = [];
+    for (const r of seen.values()) {
+      const event = eventByCode.get(r.eventCode);
+      const webinar = webinarByCode.get(r.eventCode);
+      if (event) {
+        items.push({
+          registrationId: r.id,
+          status: r.status,
+          registeredAt: r.createdAt,
+          eventCode: r.eventCode,
+          type: "event" as const,
+          id: event.id,
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          description: event.description,
+          // Only a confirmed attendee gets the outside link.
+          link: r.status === "active" ? event.registrationLink : null,
+        });
+      } else if (webinar) {
+        items.push({
+          registrationId: r.id,
+          status: r.status,
+          registeredAt: r.createdAt,
+          eventCode: r.eventCode,
+          type: "webinar" as const,
+          id: webinar.id,
+          title: webinar.title,
+          date: webinar.date,
+          time: webinar.time,
+          description: webinar.description,
+          link: r.status === "active" ? webinar.zoomOrYoutubeLink : null,
+        });
+      }
+    }
+
+    res.json({ items });
   })
 );
 

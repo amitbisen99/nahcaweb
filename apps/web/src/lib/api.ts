@@ -209,6 +209,36 @@ export async function getDonation(id: number, token: string): Promise<AdminDonat
   return data?.donation ?? null;
 }
 
+// One event/webinar the logged-in user registered for — GET /event-registrations/me.
+export interface ApiMyEventRegistration {
+  registrationId: number;
+  status: "pending" | "active";
+  registeredAt: string;
+  eventCode: string;
+  type: "event" | "webinar";
+  id: number;
+  title: string;
+  // Webinars may have no date.
+  date: string | null;
+  time: string | null;
+  description: string | null;
+  // The webinar's Zoom/YouTube link, or the event's external link — only set once the registration is confirmed.
+  link: string | null;
+}
+
+export async function getMyEventRegistrations(token: string): Promise<ApiMyEventRegistration[]> {
+  const data = await apiFetch<{ items: ApiMyEventRegistration[] }>("/event-registrations/me", token);
+  return data?.items ?? [];
+}
+
+// Whether the logged-in user already has a confirmed registration for this
+// event/webinar (by its event code) — used to swap the Register button for an
+// "already joined" message.
+export async function hasJoinedEvent(token: string, eventCode: string): Promise<boolean> {
+  const registrations = await getMyEventRegistrations(token);
+  return registrations.some((r) => r.eventCode === eventCode && r.status === "active");
+}
+
 export async function getMyPayments(token: string): Promise<ApiPayment[]> {
   const data = await apiFetch<{ payments: ApiPayment[] }>("/payments/me", token);
   return data?.payments ?? [];

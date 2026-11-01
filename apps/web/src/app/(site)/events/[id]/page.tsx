@@ -6,6 +6,7 @@ import { SpeakerCards } from "@/components/SpeakerCards";
 import { JoinButton } from "@/components/JoinButton";
 import { auth } from "@/auth";
 import { getEvent, formatEventFee } from "@/lib/cms";
+import { hasJoinedEvent } from "@/lib/api";
 import { formatDate } from "@/lib/formatDate";
 
 export default async function EventDetailPage({
@@ -17,6 +18,7 @@ export default async function EventDetailPage({
   const session = await auth();
   const event = await getEvent(id, session?.apiToken);
   if (!event) notFound();
+  const alreadyJoined = session?.apiToken ? await hasJoinedEvent(session.apiToken, event.eventCode) : false;
 
   return (
     <div className="bg-white">
@@ -67,6 +69,7 @@ export default async function EventDetailPage({
                 priceCents={event.priceCents}
                 isLoggedIn={Boolean(session?.apiToken)}
                 type="event"
+                alreadyJoined={alreadyJoined}
               />
               <AddToCalendar
                 event={{
