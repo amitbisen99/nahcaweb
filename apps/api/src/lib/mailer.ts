@@ -229,27 +229,6 @@ export function buildInstitutionClaimReceiptBody(opts: {
   ].join("\n");
 }
 
-// Sent once an event/webinar registration is confirmed — a guest's paid or
-// free registration (via activatePayment), or an existing member's
-// quick-join. Webinars get their own wording (they have no scheduled
-// date); Events keep the "held on" clause, conditional since it's only
-// ever missing if the event data itself is incomplete.
-export function buildEventRegistrationReceiptBody(opts: {
-  attendeeName: string;
-  eventTitle: string;
-  eventDate: Date | null;
-  type: "event" | "webinar";
-}) {
-  const confirmation =
-    opts.type === "webinar"
-      ? `You successfully registered for the webinar '${opts.eventTitle}'.`
-      : `You registered for this event '${opts.eventTitle}'${
-          opts.eventDate ? ` held on ${opts.eventDate.toDateString()}` : ""
-        }.`;
-
-  return [`${process.env.ORG_NAME}`, ``, `Dear ${opts.attendeeName},`, ``, confirmation].join("\n");
-}
-
 // Event/webinar dates are stored as a bare calendar day (midnight UTC from the
 // admin's date picker), so format in UTC — formatting in the server's own
 // timezone would show the previous day on a US server.

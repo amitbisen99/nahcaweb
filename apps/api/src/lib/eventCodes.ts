@@ -45,10 +45,9 @@ export interface EventOrWebinarSummary {
   id: number;
   type: "event" | "webinar";
   title: string;
-  // Events have a scheduled date; Webinars don't (they're an always-on
-  // Zoom/YouTube link) — callers building a "held on {date}" message need
-  // to handle the webinar case, where this is always null.
+  // Events always have a date; a webinar's is optional, so this can be null.
   date: Date | null;
+  time: string | null;
   priceCents: number | null;
   published: boolean;
 }
@@ -69,6 +68,7 @@ export async function findEventOrWebinarByCode(code: string): Promise<EventOrWeb
       type: "event",
       title: event.title,
       date: event.date,
+      time: event.time,
       priceCents: event.priceCents,
       published: event.published,
     };
@@ -78,10 +78,40 @@ export async function findEventOrWebinarByCode(code: string): Promise<EventOrWeb
       id: webinar.id,
       type: "webinar",
       title: webinar.title,
-      date: null,
+      date: webinar.date,
+      time: webinar.time,
       priceCents: webinar.priceCents,
       published: webinar.published,
     };
   }
   return null;
+}
+
+export interface EventOrWebinarEmailDetails extends EventOrWebinarSummary {
+  description: string | null;
+  // The webinar's Zoom/YouTube link — always null for an event.
+  joinLink: string | null;
+}
+
+export async function findEventDetailsByCode(code: string): Promise<EventOrWebinarEmailDetails | null> {
+  const summary = await findEventOrWebinarByCode(code);
+  if (!summary) return null;
+
+  if (summary.type === "event") {
+    const event = await prisma.event.findUnique({ where: { id: summary.id }, select: { description: true } });
+    return { ...summary, description: event?.description ?? null, joinLink: null };
+  }
+
+  const webinar = await prisma.webinar.findUnique({
+    where: { id: summary.id },
+    select: { description: true, zoomOrYoutubeLink: true },
+  });
+  return { ...summary, description: webinar?.description ?? null, joinLink: webinar?.zoomOrYoutubeLink ?? null };
+}
+
+// The event/webinar's own page on the website, for links in emails.
+export function eventPageUrl(type: "event" | "webinar", id: number): string | null {
+  const origin = process.env.WEB_ORIGIN?.replace(/\/$/, "");
+  if (!origin) return null;
+  return type === "webinar" ? `${origin}/events/webinars/${id}` : `${origin}/events/${id}`;
 }

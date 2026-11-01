@@ -7,7 +7,7 @@ import { quickJoinEvent } from "@/app/(site)/events/actions";
 import { formatDate } from "@/lib/formatDate";
 
 // Webinars have no scheduled date and get their own wording; Events keep
-// the "held on" clause. Mirrors buildEventRegistrationReceiptBody on the
+// the "held on" clause. Mirrors buildEventRegistrationEmail on the
 // API side — keep both in sync.
 function confirmationMessage(type: "event" | "webinar", eventTitle: string, eventDate: string | null): string {
   if (type === "webinar") {

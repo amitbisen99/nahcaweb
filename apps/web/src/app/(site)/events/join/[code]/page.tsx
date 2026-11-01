@@ -9,7 +9,7 @@ import { EventJoinForm } from "./EventJoinForm";
 
 // Webinars have no scheduled date and get their own wording; Events keep
 // the "held on" clause. Mirrors JoinButton.tsx's confirmationMessage and
-// the API's buildEventRegistrationReceiptBody — keep all three in sync.
+// the API's buildEventRegistrationEmail — keep all three in sync.
 function confirmationMessage(type: "event" | "webinar", title: string, date: string | null): string {
   if (type === "webinar") {
     return `You successfully registered for the webinar '${title}'.`;

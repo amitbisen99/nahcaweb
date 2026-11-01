@@ -78,12 +78,13 @@ function buildCouponReminders(coupons: ApiProgrammeCoupon[]): Reminder[] {
 export default async function PortalDashboardPage() {
   const session = await auth();
   const token = session?.apiToken ?? "";
-  const [memberships, payments, programmeCoupons, eventRegistrations] = await Promise.all([
+  const [memberships, payments, programmeCoupons, eventRegistrationsOrNull] = await Promise.all([
     getMyMemberships(token),
     getMyPayments(token),
     getProgrammeCoupons(token),
     getMyEventRegistrations(token),
   ]);
+  const eventRegistrations = eventRegistrationsOrNull ?? [];
   const recentPurchases = payments.slice(0, 5);
   // The next few confirmed events/webinars — dated ones that haven't passed yet, soonest first.
   const today = new Date().toISOString().slice(0, 10);
@@ -144,7 +145,7 @@ export default async function PortalDashboardPage() {
 
       <section className="mt-10">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-xl font-medium text-heading">My Events &amp; Webinars</h2>
+          <h2 className="font-heading text-xl font-medium text-heading">Your Events and Webinars</h2>
           {eventRegistrations.length > 0 && (
             <Link href="/portal/events" className="text-sm font-semibold text-brand hover:text-brand-dark">
               View all →

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { label: "Store", href: "/dashboard" },
   { label: "Forum", href: "/dashboard/forum" },
+  { label: "Your Events and Webinars", href: "/dashboard/events" },
 ];
 
 function linkClasses(active: boolean) {

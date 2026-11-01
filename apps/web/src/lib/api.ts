@@ -226,9 +226,11 @@ export interface ApiMyEventRegistration {
   link: string | null;
 }
 
-export async function getMyEventRegistrations(token: string): Promise<ApiMyEventRegistration[]> {
+// null (not an empty list) when the API call itself fails, so the page can say so
+// instead of claiming the user hasn't registered for anything.
+export async function getMyEventRegistrations(token: string): Promise<ApiMyEventRegistration[] | null> {
   const data = await apiFetch<{ items: ApiMyEventRegistration[] }>("/event-registrations/me", token);
-  return data?.items ?? [];
+  return data ? data.items : null;
 }
 
 // Whether the logged-in user already has a confirmed registration for this
@@ -236,7 +238,7 @@ export async function getMyEventRegistrations(token: string): Promise<ApiMyEvent
 // "already joined" message.
 export async function hasJoinedEvent(token: string, eventCode: string): Promise<boolean> {
   const registrations = await getMyEventRegistrations(token);
-  return registrations.some((r) => r.eventCode === eventCode && r.status === "active");
+  return (registrations ?? []).some((r) => r.eventCode === eventCode && r.status === "active");
 }
 
 export async function getMyPayments(token: string): Promise<ApiPayment[]> {

@@ -2,7 +2,6 @@ import { prisma } from "../prisma";
 import {
   buildDonationAdminNotificationBody,
   buildDonationReceiptBody,
-  buildEventRegistrationReceiptBody,
   buildInstitutionCodesEmailBody,
   buildMembershipAdminNotificationBody,
   buildMembershipReceiptBody,
@@ -14,7 +13,8 @@ import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTi
 import { redeemCoupon } from "./coupons";
 import { createCodeBatch } from "./institutions";
 import { syncMemberToBrevo } from "./brevoContacts";
-import { findEventOrWebinarByCode } from "./eventCodes";
+import { eventPageUrl, findEventDetailsByCode } from "./eventCodes";
+import { buildEventRegistrationEmail } from "./eventRegistrationEmail";
 import { buildDonationTaxReceiptPdf } from "./taxReceiptPdf";
 
 // Shared by the Stripe webhook (real payments) and the payments-bypass paths
@@ -224,21 +224,28 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       data: { status: "active" },
     });
 
-    const eventInfo = await findEventOrWebinarByCode(registration.eventCode);
+    const eventInfo = await findEventDetailsByCode(registration.eventCode);
     if (eventInfo && recipientEmail) {
-      const body = buildEventRegistrationReceiptBody({
+      const email = buildEventRegistrationEmail({
         attendeeName: recipientName,
-        eventTitle: eventInfo.title,
-        eventDate: eventInfo.date,
         type: eventInfo.type,
+        title: eventInfo.title,
+        date: eventInfo.date,
+        time: eventInfo.time,
+        pageUrl: eventPageUrl(eventInfo.type, eventInfo.id),
+        joinLink: eventInfo.joinLink,
+        description: eventInfo.description,
+        calendarUid: `${eventInfo.type}-${eventInfo.id}`,
       });
 
-      await prisma.receipt.create({ data: { paymentId: payment.id, emailBody: body } });
+      await prisma.receipt.create({ data: { paymentId: payment.id, emailBody: email.body } });
 
       await sendEmail({
         to: recipientEmail,
-        subject: `You're registered — ${eventInfo.title}`,
-        body,
+        subject: email.subject,
+        body: email.body,
+        html: email.html,
+        attachments: email.attachments,
       });
 
       await sendAdminNotification(

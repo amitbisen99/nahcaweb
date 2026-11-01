@@ -11,10 +11,10 @@ import { asyncHandler } from "../lib/asyncHandler";
 import { paymentsBypassed } from "../lib/paymentsBypass";
 import { activatePayment } from "../lib/paymentActivation";
 import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
-import { findEventOrWebinarByCode } from "../lib/eventCodes";
+import { eventPageUrl, findEventDetailsByCode, findEventOrWebinarByCode } from "../lib/eventCodes";
+import { buildEventRegistrationEmail } from "../lib/eventRegistrationEmail";
 import { employmentEntrySchema } from "../lib/memberProfile";
 import {
-  buildEventRegistrationReceiptBody,
   sendAdminNotification,
   sendEmail,
   EmailAttachment,
@@ -235,13 +235,25 @@ eventRegistrationsRouter.post(
         data: { eventCode, userId: user.id, status: "active" },
       });
 
-      const body = buildEventRegistrationReceiptBody({
+      const details = await findEventDetailsByCode(eventCode);
+      const email = buildEventRegistrationEmail({
         attendeeName: user.name,
-        eventTitle: eventInfo.title,
-        eventDate: eventInfo.date,
         type: eventInfo.type,
+        title: eventInfo.title,
+        date: eventInfo.date,
+        time: eventInfo.time,
+        pageUrl: eventPageUrl(eventInfo.type, eventInfo.id),
+        joinLink: details?.joinLink ?? null,
+        description: details?.description ?? null,
+        calendarUid: `${eventInfo.type}-${eventInfo.id}`,
       });
-      await sendEmail({ to: user.email, subject: `You're registered — ${eventInfo.title}`, body });
+      await sendEmail({
+        to: user.email,
+        subject: email.subject,
+        body: email.body,
+        html: email.html,
+        attachments: email.attachments,
+      });
       await sendAdminNotification(
         `New event registration — ${eventInfo.title}`,
         `${user.name} (${user.email}) joined "${eventInfo.title}" — existing member, no fee for this event.`
