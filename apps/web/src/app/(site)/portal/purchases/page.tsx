@@ -12,7 +12,7 @@ export default async function PurchasesPage() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Purchases</h1>
-      <p className="mt-2 text-black">Your full membership and donation history.</p>
+      <p className="mt-2 text-black">Your membership, event and webinar, and store purchases.</p>
 
       {payments.length === 0 ? (
         <p className="mt-6 text-sm text-black">You haven&apos;t made any purchases yet.</p>

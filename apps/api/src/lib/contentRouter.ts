@@ -21,8 +21,14 @@ export function createContentRouter(opts: {
   delegate: ContentDelegate;
   schema: z.ZodObject<z.ZodRawShape>;
   orderBy?: Record<string, "asc" | "desc">;
+  // Fixed column values for several content types sharing one table (e.g.
+  // Resource.kind): reads only see matching rows, creates stamp them, and
+  // edits/deletes can only touch them.
+  scope?: Record<string, unknown>;
 }) {
-  const { delegate, schema, orderBy } = opts;
+  const { delegate, schema, orderBy, scope } = opts;
+  const inScope = (item: Record<string, unknown>) =>
+    !scope || Object.entries(scope).every(([key, value]) => item[key] === value);
   const router = Router();
 
   router.get(
@@ -31,7 +37,7 @@ export function createContentRouter(opts: {
     asyncHandler(async (req, res) => {
       const isAdmin = req.auth?.role === "admin";
       const items = await delegate.findMany({
-        where: isAdmin ? undefined : { published: true },
+        where: isAdmin ? scope : { ...scope, published: true },
         orderBy,
       });
       res.json({ items });
@@ -44,7 +50,7 @@ export function createContentRouter(opts: {
     asyncHandler(async (req, res) => {
       const isAdmin = req.auth?.role === "admin";
       const item = await delegate.findUnique({ where: { id: Number(req.params.id) } });
-      if (!item || (!isAdmin && !item.published)) {
+      if (!item || !inScope(item) || (!isAdmin && !item.published)) {
         return res.status(404).json({ error: "Not found" });
       }
       res.json({ item });
@@ -60,7 +66,7 @@ export function createContentRouter(opts: {
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.flatten() });
       }
-      const item = await delegate.create({ data: parsed.data });
+      const item = await delegate.create({ data: { ...parsed.data, ...scope } });
       res.status(201).json({ item });
     })
   );
@@ -74,6 +80,8 @@ export function createContentRouter(opts: {
       if (!parsed.success) {
         return res.status(400).json({ error: parsed.error.flatten() });
       }
+      const existing = await delegate.findUnique({ where: { id: Number(req.params.id) } });
+      if (!existing || !inScope(existing)) return res.status(404).json({ error: "Not found" });
       const item = await delegate.update({
         where: { id: Number(req.params.id) },
         data: parsed.data,
@@ -87,6 +95,8 @@ export function createContentRouter(opts: {
     requireAuth,
     requirePermission("website_content"),
     asyncHandler(async (req, res) => {
+      const existing = await delegate.findUnique({ where: { id: Number(req.params.id) } });
+      if (!existing || !inScope(existing)) return res.status(404).json({ error: "Not found" });
       await delegate.delete({ where: { id: Number(req.params.id) } });
       res.status(204).send();
     })

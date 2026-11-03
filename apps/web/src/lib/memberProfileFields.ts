@@ -41,8 +41,8 @@ export const PRIMARY_ROLES: { value: "chaplain" | "student"; label: string }[] =
 ];
 
 export const HEAR_ABOUT_OPTIONS = [
-  "CIF Spiritual Care course",
-  "GTU",
+  "Chinmaya International Foundation (CIF)",
+  "Global Theological Union (GTU)",
   "Chaplaincy Innovation Lab",
   "Divinity School (please specify which one)",
   "Word of mouth",
@@ -53,8 +53,8 @@ export const HEAR_ABOUT_OPTIONS = [
 export const CARE_CONTEXTS = ["Healthcare", "Higher education", "Military", "Corrections", "Community"];
 
 export const ORG_MEMBERSHIPS = [
-  "APC",
-  "ACPE",
+  "Association of Professional Chaplains (APC)",
+  "Association for Clinical Pastoral Education (ACPE)",
   "Association of Chaplains and Spiritual Life in Higher Education (ACSLHE)",
   "Chaplaincy Innovation Lab",
   "Chinmaya Mission",

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container } from "@/components/Container";
 import { EventBanner } from "@/components/EventBanner";
 import { getPublishedNewsletters } from "@/lib/api";
@@ -18,6 +19,9 @@ export default async function NewslettersPage() {
       <EventBanner title="Newsletters" image="/brand/temple-home.jpg" />
       <Container>
         <div className="py-12">
+          <Link href="/resources" className="mb-6 inline-block text-sm font-semibold text-brand hover:text-brand-dark">
+            ← Back to Resources
+          </Link>
           {sorted.length === 0 ? (
             <p className="text-sm text-black">No newsletters have been published yet — check back soon.</p>
           ) : (

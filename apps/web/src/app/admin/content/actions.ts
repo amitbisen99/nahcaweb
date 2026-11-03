@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
+import { CONTENT_TYPES, ContentTypeKey, contentListPath } from "@/lib/contentTypes";
 
 // A "use server" function bound to <form action={...}> must never throw on
 // failure — Next.js has no way to display that, it just renders the
@@ -23,6 +23,14 @@ async function requireAdminToken(): Promise<string> {
   return session.apiToken;
 }
 
+// Thrown when the API refuses an upload (too big, wrong type, ...), so the admin
+// sees why instead of the file silently going missing.
+class UploadError extends Error {}
+
+function preparationError(err: unknown): string {
+  return err instanceof UploadError ? err.message : "Something went wrong while preparing this request. Please try again.";
+}
+
 async function uploadFile(file: File, token: string): Promise<string | null> {
   const formData = new FormData();
   formData.append("file", file);
@@ -31,7 +39,10 @@ async function uploadFile(file: File, token: string): Promise<string | null> {
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new UploadError(`Couldn't upload "${file.name}": ${data?.error ?? `server returned ${res.status}`}`);
+  }
   const data = await res.json();
   return (data.url as string) ?? null;
 }
@@ -122,7 +133,7 @@ export async function createContentItem(
     payload = await buildPayload(type, formData, token);
   } catch (err) {
     console.error(`createContentItem ${type}: failed to prepare request:`, err);
-    return { error: "Something went wrong while preparing this request. Please try again." };
+    return { error: preparationError(err) };
   }
 
   let res: Response;
@@ -143,8 +154,8 @@ export async function createContentItem(
 
   // redirect() throws internally by design — must stay outside the try/catch
   // above, or its own throw would be caught and reported as a real error.
-  revalidatePath(`/admin/content/${type}`);
-  redirect(`/admin/content/${type}`);
+  revalidatePath(contentListPath(type).split("?")[0]);
+  redirect(contentListPath(type));
 }
 
 export async function updateContentItem(
@@ -160,7 +171,7 @@ export async function updateContentItem(
     payload = await buildPayload(type, formData, token);
   } catch (err) {
     console.error(`updateContentItem ${type}/${id}: failed to prepare request:`, err);
-    return { error: "Something went wrong while preparing this request. Please try again." };
+    return { error: preparationError(err) };
   }
 
   let res: Response;
@@ -179,8 +190,8 @@ export async function updateContentItem(
     return { error: `Failed to update ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
   }
 
-  revalidatePath(`/admin/content/${type}`);
-  redirect(`/admin/content/${type}`);
+  revalidatePath(contentListPath(type).split("?")[0]);
+  redirect(contentListPath(type));
 }
 
 export async function deleteContentItem(type: ContentTypeKey, id: string): Promise<ContentFormState> {
@@ -207,7 +218,7 @@ export async function deleteContentItem(type: ContentTypeKey, id: string): Promi
     return { error: `Failed to delete ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
   }
 
-  revalidatePath(`/admin/content/${type}`);
+  revalidatePath(contentListPath(type).split("?")[0]);
   return {};
 }
 
@@ -236,6 +247,6 @@ export async function publishContentItem(type: ContentTypeKey, id: string): Prom
     return { error: `Failed to publish ${CONTENT_TYPES[type].singularLabel}: ${await extractErrorMessage(res)}` };
   }
 
-  revalidatePath(`/admin/content/${type}`);
+  revalidatePath(contentListPath(type).split("?")[0]);
   return {};
 }

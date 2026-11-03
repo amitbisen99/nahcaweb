@@ -12,7 +12,7 @@ const PLAN_OPTIONS: { value: NonNullable<AdminCoupon["appliesTo"]>[number]; labe
   { value: "regular", label: "Regular Membership" },
   { value: "student", label: "Student Membership" },
   { value: "institutional", label: "Institution-Sponsored Membership" },
-  { value: "nahca_programmes", label: "Nahca Programmes (a specific Event/Webinar)" },
+  { value: "nahca_programmes", label: "NAHCA Programs (a specific Event/Webinar)" },
 ];
 
 export function CouponForm({

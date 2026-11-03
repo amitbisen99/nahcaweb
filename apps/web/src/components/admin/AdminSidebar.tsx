@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { CONTENT_TYPES } from "@/lib/contentTypes";
+import { CONTENT_TYPES, isResourceOnlyType } from "@/lib/contentTypes";
 import { AdminAccess, AdminPermission } from "@/lib/adminPermissions";
 
 // `permission` ties an item to an area an admin can be granted; the
@@ -13,6 +13,7 @@ const NAV_ITEMS: { label: string; href: string; permission?: AdminPermission }[]
   { label: "Members", href: "/admin/members", permission: "members" },
   { label: "All Users", href: "/admin/all-users", permission: "all_users" },
   { label: "Donations", href: "/admin/donations", permission: "donations" },
+  { label: "Transactions", href: "/admin/transactions", permission: "transactions" },
   { label: "Membership Plans", href: "/admin/membership-plans", permission: "membership_plans" },
   { label: "Coupons", href: "/admin/coupons", permission: "coupons" },
   { label: "Store", href: "/admin/store", permission: "store" },
@@ -64,22 +65,23 @@ export function AdminSidebar({ access, onNavigate }: { access: AdminAccess; onNa
 
           {expanded && (
             <div className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-white/10 pl-3">
-              {Object.values(CONTENT_TYPES).map((config) => {
-                const href = `/admin/content/${config.key}`;
-                const active = pathname?.startsWith(href);
-                return (
-                  <Link
-                    key={config.key}
-                    href={href}
-                    onClick={onNavigate}
-                    className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                      active ? "bg-brand text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {config.label}
-                  </Link>
-                );
-              })}
+              {[{ key: "resources", label: "Resources" }, ...Object.values(CONTENT_TYPES).filter((config) => !isResourceOnlyType(config.key))]
+                .map((config) => {
+                  const href = `/admin/content/${config.key}`;
+                  const active = pathname?.startsWith(href);
+                  return (
+                    <Link
+                      key={config.key}
+                      href={href}
+                      onClick={onNavigate}
+                      className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                        active ? "bg-brand text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {config.label}
+                    </Link>
+                  );
+                })}
             </div>
           )}
         </div>

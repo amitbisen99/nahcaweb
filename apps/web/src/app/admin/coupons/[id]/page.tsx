@@ -10,7 +10,7 @@ const SCOPE_LABELS: Record<string, string> = {
   regular: "Regular Membership",
   student: "Student Membership",
   institutional: "Institution-Sponsored Membership",
-  nahca_programmes: "Nahca Programmes (a specific Event/Webinar)",
+  nahca_programmes: "NAHCA Programs (a specific Event/Webinar)",
 };
 
 function formatDiscount(coupon: AdminCoupon): string {

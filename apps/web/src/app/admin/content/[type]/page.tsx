@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Button } from "@/components/Button";
 import { auth } from "@/auth";
-import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
+import { CONTENT_TYPES, ContentTypeKey, contentListPath, isResourceOnlyType } from "@/lib/contentTypes";
 import { listContent } from "@/lib/adminApi";
-import { ContentRowActions } from "@/components/admin/ContentRowActions";
+import { ContentList } from "@/components/admin/ContentList";
 
 export default async function ContentListPage({
   params,
@@ -14,6 +14,7 @@ export default async function ContentListPage({
   const { type } = await params;
   const config = CONTENT_TYPES[type as ContentTypeKey];
   if (!config) notFound();
+  if (isResourceOnlyType(config.key)) redirect(contentListPath(config.key));
 
   const session = await auth();
   const items = await listContent(config.key, session?.apiToken ?? "");
@@ -37,35 +38,8 @@ export default async function ContentListPage({
         <Button href={`/admin/content/${config.key}/new`}>+ New {config.singularLabel}</Button>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3">
-        {items.length === 0 && (
-          <p className="text-sm text-black">No {config.label.toLowerCase()} yet.</p>
-        )}
-        {items.map((item) => (
-          <div
-            key={String(item.id)}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ink/10 bg-white p-4"
-          >
-            <div>
-              <p className="font-medium text-ink">
-                {String(item[config.titleField])}
-                {(config.key === "events" || config.key === "webinars") && typeof item.eventCode === "string" && (
-                  <span className="ml-2 rounded bg-sand px-1.5 py-0.5 font-mono text-xs font-normal text-black/70">
-                    {item.eventCode}
-                  </span>
-                )}
-              </p>
-              <span
-                className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  item.published ? "bg-forest/10 text-forest" : "bg-ink/10 text-black"
-                }`}
-              >
-                {item.published ? "Published" : "Draft"}
-              </span>
-            </div>
-            <ContentRowActions type={config.key} item={item} config={config} />
-          </div>
-        ))}
+      <div className="mt-8">
+        <ContentList config={config} items={items} />
       </div>
     </div>
   );

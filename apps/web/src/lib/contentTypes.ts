@@ -4,7 +4,12 @@ export type ContentTypeKey =
   | "conference-videos"
   | "articles"
   | "newsletters"
-  | "board";
+  | "board"
+  | "partners"
+  | "academic-papers"
+  | "resource-websites"
+  | "podcasts"
+  | "resource-videos";
 
 export interface SelectOption {
   value: string;
@@ -27,6 +32,9 @@ export interface FieldConfig {
     | "file"
     | "speakers";
   required?: boolean;
+  // For "file" fields: what the picker offers and what its button says.
+  accept?: string;
+  uploadLabel?: string;
   options?: (string | SelectOption)[];
   helpText?: string;
 }
@@ -37,6 +45,9 @@ export interface ContentTypeConfig {
   singularLabel: string;
   titleField: string;
   fields: FieldConfig[];
+  // New items start with Published ticked (used where a draft would just look
+  // like "my item isn't showing on the website").
+  defaultPublished?: boolean;
 }
 
 export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
@@ -126,7 +137,28 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
     titleField: "title",
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
-      { name: "videoUrl", label: "Video URL", type: "text", required: true },
+      {
+        name: "videoFileUrl",
+        label: "Upload Video",
+        type: "file",
+        accept: "video/mp4,video/webm,video/quicktime",
+        uploadLabel: "Upload Video",
+        helpText: "MP4 recommended, up to 50 MB. For a bigger video, use the link or embed code below instead.",
+      },
+      { name: "videoUrl", label: "Video Link (optional)", type: "text", helpText: "YouTube or Vimeo link." },
+      {
+        name: "embedCode",
+        label: "Embed Code (optional)",
+        type: "textarea",
+        helpText: "Paste the <iframe> embed code. An uploaded video is played first, then the embed code, then the link.",
+      },
+      {
+        name: "thumbnailUrl",
+        label: "Thumbnail Image",
+        type: "file",
+        accept: "image/*",
+        helpText: "Shown before an uploaded video plays. 1280 × 720 (16:9) works best.",
+      },
       { name: "year", label: "Year", type: "number" },
       { name: "category", label: "Category", type: "text" },
       { name: "published", label: "Published", type: "checkbox" },
@@ -176,4 +208,106 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "published", label: "Published", type: "checkbox" },
     ],
   },
+  partners: {
+    defaultPublished: true,
+    key: "partners",
+    label: "Organizational Partners",
+    singularLabel: "Partner",
+    titleField: "name",
+    fields: [
+      { name: "name", label: "Organization Name", type: "text", required: true },
+      { name: "url", label: "Website URL", type: "text", required: true, helpText: "Full address, e.g. https://example.org/" },
+      { name: "logoUrl", label: "Logo", type: "file", helpText: "Crop the image close to the logo — extra empty space makes it render small." },
+      { name: "order", label: "Display Order", type: "number" },
+      { name: "published", label: "Published", type: "checkbox" },
+    ],
+  },
+  "academic-papers": {
+    defaultPublished: true,
+    key: "academic-papers",
+    label: "Academic Papers",
+    singularLabel: "Academic Paper",
+    titleField: "title",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "fileUrl", label: "Upload PDF", type: "file", helpText: "PDF, up to 10 MB." },
+      { name: "published", label: "Published", type: "checkbox" },
+    ],
+  },
+  "resource-websites": {
+    defaultPublished: true,
+    key: "resource-websites",
+    label: "Websites",
+    singularLabel: "Website",
+    titleField: "title",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "linkUrl", label: "Website Link", type: "text", required: true, helpText: "Full address, e.g. https://example.org/" },
+      { name: "published", label: "Published", type: "checkbox" },
+    ],
+  },
+  podcasts: {
+    defaultPublished: true,
+    key: "podcasts",
+    label: "Podcasts",
+    singularLabel: "Podcast",
+    titleField: "title",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "linkUrl", label: "Podcast Link (optional)", type: "text", helpText: "YouTube or Vimeo link (or any page where it can be listened to)." },
+      {
+        name: "embedCode",
+        label: "Embed Code (optional)",
+        type: "textarea",
+        helpText: "Paste the <iframe> embed code. Leave empty to embed automatically from a YouTube/Vimeo link.",
+      },
+      { name: "published", label: "Published", type: "checkbox" },
+    ],
+  },
+  "resource-videos": {
+    defaultPublished: true,
+    key: "resource-videos",
+    label: "Videos",
+    singularLabel: "Video",
+    titleField: "title",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      { name: "description", label: "Description", type: "textarea" },
+      { name: "linkUrl", label: "Video Link (optional)", type: "text", helpText: "YouTube or Vimeo link." },
+      {
+        name: "embedCode",
+        label: "Embed Code (optional)",
+        type: "textarea",
+        helpText: "Paste the <iframe> embed code. Leave empty to embed automatically from a YouTube/Vimeo link.",
+      },
+      { name: "published", label: "Published", type: "checkbox" },
+    ],
+  },
 };
+
+// The tabs on the admin Resources page, in order. Articles and Newsletters
+// are older content types that already have their own forms — their tabs
+// just reuse those.
+export const RESOURCE_TAB_KEYS: ContentTypeKey[] = [
+  "academic-papers",
+  "resource-websites",
+  "podcasts",
+  "resource-videos",
+  "articles",
+  "newsletters",
+];
+
+// These are managed from the Resources page (under Website Content), not
+// from a list page of their own: adding, editing and deleting one sends the
+// admin back to its tab there, and they're left out of the Website Content
+// menu and overview.
+export function isResourceOnlyType(key: ContentTypeKey): boolean {
+  return RESOURCE_TAB_KEYS.includes(key);
+}
+
+export function contentListPath(key: ContentTypeKey): string {
+  return isResourceOnlyType(key) ? `/admin/content/resources?tab=${key}` : `/admin/content/${key}`;
+}

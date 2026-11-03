@@ -92,7 +92,7 @@ export default async function Home() {
               </div>
 
               <Link
-                href="/what-is-hindu-chaplaincy/community"
+                href="/forum"
                 className="inline-flex w-fit items-center gap-2 font-semibold text-brand hover:text-brand-dark"
               >
                 Visit our community support forum

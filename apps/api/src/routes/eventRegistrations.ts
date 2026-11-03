@@ -278,6 +278,7 @@ eventRegistrationsRouter.post(
     const payment = await prisma.payment.create({
       data: {
         eventRegistrationId: registration.id,
+        userId: user.id,
         couponId,
         type: "event",
         amountCents: priceCents,

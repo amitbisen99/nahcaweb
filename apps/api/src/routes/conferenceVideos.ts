@@ -12,11 +12,25 @@ export const conferenceVideosRouter = Router();
 
 const conferenceVideoSchema = z.object({
   title: z.string().min(1),
-  videoUrl: z.string().min(1),
+  videoUrl: z
+    .string()
+    .url()
+    .refine((value) => /^https?:\/\//i.test(value), "Must start with http:// or https://")
+    .nullable()
+    .optional(),
+  videoFileUrl: z.string().nullable().optional(),
+  embedCode: z.string().nullable().optional(),
+  thumbnailUrl: z.string().nullable().optional(),
   year: z.number().int().optional(),
   category: z.string().optional(),
   published: z.boolean().optional(),
 });
+
+const NO_SOURCE_ERROR = "Add a video file, a video link or an embed code.";
+
+function hasVideoSource(video: { videoUrl?: string | null; videoFileUrl?: string | null; embedCode?: string | null }) {
+  return Boolean(video.videoUrl || video.videoFileUrl || video.embedCode);
+}
 
 conferenceVideosRouter.get(
   "/",
@@ -49,6 +63,7 @@ conferenceVideosRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = conferenceVideoSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    if (!hasVideoSource(parsed.data)) return res.status(400).json({ error: NO_SOURCE_ERROR });
     const item = await prisma.conferenceVideo.create({ data: parsed.data });
     res.status(201).json({ item });
   })
@@ -61,6 +76,10 @@ conferenceVideosRouter.put(
   asyncHandler(async (req, res) => {
     const parsed = conferenceVideoSchema.partial().safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    // Whatever the edit leaves behind must still be playable.
+    const existing = await prisma.conferenceVideo.findUnique({ where: { id: Number(req.params.id) } });
+    if (!existing) return res.status(404).json({ error: "Not found" });
+    if (!hasVideoSource({ ...existing, ...parsed.data })) return res.status(400).json({ error: NO_SOURCE_ERROR });
     const item = await prisma.conferenceVideo.update({ where: { id: Number(req.params.id) }, data: parsed.data });
     res.json({ item });
   })

@@ -13,26 +13,24 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { label: "Home", href: "/" },
   {
-    label: "Resources",
-    href: "/what-is-hindu-chaplaincy",
+    label: "About Us",
+    href: "/about",
     children: [
+      { label: "NAHCA Board", href: "/about#board" },
+      { label: "Organizational Partners", href: "/organizational-partners" },
+      { label: "NAHCA Code of Ethics", href: "/about/code-of-ethics" },
+    ],
+  },
+  {
+    label: "Resources",
+    href: "/resources",
+    children: [
+      { label: "Resource Library", href: "/resources" },
       { label: "What Is Hindu Chaplaincy?", href: "/what-is-hindu-chaplaincy" },
       { label: "Hindu Spiritual Care Resources", href: "/about/resources" },
       { label: "Resources for Chaplains", href: "/resources/chaplains" },
       { label: "Resources for Students", href: "/resources/students" },
       { label: "Resources for Community", href: "/resources/community" },
-      { label: "Articles", href: "/articles" },
-      { label: "Newsletters", href: "/newsletters" },
-    ],
-  },
-  {
-    label: "About Us",
-    href: "/about",
-    children: [
-      { label: "NAHCA Board", href: "/about#board" },
-      { label: "Hindu Spiritual Care Resources", href: "/about/resources" },
-      { label: "Organizational Partners", href: "/organizational-partners" },
-      { label: "NAHCA Code of Ethics", href: "/about/code-of-ethics" },
     ],
   },
   {
@@ -57,6 +55,6 @@ export const NAV: NavItem[] = [
 
 export const FOOTER_LINKS: NavChild[] = [
   { label: "Newsletters", href: "/newsletters" },
-  { label: "Join Us / Membership", href: "/membership" },
-  { label: "Get In Touch / Contact Us", href: "/contact" },
+  { label: "Join us", href: "/membership" },
+  { label: "Contact us", href: "/contact" },
 ];

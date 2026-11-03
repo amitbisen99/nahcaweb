@@ -482,15 +482,20 @@ model ReceiptEmailLog {
   @@index([eventCode])
 }
 
+// A video comes from an uploaded file (`videoFileUrl`), an embed code, or a
+// link — at least one of them (checked in the route).
 model ConferenceVideo {
-  id        Int      @id @default(autoincrement())
-  title     String
-  videoUrl  String
-  year      Int?
-  category  String?
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  title        String
+  videoUrl     String?
+  videoFileUrl String?
+  embedCode    String?  @db.Text
+  thumbnailUrl String?
+  year         Int?
+  category     String?
+  published    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([published])
 }
@@ -539,6 +544,40 @@ model Board {
   role      String?
   bio       String?  @db.Text
   photoUrl  String?
+  order     Int      @default(0)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+}
+
+// One table for the four Resources-library types an admin adds from the
+// Resources page; `kind` is one of academic_paper | website | podcast | video.
+// Articles and Newsletters have their own models.
+model Resource {
+  id          Int      @id @default(autoincrement())
+  kind        String
+  title       String
+  description String?  @db.Text
+  fileUrl     String?
+  linkUrl     String?
+  embedCode   String?  @db.Text
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([kind, published])
+}
+
+// Organizational partners shown on /organizational-partners. The first four
+// are seeded by the migration; `logoUrl` is either a site path ("/partners/...")
+// or an API upload path ("/uploads/...").
+model Partner {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  logoUrl   String?
   order     Int      @default(0)
   published Boolean  @default(false)
   createdAt DateTime @default(now())

@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { CONTENT_TYPES } from "@/lib/contentTypes";
+import { CONTENT_TYPES, isResourceOnlyType } from "@/lib/contentTypes";
 import { listContent } from "@/lib/adminApi";
+
+// The four Resources-library types are managed from the Resources page.
+const HUB_TYPES = Object.values(CONTENT_TYPES).filter((config) => !isResourceOnlyType(config.key));
 
 export default async function ContentHubPage() {
   const session = await auth();
   const token = session?.apiToken ?? "";
 
   const counts = await Promise.all(
-    Object.values(CONTENT_TYPES).map(async (config) => {
+    HUB_TYPES.map(async (config) => {
       const items = await listContent(config.key, token);
       return { key: config.key, label: config.label, count: items.length };
     })
@@ -18,11 +21,18 @@ export default async function ContentHubPage() {
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Website Content</h1>
       <p className="mt-2 text-black">
-        Manage events, webinars, videos, articles, newsletters, and board members shown on the
+        Manage events, webinars, resources, board members, and organizational partners shown on the
         public site.
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Link
+          href="/admin/content/resources"
+          className="rounded-xl border border-ink/10 bg-white p-6 transition-colors hover:border-brand/40"
+        >
+          <h2 className="font-heading text-lg font-medium text-heading">Resources</h2>
+          <p className="mt-1 text-sm text-black">Papers, websites, podcasts, videos, articles, newsletters</p>
+        </Link>
         {counts.map((c) => (
           <Link
             key={c.key}

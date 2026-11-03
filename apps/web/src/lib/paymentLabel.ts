@@ -17,6 +17,10 @@ export function paymentLabel(payment: ApiPayment): string {
   }
   if (payment.type === "conference") return "Conference Fee";
   if (payment.type === "endorsement") return "Endorsement Fee";
+  if (payment.type === "event") {
+    if (!payment.event) return "Event or Webinar Registration";
+    return `${payment.event.type === "webinar" ? "Webinar" : "Event"} — ${payment.event.title}`;
+  }
   if (payment.type === "product") return payment.productOrder?.product.title ?? "Store Purchase";
   return "Purchase";
 }

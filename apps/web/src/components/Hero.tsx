@@ -27,7 +27,7 @@ export function Hero() {
           <div className="flex flex-wrap gap-4 pt-2">
             <Button href="/membership">Become a Member</Button>
             <Button
-              href="/what-is-hindu-chaplaincy/community"
+              href="/forum"
               variant="ghost"
               className="!border-white !text-white hover:!bg-white hover:!text-brand"
             >

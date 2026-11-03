@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
+import { CONTENT_TYPES, ContentTypeKey, contentListPath } from "@/lib/contentTypes";
 import { createContentItem } from "../../actions";
 import { ContentForm } from "@/components/admin/ContentForm";
 
@@ -16,7 +16,7 @@ export default async function NewContentPage({
   return (
     <div className="max-w-2xl">
       <Link
-        href={`/admin/content/${config.key}`}
+        href={contentListPath(config.key)}
         className="text-sm font-semibold text-brand hover:text-brand-dark"
       >
         ← {config.label}

@@ -7,11 +7,15 @@ export function ContentFileField({
   name,
   label,
   helpText,
+  accept,
+  uploadLabel = "Upload Image",
   currentValue,
 }: {
   name: string;
   label: string;
   helpText?: string;
+  accept?: string;
+  uploadLabel?: string;
   currentValue?: string | null;
 }) {
   const [removed, setRemoved] = useState(false);
@@ -92,8 +96,8 @@ export function ContentFileField({
       ) : null}
 
       <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-sand/40">
-        Upload Image
-        <input ref={inputRef} type="file" name={name} onChange={handleFileChange} className="hidden" />
+        {uploadLabel}
+        <input ref={inputRef} type="file" name={name} accept={accept} onChange={handleFileChange} className="hidden" />
       </label>
 
       <input type="hidden" name={`${name}__remove`} value={removed ? "on" : ""} />

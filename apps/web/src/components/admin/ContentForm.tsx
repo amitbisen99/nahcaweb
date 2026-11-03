@@ -31,7 +31,11 @@ export function ContentForm({
         if (field.type === "checkbox") {
           return (
             <label key={field.name} className="flex items-center gap-2 text-sm font-medium text-black">
-              <input type="checkbox" name={field.name} defaultChecked={Boolean(currentValue)} />
+              <input
+                type="checkbox"
+                name={field.name}
+                defaultChecked={item ? Boolean(currentValue) : Boolean(config.defaultPublished && field.name === "published")}
+              />
               {field.label}
             </label>
           );
@@ -44,6 +48,8 @@ export function ContentForm({
               name={field.name}
               label={field.label}
               helpText={field.helpText}
+              accept={field.accept}
+              uploadLabel={field.uploadLabel}
               currentValue={typeof currentValue === "string" ? currentValue : null}
             />
           );

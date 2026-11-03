@@ -4,6 +4,7 @@ export const ADMIN_PERMISSIONS = [
   { key: "members", label: "Members" },
   { key: "all_users", label: "All Users" },
   { key: "donations", label: "Donations" },
+  { key: "transactions", label: "Transactions" },
   { key: "membership_plans", label: "Membership Plans" },
   { key: "coupons", label: "Coupons" },
   { key: "store", label: "Store" },

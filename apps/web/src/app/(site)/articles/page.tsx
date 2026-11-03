@@ -19,6 +19,9 @@ export default async function ArticlesPage() {
       <EventBanner title="Articles" image="/chaplaincy/colorful-palm-leaf-books.jpg" />
       <Container>
         <div className="py-12">
+          <Link href="/resources" className="mb-6 inline-block text-sm font-semibold text-brand hover:text-brand-dark">
+            ← Back to Resources
+          </Link>
           {articles.length === 0 ? (
             <p className="text-sm text-black">No articles have been published yet — check back soon.</p>
           ) : (

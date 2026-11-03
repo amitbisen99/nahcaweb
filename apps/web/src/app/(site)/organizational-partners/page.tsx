@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { SVGProps } from "react";
 import { Container } from "@/components/Container";
 import { EventBanner } from "@/components/EventBanner";
+import { getPartners } from "@/lib/cms";
 
 function ChevronIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -11,43 +11,15 @@ function ChevronIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-interface Partner {
-  name: string;
-  url: string;
-  logo: string;
-  /** Aspect ratio (width/height) of the logo mark itself, for source files that have a
-   *  lot of built-in whitespace padding around the mark. When set, the logo is cropped
-   *  (object-cover) to this ratio instead of letterboxed (object-contain), so it renders
-   *  at the same visual size as the tightly-cropped logos. */
-  contentAspect?: number;
+// Logos that ship with the site are "/partners/..."; anything an admin uploads
+// is served by the API.
+function logoSrc(logoUrl: string) {
+  return logoUrl.startsWith("/uploads/") ? `${process.env.NEXT_PUBLIC_API_URL}${logoUrl}` : logoUrl;
 }
 
-const PARTNERS: Partner[] = [
-  {
-    name: "Association of Professional Chaplains (APC)",
-    url: "https://www.apchaplains.org/",
-    logo: "/partners/apc.png",
-  },
-  {
-    name: "ACPE",
-    url: "https://acpe.edu/",
-    logo: "/partners/acpe.png",
-  },
-  {
-    name: "Chaplaincy Innovation Lab",
-    url: "https://chaplaincyinnovation.org/",
-    logo: "/partners/chaplaincy-innovation-lab.jpg",
-    contentAspect: 1.82,
-  },
-  {
-    name: "Chinmaya International Foundation",
-    url: "https://chinfo.org/all-courses/hindu-spiritual-care/",
-    logo: "/partners/chinmaya-international-foundation.jpg",
-    contentAspect: 2.94,
-  },
-];
+export default async function OrganizationalPartnersPage() {
+  const partners = await getPartners();
 
-export default function OrganizationalPartnersPage() {
   return (
     <>
       <EventBanner title="Organizational Partners" image="/brand/temple-home.jpg" />
@@ -60,34 +32,36 @@ export default function OrganizationalPartnersPage() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2">
-          {PARTNERS.map((partner) => (
-            <a
-              key={partner.name}
-              href={partner.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col items-center gap-5 rounded-xl border border-ink/10 p-8 text-center transition-colors hover:border-brand/40"
-            >
-              <div
-                className={partner.contentAspect ? "relative h-20 overflow-hidden" : "relative h-20 w-full"}
-                style={partner.contentAspect ? { aspectRatio: partner.contentAspect } : undefined}
+        {partners.length === 0 ? (
+          <p className="mt-14 text-sm text-black">Our partners will be listed here soon.</p>
+        ) : (
+          <div className="mt-14 grid gap-6 sm:grid-cols-2">
+            {partners.map((partner) => (
+              <a
+                key={partner.id}
+                href={partner.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center gap-5 rounded-xl border border-ink/10 p-8 text-center transition-colors hover:border-brand/40"
               >
-                <Image
-                  src={partner.logo}
-                  alt={partner.name}
-                  fill
-                  className={partner.contentAspect ? "object-cover" : "object-contain"}
-                />
-              </div>
-              <h2 className="font-heading text-lg font-medium text-heading">{partner.name}</h2>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand group-hover:text-brand-dark">
-                Visit Website
-                <ChevronIcon className="h-3 w-3" />
-              </span>
-            </a>
-          ))}
-        </div>
+                <div className="flex h-20 w-full items-center justify-center">
+                  {partner.logoUrl && (
+                    <img
+                      src={logoSrc(partner.logoUrl)}
+                      alt={partner.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  )}
+                </div>
+                <h2 className="font-heading text-lg font-medium text-heading">{partner.name}</h2>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand group-hover:text-brand-dark">
+                  Visit Website
+                  <ChevronIcon className="h-3 w-3" />
+                </span>
+              </a>
+            ))}
+          </div>
+        )}
       </Container>
       </section>
     </>

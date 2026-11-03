@@ -59,6 +59,8 @@ export interface ApiPayment {
   membership: { type: ApiMembership["type"]; groupId: string | null } | null;
   donation: { purpose: string | null } | null;
   productOrder: { status: "pending" | "active"; product: { id: number; title: string; type: "video" | "file" } } | null;
+  // The event or webinar an "event" payment was for.
+  event: { title: string; type: "event" | "webinar" } | null;
 }
 
 export interface ApiNewsletter {
@@ -150,7 +152,10 @@ export interface ApiArticle {
 export interface ApiConferenceVideo {
   id: number;
   title: string;
-  videoUrl: string;
+  videoUrl: string | null;
+  videoFileUrl: string | null;
+  embedCode: string | null;
+  thumbnailUrl: string | null;
   year: number | null;
   category: string | null;
 }
@@ -188,6 +193,43 @@ export async function getAllMemberships(
     token
   );
   return data ?? { memberships: [], total: 0, page, pageSize };
+}
+
+export interface AdminTransaction {
+  id: number;
+  createdAt: string;
+  category: string;
+  service: string;
+  name: string | null;
+  email: string | null;
+  hasAccount: boolean;
+  amountCents: number;
+  status: "pending" | "succeeded" | "failed" | "refunded";
+  couponCode: string | null;
+  stripeRef: string | null;
+}
+
+export interface PaginatedTransactions {
+  transactions: AdminTransaction[];
+  total: number;
+  page: number;
+  pageSize: number;
+  succeededCount: number;
+  succeededCents: number;
+}
+
+export async function getAllTransactions(
+  token: string,
+  opts: { page?: number; pageSize?: number; q?: string; type?: string; status?: string; from?: string; to?: string } = {}
+): Promise<PaginatedTransactions> {
+  const page = opts.page ?? 1;
+  const pageSize = opts.pageSize ?? 20;
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  for (const key of ["q", "type", "status", "from", "to"] as const) {
+    if (opts[key]) params.set(key, opts[key] as string);
+  }
+  const data = await apiFetch<PaginatedTransactions>(`/payments?${params}`, token);
+  return data ?? { transactions: [], total: 0, page, pageSize, succeededCount: 0, succeededCents: 0 };
 }
 
 export async function getAllDonations(

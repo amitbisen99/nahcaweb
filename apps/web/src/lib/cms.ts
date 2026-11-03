@@ -99,6 +99,40 @@ export async function getBoardMembers(): Promise<CmsBoardMember[]> {
   return data?.items ?? [];
 }
 
+export interface CmsPartner {
+  id: number;
+  name: string;
+  url: string;
+  logoUrl: string | null;
+  order: number;
+}
+
+export async function getPartners(): Promise<CmsPartner[]> {
+  const data = await fetchJson<{ items: CmsPartner[] }>(`${process.env.NEXT_PUBLIC_API_URL}/partners`, {
+    next: { revalidate: 60 },
+  });
+  return data?.items ?? [];
+}
+
+export interface CmsResource {
+  id: number;
+  title: string;
+  description: string | null;
+  fileUrl: string | null;
+  linkUrl: string | null;
+  embedCode: string | null;
+  createdAt: string;
+}
+
+// `apiPath` is the content type's API path — academic-papers,
+// resource-websites, podcasts or resource-videos.
+export async function getResources(apiPath: string): Promise<CmsResource[]> {
+  const data = await fetchJson<{ items: CmsResource[] }>(`${process.env.API_URL}/${apiPath}`, {
+    cache: "no-store",
+  });
+  return data?.items ?? [];
+}
+
 export interface CmsEventInfo {
   type: "event" | "webinar";
   title: string;

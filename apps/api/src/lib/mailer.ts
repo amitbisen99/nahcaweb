@@ -22,6 +22,9 @@ export async function sendEmail(opts: {
   // which composes rich-text content.
   html?: string;
   attachments?: EmailAttachment[];
+  // Where a reply should go instead of the sender address (e.g. the visitor
+  // who filled in the contact form).
+  replyTo?: { email: string; name?: string };
 }) {
   if (!brevoConfigured) {
     // eslint-disable-next-line no-console
@@ -43,6 +46,7 @@ export async function sendEmail(opts: {
       },
       to: [{ email: opts.to }],
       subject: opts.subject,
+      ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
       textContent: opts.body,
       ...(opts.html ? { htmlContent: opts.html } : {}),
       ...(opts.attachments?.length ? { attachment: opts.attachments } : {}),
