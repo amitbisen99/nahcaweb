@@ -18,6 +18,8 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: "admin" | "member";
     hasMembership?: boolean;
+    // When hasMembership was last checked against the API (ms since epoch).
+    membershipCheckedAt?: number;
     apiToken?: string;
   }
 }

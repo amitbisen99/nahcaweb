@@ -63,15 +63,6 @@ export interface ApiPayment {
   event: { title: string; type: "event" | "webinar" } | null;
 }
 
-export interface ApiNewsletter {
-  id: number;
-  title: string;
-  fileUrl: string | null;
-  mailchimpCampaignUrl: string | null;
-  publishedDate: string | null;
-  createdAt: string;
-}
-
 // Mirrors apps/api/src/lib/memberProfile.ts's memberProfileSchema — the
 // questionnaire captured on the Regular/Student/Institutional signup form,
 // viewable/editable by the member themselves on /portal/profile.
@@ -139,14 +130,6 @@ export interface ApiMembershipPlan {
   tooltip: string | null;
   minStudents: number | null;
   pricePerStudentCents: number | null;
-}
-
-export interface ApiArticle {
-  id: number;
-  title: string;
-  richTextBody: string | null;
-  category: "Podcast" | "Presentation" | "Referral" | "Ethics";
-  createdAt: string;
 }
 
 export interface ApiConferenceVideo {
@@ -232,6 +215,77 @@ export async function getAllTransactions(
   return data ?? { transactions: [], total: 0, page, pageSize, succeededCount: 0, succeededCents: 0 };
 }
 
+// One person's registration for one event or webinar — the Event Attendees admin
+// page. Everything is already merged: a guest's answers from the form, an account
+// holder's from their member profile.
+export interface AdminEventAttendee {
+  id: number;
+  createdAt: string;
+  status: "pending" | "active";
+  eventCode: string;
+  eventTitle: string;
+  eventType: "Event" | "Webinar" | null;
+  eventDate: string | null;
+  eventTime: string | null;
+  name: string | null;
+  email: string | null;
+  attendeeType: "Guest" | "Member" | "General user";
+  pronouns: string | null;
+  phone: string | null;
+  mailingAddress: string | null;
+  usesWhatsapp: boolean | null;
+  whatsappContactOk: boolean | null;
+  religiousTraditions: string[];
+  religiousTraditionOther: string | null;
+  primaryRole: string | null;
+  primaryRoleLabel: string | null;
+  employment: { employerName?: string; jobTitle?: string | null; employmentType?: string | null }[];
+  hearAboutUs: string | null;
+  hearAboutUsOther: string | null;
+  amountCents: number | null;
+  paymentStatus: "pending" | "succeeded" | "failed" | "refunded" | null;
+  couponCode: string | null;
+  paymentRef: string | null;
+}
+
+export interface PaginatedEventAttendees {
+  attendees: AdminEventAttendee[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface EventAttendeeFilterOption {
+  code: string;
+  title: string;
+  type: "Event" | "Webinar";
+  date: string | null;
+}
+
+export async function getEventAttendees(
+  token: string,
+  opts: { page?: number; pageSize?: number; q?: string; eventCode?: string; status?: string; type?: string } = {}
+): Promise<PaginatedEventAttendees> {
+  const page = opts.page ?? 1;
+  const pageSize = opts.pageSize ?? 20;
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  for (const key of ["q", "eventCode", "status", "type"] as const) {
+    if (opts[key]) params.set(key, opts[key] as string);
+  }
+  const data = await apiFetch<PaginatedEventAttendees>(`/event-attendees?${params}`, token);
+  return data ?? { attendees: [], total: 0, page, pageSize };
+}
+
+export async function getEventAttendeeFilterOptions(token: string): Promise<EventAttendeeFilterOption[]> {
+  const data = await apiFetch<{ events: EventAttendeeFilterOption[] }>("/event-attendees/events", token);
+  return data?.events ?? [];
+}
+
+export async function getEventAttendee(id: number, token: string): Promise<AdminEventAttendee | null> {
+  const data = await apiFetch<{ attendee: AdminEventAttendee }>(`/event-attendees/${id}`, token);
+  return data?.attendee ?? null;
+}
+
 export async function getAllDonations(
   token: string,
   opts: { page?: number; pageSize?: number; email?: string; from?: string; to?: string } = {}
@@ -291,21 +345,6 @@ export async function getMyPayments(token: string): Promise<ApiPayment[]> {
 export async function getMembershipPlans(): Promise<ApiMembershipPlan[]> {
   const data = await publicFetch<{ plans: ApiMembershipPlan[] }>("/membership-plans");
   return data?.plans ?? [];
-}
-
-export async function getPublishedNewsletters(): Promise<ApiNewsletter[]> {
-  const data = await publicFetch<{ items: ApiNewsletter[] }>("/newsletters");
-  return data?.items ?? [];
-}
-
-export async function getPublishedArticles(): Promise<ApiArticle[]> {
-  const data = await publicFetch<{ items: ApiArticle[] }>("/articles");
-  return data?.items ?? [];
-}
-
-export async function getPublishedArticle(id: number): Promise<ApiArticle | null> {
-  const data = await publicFetch<{ item: ApiArticle }>(`/articles/${id}`);
-  return data?.item ?? null;
 }
 
 export interface ApiProgrammeCoupon {

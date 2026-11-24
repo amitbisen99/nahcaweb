@@ -4,23 +4,24 @@ import { brevoConfigured } from "./mailer";
 // transactional email. API reference: https://developers.brevo.com/reference/createcontact
 const BREVO_CONTACTS_URL = "https://api.brevo.com/v3/contacts";
 
-// Three contact lists in the Brevo account, one per kind of person. Read from
+// Four contact lists in the Brevo account, one per kind of person. Read from
 // the environment on every call (list IDs belong to a Brevo account, so they
-// change whenever the account does). BREVO_LIST_ID_7 is set aside for future
-// use and deliberately not referenced here.
+// change whenever the account does).
 //
 //   members     (list 4) — people with an active paid/sponsored membership
 //   newsletter  (list 5) — footer "monthly newsletter" sign-ups
 //   general     (list 6) — free accounts with no active membership
+//   attendees   (list 7) — everyone with a confirmed event or webinar registration
 //
 // Someone can be on more than one at once (a member who also subscribes via
 // the footer is on members + newsletter).
-type BrevoList = "members" | "newsletter" | "general";
+type BrevoList = "members" | "newsletter" | "general" | "attendees";
 
 const LIST_ENV_VARS: Record<BrevoList, string> = {
   members: "BREVO_LIST_ID_4",
   newsletter: "BREVO_LIST_ID_5",
   general: "BREVO_LIST_ID_6",
+  attendees: "BREVO_LIST_ID_7",
 };
 
 function listIdFor(list: BrevoList): number | undefined {
@@ -104,6 +105,13 @@ async function removeFromList(list: BrevoList, email: string) {
 // A free account was just created — goes on the general users list.
 export async function syncGeneralUserToBrevo(email: string, name?: string) {
   await addToList("general", email, name);
+}
+
+// Someone's event or webinar registration was confirmed — guest or account holder,
+// free or paid. They go on the attendees list and stay wherever else they already
+// are (an attendee is not made a member or removed from the general users list).
+export async function syncEventAttendeeToBrevo(email: string, name?: string) {
+  await addToList("attendees", email, name);
 }
 
 // Someone subscribed through the footer form — goes on the newsletter list

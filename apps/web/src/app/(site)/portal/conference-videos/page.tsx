@@ -18,7 +18,7 @@ export default async function PortalConferenceVideosPage() {
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           {videos.map((video) => {
             // An uploaded file plays first, then the embed code, then the link.
-            const embed = video.videoFileUrl ? null : getResourceEmbed({ embedCode: video.embedCode, linkUrl: video.videoUrl });
+            const embed = video.videoFileUrl ? null : getResourceEmbed({ embedCode: video.embedCode, videoUrl: video.videoUrl, podcastUrl: null });
             const thumbnail = video.thumbnailUrl ? `${apiUrl}${video.thumbnailUrl}` : undefined;
             return (
               <div key={video.id} className="rounded-xl border border-ink/10 bg-white p-4">

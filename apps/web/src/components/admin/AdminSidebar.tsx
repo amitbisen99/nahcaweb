@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { CONTENT_TYPES, isResourceOnlyType } from "@/lib/contentTypes";
+import { CONTENT_TYPES } from "@/lib/contentTypes";
 import { AdminAccess, AdminPermission } from "@/lib/adminPermissions";
 
 // `permission` ties an item to an area an admin can be granted; the
@@ -12,6 +12,7 @@ const NAV_ITEMS: { label: string; href: string; permission?: AdminPermission }[]
   { label: "Dashboard", href: "/admin" },
   { label: "Members", href: "/admin/members", permission: "members" },
   { label: "All Users", href: "/admin/all-users", permission: "all_users" },
+  { label: "Event Attendees", href: "/admin/event-attendees", permission: "event_attendees" },
   { label: "Donations", href: "/admin/donations", permission: "donations" },
   { label: "Transactions", href: "/admin/transactions", permission: "transactions" },
   { label: "Membership Plans", href: "/admin/membership-plans", permission: "membership_plans" },
@@ -65,7 +66,7 @@ export function AdminSidebar({ access, onNavigate }: { access: AdminAccess; onNa
 
           {expanded && (
             <div className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-white/10 pl-3">
-              {[{ key: "resources", label: "Resources" }, ...Object.values(CONTENT_TYPES).filter((config) => !isResourceOnlyType(config.key))]
+              {[{ key: "resources", label: "Resources" }, ...Object.values(CONTENT_TYPES)]
                 .map((config) => {
                   const href = `/admin/content/${config.key}`;
                   const active = pathname?.startsWith(href);

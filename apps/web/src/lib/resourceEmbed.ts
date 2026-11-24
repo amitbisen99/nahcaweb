@@ -11,7 +11,11 @@ export interface ResourceEmbed {
 // code an admin pasted, else a player built from a YouTube/Vimeo link. Only the
 // iframe's address is used — never the pasted markup itself — and only https
 // ones, so the embed box can't be made to run anything else.
-export function getResourceEmbed(resource: { embedCode: string | null; linkUrl: string | null }): ResourceEmbed | null {
+export function getResourceEmbed(resource: {
+  embedCode: string | null;
+  videoUrl: string | null;
+  podcastUrl: string | null;
+}): ResourceEmbed | null {
   if (resource.embedCode) {
     const tag = resource.embedCode.match(/<iframe\b[^>]*>/i)?.[0];
     const rawSrc = tag?.match(/\ssrc\s*=\s*["']([^"']+)["']/i)?.[1];
@@ -23,6 +27,7 @@ export function getResourceEmbed(resource: { embedCode: string | null; linkUrl: 
       }
     }
   }
-  const auto = resource.linkUrl ? toVideoEmbedUrl(resource.linkUrl) : null;
+  const link = resource.videoUrl ?? resource.podcastUrl;
+  const auto = link ? toVideoEmbedUrl(link) : null;
   return auto ? { src: auto, height: null } : null;
 }

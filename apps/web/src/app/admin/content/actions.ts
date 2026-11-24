@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { CONTENT_TYPES, ContentTypeKey, contentListPath } from "@/lib/contentTypes";
+import { UploadError, uploadFile } from "@/lib/adminUpload";
 
 // A "use server" function bound to <form action={...}> must never throw on
 // failure — Next.js has no way to display that, it just renders the
@@ -23,28 +24,8 @@ async function requireAdminToken(): Promise<string> {
   return session.apiToken;
 }
 
-// Thrown when the API refuses an upload (too big, wrong type, ...), so the admin
-// sees why instead of the file silently going missing.
-class UploadError extends Error {}
-
 function preparationError(err: unknown): string {
   return err instanceof UploadError ? err.message : "Something went wrong while preparing this request. Please try again.";
-}
-
-async function uploadFile(file: File, token: string): Promise<string | null> {
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${process.env.API_URL}/uploads`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
-    throw new UploadError(`Couldn't upload "${file.name}": ${data?.error ?? `server returned ${res.status}`}`);
-  }
-  const data = await res.json();
-  return (data.url as string) ?? null;
 }
 
 async function buildSpeakers(fieldName: string, formData: FormData, token: string) {

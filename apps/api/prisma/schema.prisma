@@ -500,6 +500,8 @@ model ConferenceVideo {
   @@index([published])
 }
 
+// Legacy: articles now live in Resource (tag "articles"). Kept as a backup of the
+// rows copied by the resources_tags_pages migration; nothing reads it any more.
 model Article {
   id           Int             @id @default(autoincrement())
   title        String
@@ -512,6 +514,7 @@ model Article {
   @@index([published])
 }
 
+// Legacy: newsletters now live in Resource (tag "newsletters"); see Article above.
 model Newsletter {
   id                   Int       @id @default(autoincrement())
   title                String
@@ -556,18 +559,28 @@ model Board {
 // Resources page; `kind` is one of academic_paper | website | podcast | video.
 // Articles and Newsletters have their own models.
 model Resource {
-  id          Int      @id @default(autoincrement())
-  kind        String
-  title       String
-  description String?  @db.Text
-  fileUrl     String?
-  linkUrl     String?
-  embedCode   String?  @db.Text
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+  title         String
+  // Rich text (HTML).
+  description   String?   @db.Text
+  fileUrl       String?
+  websiteUrl    String?
+  podcastUrl    String?
+  videoUrl      String?
+  embedCode     String?   @db.Text
+  // Used by newsletters, to order them and show the issue's date.
+  publishedDate DateTime?
+  // Which sections of the Resource Library it appears in — any of
+  // academic-papers, websites, podcasts, videos, articles, newsletters.
+  tags          Json?
+  // Which "Resources for ..." pages it appears on — any of chaplains,
+  // students, community.
+  pages         Json?
+  published     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  @@index([kind, published])
+  @@index([published])
 }
 
 // Organizational partners shown on /organizational-partners. The first four

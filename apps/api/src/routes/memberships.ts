@@ -35,6 +35,113 @@ const membershipSignupSchema = z
     path: ["studentCount"],
   });
 
+type MembershipType = z.infer<typeof membershipSignupSchema>["type"];
+
+type Quote =
+  | { ok: true; plan: NonNullable<Awaited<ReturnType<typeof getMembershipPlan>>>; priceCents: number; couponId: number | null }
+  | { ok: false; status: number; error: unknown };
+
+// What a plan costs this buyer once seats and any coupon are applied — or why
+// it can't be bought. Shared by /signup and /purchase.
+async function quoteMembership(input: {
+  type: MembershipType;
+  studentCount?: number;
+  couponCode?: string;
+}): Promise<Quote> {
+  const { type, studentCount, couponCode } = input;
+
+  const plan = await getMembershipPlan(type);
+  if (!plan) return { ok: false, status: 400, error: "Unknown membership type" };
+
+  if (type === "institutional") {
+    const minStudents = plan.minStudents ?? INSTITUTIONAL_MIN_STUDENTS;
+    if ((studentCount as number) < minStudents) {
+      return {
+        ok: false,
+        status: 400,
+        error: { message: `studentCount must be at least ${minStudents} for institutional memberships` },
+      };
+    }
+  }
+
+  const basePriceCents =
+    type === "institutional" ? (studentCount as number) * (plan.pricePerStudentCents ?? 0) : plan.priceCents;
+
+  let couponId: number | null = null;
+  let priceCents = basePriceCents;
+  if (couponCode) {
+    const result = await findValidCoupon(couponCode, { planType: type });
+    if (isCouponError(result)) return { ok: false, status: result.status, error: result.message };
+    couponId = result.id;
+    priceCents = applyCouponDiscount(basePriceCents, result);
+  }
+
+  return { ok: true, plan, priceCents, couponId };
+}
+
+// Takes a pending Membership + Payment the rest of the way: activates it
+// straight away when no money is due (payments bypassed, or a free/complimentary
+// coupon), otherwise opens a Stripe Checkout session. Returns where to send the
+// buyer next.
+async function startCheckout(opts: {
+  paymentId: number;
+  membershipId: number;
+  email: string;
+  type: MembershipType;
+  planName: string;
+  priceCents: number;
+  // Where the buyer lands afterwards, relative to the site.
+  successPath: string;
+}): Promise<string> {
+  const { paymentId, membershipId, email, type, planName, priceCents, successPath } = opts;
+  const successUrl = `${process.env.WEB_ORIGIN}${successPath}`;
+
+  if (paymentsBypassed()) {
+    await activatePayment(paymentId, `bypass-${Date.now()}`);
+    return successUrl;
+  }
+
+  if (priceCents === 0) {
+    await activatePayment(paymentId, `comp-${Date.now()}`);
+    return successUrl;
+  }
+
+  // Institutional sponsorship is a recurring 24-month subscription (renews
+  // itself in Stripe; see webhooks.ts's invoice.paid handling for how a
+  // renewal issues a fresh batch of claim codes). Everything else is a
+  // one-time payment, same as before.
+  const isInstitutional = type === "institutional";
+  const session = await stripe.checkout.sessions.create({
+    mode: isInstitutional ? "subscription" : "payment",
+    payment_method_types: ["card"],
+    customer_email: email,
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: { name: `NAHCA Membership — ${planName}` },
+          unit_amount: priceCents,
+          ...(isInstitutional ? { recurring: { interval: "month" as const, interval_count: 24 } } : {}),
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: successUrl,
+    cancel_url: `${process.env.WEB_ORIGIN}/membership?status=cancelled`,
+    metadata: {
+      paymentId: String(paymentId),
+      membershipId: String(membershipId),
+    },
+  });
+
+  await prisma.payment.update({
+    where: { id: paymentId },
+    data: { stripeRef: session.id },
+  });
+
+  return session.url as string;
+}
+
 membershipsRouter.post(
   "/signup",
   asyncHandler(async (req, res) => {
@@ -51,29 +158,11 @@ membershipsRouter.post(
         .json({ error: "Email already registered — please log in to add a membership." });
     }
 
-    const plan = await getMembershipPlan(type);
-    if (!plan) return res.status(400).json({ error: "Unknown membership type" });
-
-    if (type === "institutional") {
-      const minStudents = plan.minStudents ?? INSTITUTIONAL_MIN_STUDENTS;
-      if ((studentCount as number) < minStudents) {
-        return res.status(400).json({
-          error: { message: `studentCount must be at least ${minStudents} for institutional memberships` },
-        });
-      }
-    }
-
-    const basePriceCents =
-      type === "institutional" ? (studentCount as number) * (plan.pricePerStudentCents ?? 0) : plan.priceCents;
-
-    let couponId: number | null = null;
-    let priceCents = basePriceCents;
-    if (couponCode) {
-      const result = await findValidCoupon(couponCode, { planType: type });
-      if (isCouponError(result)) return res.status(result.status).json({ error: result.message });
-      couponId = result.id;
-      priceCents = applyCouponDiscount(basePriceCents, result);
-    }
+    // Price and coupon are checked before the account is created, so a bad
+    // coupon never leaves a half-made user behind.
+    const quoted = await quoteMembership({ type, studentCount, couponCode });
+    if (!quoted.ok) return res.status(quoted.status).json({ error: quoted.error });
+    const { plan, priceCents, couponId } = quoted;
 
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -105,50 +194,124 @@ membershipsRouter.post(
       },
     });
 
-    if (paymentsBypassed()) {
-      await activatePayment(payment.id, `bypass-${Date.now()}`);
-      return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/membership?status=success` });
+    const checkoutUrl = await startCheckout({
+      paymentId: payment.id,
+      membershipId: membership.id,
+      email,
+      type,
+      planName: plan.name,
+      priceCents,
+      successPath: "/membership?status=success",
+    });
+    res.status(201).json({ checkoutUrl });
+  })
+);
+
+// A signed-in user (typically a general user — a free account with no
+// membership) buying a plan for the account they already have. Same pricing,
+// coupon and checkout as /signup, minus creating the user.
+const membershipPurchaseSchema = z
+  .object({
+    type: z.enum(["regular", "student", "institutional", "conference"]),
+    studentCount: z.number().int().min(1).optional(),
+    contactPersonName: z.string().trim().min(1).optional(),
+    couponCode: z.string().optional(),
+    profile: memberProfileSchema.optional(),
+  })
+  .refine((data) => data.type !== "institutional" || data.studentCount !== undefined, {
+    message: "studentCount is required for institutional memberships",
+    path: ["studentCount"],
+  });
+
+membershipsRouter.post(
+  "/purchase",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const parsed = membershipPurchaseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const { type, studentCount, contactPersonName, couponCode, profile } = parsed.data;
+    const userId = req.auth!.userId;
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // "Active" is the same test the forum and store use. An expired or
+    // never-paid membership doesn't block buying a new one (that's renewal).
+    const active = await prisma.membership.findFirst({ where: { userId, status: "active" }, select: { id: true } });
+    if (active) {
+      return res.status(409).json({ error: "You already have an active membership." });
     }
 
-    if (priceCents === 0) {
-      await activatePayment(payment.id, `comp-${Date.now()}`);
-      return res.status(201).json({ checkoutUrl: `${process.env.WEB_ORIGIN}/membership?status=success` });
+    const quoted = await quoteMembership({ type, studentCount, couponCode });
+    if (!quoted.ok) return res.status(quoted.status).json({ error: quoted.error });
+    const { plan, priceCents, couponId } = quoted;
+
+    if (profile) {
+      await prisma.memberProfile.upsert({
+        where: { userId },
+        update: profile,
+        create: { userId, ...profile },
+      });
     }
 
-    // Institutional sponsorship is a recurring 24-month subscription (renews
-    // itself in Stripe; see webhooks.ts's invoice.paid handling for how a
-    // renewal issues a fresh batch of claim codes). Everything else is a
-    // one-time payment, same as before.
-    const isInstitutional = type === "institutional";
-    const session = await stripe.checkout.sessions.create({
-      mode: isInstitutional ? "subscription" : "payment",
-      payment_method_types: ["card"],
-      customer_email: email,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: { name: `NAHCA Membership — ${plan.name}` },
-            unit_amount: priceCents,
-            ...(isInstitutional ? { recurring: { interval: "month" as const, interval_count: 24 } } : {}),
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${process.env.WEB_ORIGIN}/membership?status=success`,
-      cancel_url: `${process.env.WEB_ORIGIN}/membership?status=cancelled`,
-      metadata: {
-        paymentId: String(payment.id),
-        membershipId: String(membership.id),
-      },
+    const membershipData = {
+      type,
+      priceCents,
+      studentCount: type === "institutional" ? studentCount : null,
+      contactPersonName: type === "institutional" ? (contactPersonName ?? null) : null,
+    };
+
+    // Someone who started checkout and walked away still has a pending
+    // membership with its pending payment (a membership has at most one
+    // payment). Pick that up again rather than stacking duplicates.
+    const earlier = await prisma.membership.findFirst({
+      where: { userId, status: "pending", groupId: null },
+      include: { payment: true },
+      orderBy: { createdAt: "desc" },
     });
 
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: { stripeRef: session.id },
-    });
+    let membershipId: number;
+    let paymentId: number;
+    if (earlier) {
+      membershipId = earlier.id;
+      await prisma.membership.update({ where: { id: earlier.id }, data: membershipData });
+      if (earlier.payment) {
+        paymentId = earlier.payment.id;
+        await prisma.payment.update({
+          where: { id: paymentId },
+          data: { couponId, amountCents: priceCents, status: "pending", stripeRef: null },
+        });
+      } else {
+        paymentId = (
+          await prisma.payment.create({
+            data: { userId, membershipId, couponId, type: "membership", amountCents: priceCents, status: "pending" },
+          })
+        ).id;
+      }
+    } else {
+      const membership = await prisma.membership.create({
+        data: { userId, status: "pending", ...membershipData },
+      });
+      membershipId = membership.id;
+      paymentId = (
+        await prisma.payment.create({
+          data: { userId, membershipId, couponId, type: "membership", amountCents: priceCents, status: "pending" },
+        })
+      ).id;
+    }
 
-    res.status(201).json({ checkoutUrl: session.url });
+    const checkoutUrl = await startCheckout({
+      paymentId,
+      membershipId,
+      email: user.email,
+      type,
+      planName: plan.name,
+      priceCents,
+      successPath: "/portal?membership=success",
+    });
+    res.status(201).json({ checkoutUrl });
   })
 );
 

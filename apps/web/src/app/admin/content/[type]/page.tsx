@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/Button";
 import { auth } from "@/auth";
-import { CONTENT_TYPES, ContentTypeKey, contentListPath, isResourceOnlyType } from "@/lib/contentTypes";
+import { CONTENT_TYPES, ContentTypeKey } from "@/lib/contentTypes";
 import { listContent } from "@/lib/adminApi";
 import { ContentList } from "@/components/admin/ContentList";
 
@@ -14,7 +14,6 @@ export default async function ContentListPage({
   const { type } = await params;
   const config = CONTENT_TYPES[type as ContentTypeKey];
   if (!config) notFound();
-  if (isResourceOnlyType(config.key)) redirect(contentListPath(config.key));
 
   const session = await auth();
   const items = await listContent(config.key, session?.apiToken ?? "");

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
 import { ContactForm } from "@/components/ContactForm";
@@ -15,8 +16,12 @@ export default function ContactPage() {
             <div>
               <h2 className="font-heading text-2xl font-medium text-heading">Get in Touch</h2>
               <p className="mt-4 text-black">
-                Questions about membership, events, or Hindu chaplaincy? Send us a message and a member of
-                the NAHCA team will reply.
+                Questions about membership, events, or Hindu chaplaincy? Send us an email and a member of the
+                NAHCA team will reply. Or feel free to add your question to the{" "}
+                <Link href="/forum" className="font-semibold text-brand underline hover:text-brand-dark">
+                  Community Forum
+                </Link>
+                .
               </p>
               <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-brand">Email</p>
               <a href={`mailto:${CONTACT_EMAIL}`} className="mt-1 inline-block text-black hover:text-brand">

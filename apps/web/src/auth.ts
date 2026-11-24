@@ -19,6 +19,9 @@ export class AccountDeactivatedError extends CredentialsSignin {
   code = "account_deactivated";
 }
 
+// How often a general user's session is re-checked for a newly bought membership.
+const MEMBERSHIP_RECHECK_MS = 10_000;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
@@ -102,11 +105,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = (user as { role: "admin" | "member" }).role;
         token.hasMembership = (user as { hasMembership: boolean }).hasMembership;
         token.apiToken = (user as { apiToken: string }).apiToken;
+        token.membershipCheckedAt = Date.now();
+        return token;
+      }
+
+      // hasMembership is read once at login, so someone who buys a membership
+      // while signed in would keep landing on the general-user dashboard until
+      // they logged out and back in. A general user's token is therefore
+      // re-checked now and then — the first request after they buy picks it up.
+      if (!token.hasMembership && token.role !== "admin" && token.apiToken) {
+        const stale = Date.now() - Number(token.membershipCheckedAt ?? 0) > MEMBERSHIP_RECHECK_MS;
+        if (stale) {
+          token.membershipCheckedAt = Date.now();
+          try {
+            const res = await fetch(`${process.env.API_URL}/memberships/me`, {
+              headers: { Authorization: `Bearer ${token.apiToken}` },
+              cache: "no-store",
+              signal: AbortSignal.timeout(5_000),
+            });
+            if (res.ok) {
+              const data = (await res.json()) as { memberships?: unknown[] };
+              token.hasMembership = (data.memberships?.length ?? 0) > 0;
+            }
+          } catch (err) {
+            // Keep what the token says; the next check will try again.
+            console.error("NextAuth: could not re-check membership:", err);
+          }
+        }
       }
       return token;
     },

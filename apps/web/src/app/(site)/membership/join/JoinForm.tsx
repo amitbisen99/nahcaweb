@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { ApiMembershipPlan } from "@/lib/api";
+import { purchaseMembership } from "./actions";
 import {
   emptyProfileDraft,
   profileDraftToPayload,
@@ -35,7 +37,17 @@ function discountedPriceCents(baseCents: number, coupon: AppliedCoupon | null): 
   return Math.max(0, Math.round(baseCents * (1 - coupon.discountValue / 100)));
 }
 
-export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; initialType?: string }) {
+// `account` is set when the visitor is already signed in: the plan is then added to
+// that account, so the form skips name, email and password.
+export function JoinForm({
+  plans,
+  initialType,
+  account = null,
+}: {
+  plans: ApiMembershipPlan[];
+  initialType?: string;
+  account?: { name: string; email: string } | null;
+}) {
   const defaultType: PlanType = SELECTABLE_PLAN_TYPES.includes(initialType as PlanType)
     ? (initialType as PlanType)
     : "regular";
@@ -50,6 +62,8 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
   const [studentCount, setStudentCount] = useState(institutionalMinStudents);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The email typed on the signup form already has an account.
+  const [emailTaken, setEmailTaken] = useState(false);
 
   const [draft, setDraft] = useState<ProfileDraft>(emptyProfileDraft);
   const [showErrors, setShowErrors] = useState(false);
@@ -127,6 +141,7 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setEmailTaken(false);
 
     if (showProfileQuestionnaire) {
       const problem = validateProfileDraft(draft);
@@ -148,6 +163,22 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
 
     const profile = showProfileQuestionnaire ? profileDraftToPayload(draft) : undefined;
 
+    if (account) {
+      const result = await purchaseMembership({
+        type: selectedType,
+        ...(isInstitutional ? { studentCount, contactPersonName } : {}),
+        ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
+        ...(profile ? { profile } : {}),
+      });
+      if (result.error || !result.checkoutUrl) {
+        setError(result.error ?? "Something went wrong. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+      window.location.href = result.checkoutUrl;
+      return;
+    }
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/memberships/signup`, {
         method: "POST",
@@ -164,6 +195,12 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
       });
 
       const data = await res.json();
+
+      if (res.status === 409) {
+        setEmailTaken(true);
+        setSubmitting(false);
+        return;
+      }
 
       if (!res.ok) {
         throw new Error(data.error?.message ?? data.error ?? "Something went wrong. Please try again.");
@@ -199,20 +236,30 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
         {computedPrice}
       </p>
 
+      {isInstitutional && (
+        <p className="mt-3 text-sm text-black">
+          Thank you for becoming an Institutional sponsor for your students. We are pleased to welcome them into the
+          NAHCA community. Please fill out the information below. An account will be created for you on our website
+          where will receive membership codes to send to your students.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4 rounded-xl border border-ink/10 bg-white p-6 sm:p-8">
         <Section title="Basic information" divider={false}>
           {isInstitutional ? (
             <>
-              <label className="flex flex-col gap-1">
-                <span className={fieldLabelClass()}>Institution / Organization Name</span>
-                <input type="text" name="institutionName" required className={inputClass()} />
-              </label>
+              {!account && (
+                <label className="flex flex-col gap-1">
+                  <span className={fieldLabelClass()}>Institution / Organization Name</span>
+                  <input type="text" name="institutionName" required className={inputClass()} />
+                </label>
+              )}
               <label className="flex flex-col gap-1">
                 <span className={fieldLabelClass()}>Contact person name</span>
                 <input type="text" name="contactPersonName" required className={inputClass()} />
               </label>
             </>
-          ) : (
+          ) : account ? null : (
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1">
                 <span className={fieldLabelClass()}>First Name</span>
@@ -227,17 +274,25 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
 
           {showProfileQuestionnaire && <PronounsField draft={draft} update={updateDraft} />}
 
-          <label className="flex flex-col gap-1">
-            <span className={fieldLabelClass()}>
-              {isInstitutional ? "Contact email address" : "Email address that you check regularly"}
-            </span>
-            <input type="email" name="email" required className={inputClass()} />
-          </label>
+          {account ? (
+            <p className="rounded-lg bg-sand px-3 py-2 text-sm text-black">
+              Joining as <span className="font-semibold text-heading">{account.name}</span> ({account.email})
+            </p>
+          ) : (
+            <>
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>
+                  {isInstitutional ? "Contact email address" : "Email address that you check regularly"}
+                </span>
+                <input type="email" name="email" required className={inputClass()} />
+              </label>
 
-          <label className="flex flex-col gap-1">
-            <span className={fieldLabelClass()}>Password</span>
-            <input type="password" name="password" required minLength={8} className={inputClass()} />
-          </label>
+              <label className="flex flex-col gap-1">
+                <span className={fieldLabelClass()}>Password</span>
+                <input type="password" name="password" required minLength={8} className={inputClass()} />
+              </label>
+            </>
+          )}
 
           {showProfileQuestionnaire && <ContactFields draft={draft} update={updateDraft} showErrors={showErrors} />}
 
@@ -295,6 +350,15 @@ export function JoinForm({ plans, initialType }: { plans: ApiMembershipPlan[]; i
           {couponError && <p className="text-xs text-red-600">{couponError}</p>}
         </Section>
 
+        {emailTaken && (
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-black">
+            An account with this email already exists.{" "}
+            <Link href="/login" className="font-semibold text-brand hover:text-brand-dark">
+              Log in
+            </Link>{" "}
+            and choose &ldquo;Become a member&rdquo; from your dashboard to add a membership to it.
+          </p>
+        )}
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button

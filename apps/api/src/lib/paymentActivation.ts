@@ -12,7 +12,7 @@ import {
 import { TIER_LABELS, TIER_TERM_MONTHS, getMembershipPlan } from "./membershipTiers";
 import { redeemCoupon } from "./coupons";
 import { createCodeBatch } from "./institutions";
-import { syncMemberToBrevo } from "./brevoContacts";
+import { syncEventAttendeeToBrevo, syncMemberToBrevo } from "./brevoContacts";
 import { eventPageUrl, findEventDetailsByCode } from "./eventCodes";
 import { buildEventRegistrationEmail } from "./eventRegistrationEmail";
 import { buildDonationTaxReceiptPdf } from "./taxReceiptPdf";
@@ -223,6 +223,9 @@ export async function activatePayment(paymentId: number, stripeRef: string, stri
       where: { id: registration.id },
       data: { status: "active" },
     });
+
+    // On the Brevo attendees list as soon as the registration is confirmed.
+    if (recipientEmail) await syncEventAttendeeToBrevo(recipientEmail, recipientName);
 
     const eventInfo = await findEventDetailsByCode(registration.eventCode);
     if (eventInfo && recipientEmail) {

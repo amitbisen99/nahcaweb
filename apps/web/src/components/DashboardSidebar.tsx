@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { label: "Store", href: "/dashboard" },
   { label: "Forum", href: "/dashboard/forum" },
   { label: "Your Events and Webinars", href: "/dashboard/events" },
+  { label: "Become a Member", href: "/dashboard/membership" },
 ];
 
 function linkClasses(active: boolean) {

@@ -35,7 +35,7 @@ function buildReminders(memberships: Awaited<ReturnType<typeof getMyMemberships>
       href: "/membership",
       tone: "info",
     });
-  } else if (pending) {
+  } else if (pending && !active) {
     reminders.push({
       text: `Your ${TIER_LABELS[pending.type] ?? pending.type} payment is pending.`,
       tone: "warning",
@@ -75,7 +75,12 @@ function buildCouponReminders(coupons: ApiProgrammeCoupon[]): Reminder[] {
   }));
 }
 
-export default async function PortalDashboardPage() {
+export default async function PortalDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ membership?: string }>;
+}) {
+  const { membership: membershipStatus } = await searchParams;
   const session = await auth();
   const token = session?.apiToken ?? "";
   const [memberships, payments, programmeCoupons, eventRegistrationsOrNull] = await Promise.all([
@@ -102,6 +107,12 @@ export default async function PortalDashboardPage() {
     <div>
       <h1 className="font-heading text-3xl font-medium text-heading">Dashboard</h1>
       <p className="mt-2 text-black">Welcome, {session?.user?.name}.</p>
+      {membershipStatus === "success" && (
+        <p className="mt-4 rounded-lg bg-green-100 px-4 py-3 text-sm text-green-800">
+          Thank you for joining NAHCA! Your membership will show as active here as soon as your payment is confirmed —
+          this usually takes a few seconds, so refresh the page if you don&apos;t see it yet. A confirmation email is on its way.
+        </p>
+      )}
       {sponsoringInstitutionName && (
         <p className="mt-1 text-sm text-black">Your membership is sponsored by {sponsoringInstitutionName}.</p>
       )}

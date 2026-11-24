@@ -288,13 +288,11 @@ export function QuestionnaireSections({ draft, update }: DraftProps) {
         </div>
       </Section>
 
-      <Section title="What are you interested in?">
-        <SettingSelect
-          label="Select one"
-          value={draft.interestedIn}
-          otherValue={draft.interestedInOther}
-          onChange={(value) => update({ interestedIn: value })}
-          onOtherChange={(value) => update({ interestedInOther: value })}
+      <Section title="Which contexts of spiritual care are you interested in?">
+        <CheckboxGrid
+          options={CARE_CONTEXTS}
+          selected={draft.careContexts}
+          onToggle={(value) => update({ careContexts: toggleInArray(draft.careContexts, value) })}
         />
       </Section>
 
@@ -374,14 +372,6 @@ export function QuestionnaireSections({ draft, update }: DraftProps) {
             className={inputClass()}
           />
         )}
-      </Section>
-
-      <Section title="Which contexts of spiritual care are you interested in?">
-        <CheckboxGrid
-          options={CARE_CONTEXTS}
-          selected={draft.careContexts}
-          onToggle={(value) => update({ careContexts: toggleInArray(draft.careContexts, value) })}
-        />
       </Section>
 
       <Section title="Board certification">

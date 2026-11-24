@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { CONTENT_TYPES, isResourceOnlyType } from "@/lib/contentTypes";
+import { CONTENT_TYPES } from "@/lib/contentTypes";
 import { listContent } from "@/lib/adminApi";
 
-// The four Resources-library types are managed from the Resources page.
-const HUB_TYPES = Object.values(CONTENT_TYPES).filter((config) => !isResourceOnlyType(config.key));
+// Resources have their own page (one form for everything in the library), so
+// they're not one of these.
+const HUB_TYPES = Object.values(CONTENT_TYPES);
 
 export default async function ContentHubPage() {
   const session = await auth();

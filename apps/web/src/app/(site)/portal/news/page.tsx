@@ -1,4 +1,4 @@
-import { getPublishedArticles, getPublishedNewsletters } from "@/lib/api";
+import { getResources } from "@/lib/cms";
 import { formatDate } from "@/lib/formatDate";
 
 interface NewsItem {
@@ -6,7 +6,6 @@ interface NewsItem {
   title: string;
   date: string;
   kind: "Newsletter" | "Article";
-  meta?: string;
   href?: string;
   excerpt?: string;
 }
@@ -17,7 +16,10 @@ function excerptOf(html: string, max = 200): string {
 }
 
 export default async function PortalNewsPage() {
-  const [newsletters, articles] = await Promise.all([getPublishedNewsletters(), getPublishedArticles()]);
+  const [newsletters, articles] = await Promise.all([
+    getResources({ tag: "newsletters" }),
+    getResources({ tag: "articles" }),
+  ]);
 
   const items: NewsItem[] = [
     ...newsletters.map((n) => ({
@@ -25,15 +27,15 @@ export default async function PortalNewsPage() {
       title: n.title,
       date: n.publishedDate ?? n.createdAt,
       kind: "Newsletter" as const,
-      href: n.fileUrl ? `${process.env.NEXT_PUBLIC_API_URL}${n.fileUrl}` : n.mailchimpCampaignUrl ?? undefined,
+      href: n.fileUrl ? `${process.env.NEXT_PUBLIC_API_URL}${n.fileUrl}` : n.websiteUrl ?? undefined,
     })),
     ...articles.map((a) => ({
       id: `article-${a.id}`,
       title: a.title,
-      date: a.createdAt,
+      date: a.publishedDate ?? a.createdAt,
       kind: "Article" as const,
-      meta: a.category,
-      excerpt: a.richTextBody ? excerptOf(a.richTextBody) : undefined,
+      href: `/resources/item/${a.id}`,
+      excerpt: a.description ? excerptOf(a.description) : undefined,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -50,7 +52,7 @@ export default async function PortalNewsPage() {
             <div key={item.id} className="rounded-xl border border-ink/10 bg-white p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="rounded-full bg-brand/10 px-2.5 py-0.5 text-xs font-semibold text-brand-dark">
-                  {item.meta ?? item.kind}
+                  {item.kind}
                 </span>
                 <span className="text-xs text-black">{formatDate(item.date)}</span>
               </div>

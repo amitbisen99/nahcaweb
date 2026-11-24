@@ -117,20 +117,41 @@ export async function getPartners(): Promise<CmsPartner[]> {
 export interface CmsResource {
   id: number;
   title: string;
+  // Rich text (HTML), written in the admin's editor.
   description: string | null;
   fileUrl: string | null;
-  linkUrl: string | null;
+  websiteUrl: string | null;
+  podcastUrl: string | null;
+  videoUrl: string | null;
   embedCode: string | null;
+  // Set on newsletters — the issue's date.
+  publishedDate: string | null;
+  // Library sections it appears in (see RESOURCE_SECTIONS) and the
+  // "Resources for ..." pages it appears on (see RESOURCE_PAGES).
+  tags: string[];
+  pages: string[];
   createdAt: string;
 }
 
-// `apiPath` is the content type's API path — academic-papers,
-// resource-websites, podcasts or resource-videos.
-export async function getResources(apiPath: string): Promise<CmsResource[]> {
-  const data = await fetchJson<{ items: CmsResource[] }>(`${process.env.API_URL}/${apiPath}`, {
+// Published resources, newest first — everything, or just those carrying one
+// `tag` (a Resource Library section) or placed on one `page` ("Resources for ...").
+export async function getResources(filter: { tag?: string; page?: string } = {}): Promise<CmsResource[]> {
+  const params = new URLSearchParams();
+  if (filter.tag) params.set("tag", filter.tag);
+  if (filter.page) params.set("page", filter.page);
+  const query = params.size ? `?${params}` : "";
+  const data = await fetchJson<{ items: CmsResource[] }>(`${process.env.API_URL}/resources${query}`, {
     cache: "no-store",
   });
   return data?.items ?? [];
+}
+
+export async function getResource(id: number): Promise<CmsResource | null> {
+  const data = await fetchJson<{ item: CmsResource }>(`${process.env.API_URL}/resources/${id}`, {
+    cache: "no-store",
+    silentStatuses: [404],
+  });
+  return data?.item ?? null;
 }
 
 export interface CmsEventInfo {

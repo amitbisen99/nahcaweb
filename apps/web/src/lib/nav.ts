@@ -54,7 +54,7 @@ export const NAV: NavItem[] = [
 ];
 
 export const FOOTER_LINKS: NavChild[] = [
-  { label: "Newsletters", href: "/newsletters" },
+  { label: "Newsletters", href: "/resources/newsletters" },
   { label: "Join us", href: "/membership" },
   { label: "Contact us", href: "/contact" },
 ];

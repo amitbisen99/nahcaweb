@@ -2,27 +2,15 @@
 
 import { FormEvent, useState } from "react";
 import {
-  EmploymentEntry,
   HEAR_ABOUT_OPTIONS,
   HEAR_ABOUT_OTHER_TRIGGERS,
   PREFERRED_PRONOUN_OPTIONS,
   PRIMARY_ROLES,
-  RELIGIOUS_TRADITIONS,
-  emptyEmployment,
 } from "@/lib/memberProfileFields";
-import {
-  CheckboxGrid,
-  Section,
-  YesNoRadio,
-  fieldLabelClass,
-  inputClass,
-  toggleInArray,
-} from "@/components/MemberProfileFormFields";
+import { Section, fieldLabelClass, inputClass } from "@/components/MemberProfileFormFields";
 
-// Same questionnaire as the membership form, but only through "How did you
-// hear about NAHCA?" (client's explicit instruction) — no password (guest
-// registration, no account created) and no care-context/board-cert/
-// endorsement/org-membership sections.
+// Guest registration (no account is created), so it's a short form: name,
+// pronouns, email, primary role, how they heard about NAHCA, and a coupon.
 
 interface AppliedCoupon {
   code: string;
@@ -53,14 +41,7 @@ export function EventJoinForm({
 
   const [preferredPronouns, setPreferredPronouns] = useState("");
   const [preferredPronounsOther, setPreferredPronounsOther] = useState("");
-  const [mailingAddress, setMailingAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [usesWhatsapp, setUsesWhatsapp] = useState<"" | "yes" | "no">("");
-  const [whatsappContactOk, setWhatsappContactOk] = useState<"" | "yes" | "no">("");
-  const [religiousTraditions, setReligiousTraditions] = useState<string[]>([]);
-  const [religiousTraditionOther, setReligiousTraditionOther] = useState("");
   const [primaryRole, setPrimaryRole] = useState<"" | "chaplain" | "student">("");
-  const [employment, setEmployment] = useState<EmploymentEntry[]>([emptyEmployment()]);
   const [hearAboutUs, setHearAboutUs] = useState("");
   const [hearAboutUsOther, setHearAboutUsOther] = useState("");
 
@@ -73,18 +54,6 @@ export function EventJoinForm({
     setCouponInput("");
     setCouponError(null);
     setAppliedCoupon(null);
-  }
-
-  function updateEmploymentRow(index: number, patch: Partial<EmploymentEntry>) {
-    setEmployment((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
-  }
-
-  function addEmploymentRow() {
-    setEmployment((rows) => [...rows, emptyEmployment()]);
-  }
-
-  function removeEmploymentRow(index: number) {
-    setEmployment((rows) => rows.filter((_, i) => i !== index));
   }
 
   async function applyCoupon() {
@@ -131,22 +100,7 @@ export function EventJoinForm({
     const profile = {
       preferredPronouns:
         (preferredPronouns === "Something else" ? preferredPronounsOther.trim() : preferredPronouns) || undefined,
-      mailingAddress: mailingAddress.trim() || undefined,
-      phone: phone.trim() || undefined,
-      usesWhatsapp: usesWhatsapp === "" ? undefined : usesWhatsapp === "yes",
-      whatsappContactOk: usesWhatsapp === "yes" && whatsappContactOk !== "" ? whatsappContactOk === "yes" : undefined,
-      religiousTraditions: religiousTraditions.length ? religiousTraditions : undefined,
-      religiousTraditionOther: religiousTraditions.includes("Something else")
-        ? religiousTraditionOther.trim() || undefined
-        : undefined,
       primaryRole: primaryRole || undefined,
-      employment: employment
-        .filter((row) => row.employerName.trim())
-        .map((row) => ({
-          employerName: row.employerName.trim(),
-          jobTitle: row.jobTitle.trim() || undefined,
-          employmentType: row.employmentType || undefined,
-        })),
       hearAboutUs: hearAboutUs || undefined,
       hearAboutUsOther: showsDivinityOther ? hearAboutUsOther.trim() || undefined : undefined,
     };
@@ -199,7 +153,7 @@ export function EventJoinForm({
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className={fieldLabelClass()}>Preferred pronouns</span>
+            <span className={fieldLabelClass()}>Pronouns</span>
             <select
               value={preferredPronouns}
               onChange={(e) => setPreferredPronouns(e.target.value)}
@@ -228,59 +182,9 @@ export function EventJoinForm({
             <input type="email" name="email" required className={inputClass()} />
           </label>
 
-          <label className="flex flex-col gap-1">
-            <span className={fieldLabelClass()}>Mailing address</span>
-            <textarea
-              value={mailingAddress}
-              onChange={(e) => setMailingAddress(e.target.value)}
-              rows={2}
-              className={inputClass()}
-            />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className={fieldLabelClass()}>Telephone number</span>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass()} />
-          </label>
-
-          <div className="flex flex-col gap-1.5">
-            <span className={fieldLabelClass()}>Do you use WhatsApp?</span>
-            <YesNoRadio
-              name="usesWhatsapp"
-              value={usesWhatsapp}
-              onChange={(v) => {
-                setUsesWhatsapp(v);
-                if (v === "no") setWhatsappContactOk("");
-              }}
-            />
-          </div>
-
-          {usesWhatsapp === "yes" && (
-            <div className="flex flex-col gap-1.5">
-              <span className={fieldLabelClass()}>If so, may NAHCA contact you via WhatsApp?</span>
-              <YesNoRadio name="whatsappContactOk" value={whatsappContactOk} onChange={setWhatsappContactOk} />
-            </div>
-          )}
         </Section>
 
-        <Section title="Religious/spiritual tradition">
-          <CheckboxGrid
-            options={RELIGIOUS_TRADITIONS}
-            selected={religiousTraditions}
-            onToggle={(value) => setReligiousTraditions((list) => toggleInArray(list, value))}
-          />
-          {religiousTraditions.includes("Something else") && (
-            <input
-              type="text"
-              value={religiousTraditionOther}
-              onChange={(e) => setReligiousTraditionOther(e.target.value)}
-              placeholder="Please specify"
-              className={inputClass()}
-            />
-          )}
-        </Section>
-
-        <Section title="Primary role in spiritual care">
+        <Section title="Primary Role in Spiritual Care">
           <div className="flex flex-col gap-2">
             {PRIMARY_ROLES.map((role) => (
               <label key={role.value} className="flex items-start gap-2 text-sm text-black">
@@ -294,66 +198,6 @@ export function EventJoinForm({
                 <span>{role.label}</span>
               </label>
             ))}
-          </div>
-        </Section>
-
-        <Section title="Places of employment and/or study">
-          <div className="flex flex-col gap-4">
-            {employment.map((row, i) => (
-              <div key={i} className="flex flex-col gap-3 rounded-lg border border-ink/10 p-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="flex flex-col gap-1">
-                    <span className={fieldLabelClass()}>Employer Name / Affiliated Organization</span>
-                    <input
-                      type="text"
-                      value={row.employerName}
-                      onChange={(e) => updateEmploymentRow(i, { employerName: e.target.value })}
-                      className={inputClass()}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className={fieldLabelClass()}>Job Title</span>
-                    <input
-                      type="text"
-                      value={row.jobTitle}
-                      onChange={(e) => updateEmploymentRow(i, { jobTitle: e.target.value })}
-                      className={inputClass()}
-                    />
-                  </label>
-                </div>
-                <label className="flex flex-col gap-1">
-                  <span className={fieldLabelClass()}>Full Time/Part Time/Volunteer</span>
-                  <select
-                    value={row.employmentType}
-                    onChange={(e) =>
-                      updateEmploymentRow(i, { employmentType: e.target.value as EmploymentEntry["employmentType"] })
-                    }
-                    className={inputClass()}
-                  >
-                    <option value="">Select…</option>
-                    <option value="full_time">Full Time</option>
-                    <option value="part_time">Part Time</option>
-                    <option value="volunteer">Volunteer</option>
-                  </select>
-                </label>
-                {employment.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeEmploymentRow(i)}
-                    className="self-start text-xs font-semibold text-red-600 hover:text-red-700"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addEmploymentRow}
-              className="self-start rounded-lg border border-ink/20 px-4 py-2 text-sm font-medium text-black hover:border-brand"
-            >
-              + Add another
-            </button>
           </div>
         </Section>
 
@@ -383,7 +227,7 @@ export function EventJoinForm({
           )}
         </Section>
 
-        <Section title="Coupon code (optional)">
+        <Section title="Coupon Code">
           {appliedCoupon ? (
             <div className="flex items-center justify-between rounded-lg border border-forest/30 bg-forest/5 px-3 py-2">
               <span className="text-sm font-medium text-forest">&ldquo;{appliedCoupon.code}&rdquo; applied</span>

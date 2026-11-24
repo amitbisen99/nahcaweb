@@ -13,6 +13,7 @@ import { activatePayment } from "../lib/paymentActivation";
 import { applyCouponDiscount, findValidCoupon, isCouponError } from "../lib/coupons";
 import { eventPageUrl, findEventDetailsByCode, findEventOrWebinarByCode } from "../lib/eventCodes";
 import { buildEventRegistrationEmail } from "../lib/eventRegistrationEmail";
+import { syncEventAttendeeToBrevo } from "../lib/brevoContacts";
 import { employmentEntrySchema } from "../lib/memberProfile";
 import {
   sendAdminNotification,
@@ -234,6 +235,10 @@ eventRegistrationsRouter.post(
       const registration = await prisma.eventRegistration.create({
         data: { eventCode, userId: user.id, status: "active" },
       });
+
+      // Free for a member, so it never goes through activatePayment — add them to
+      // the Brevo attendees list here.
+      await syncEventAttendeeToBrevo(user.email, user.name);
 
       const details = await findEventDetailsByCode(eventCode);
       const email = buildEventRegistrationEmail({

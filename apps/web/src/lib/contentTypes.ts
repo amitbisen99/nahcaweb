@@ -2,14 +2,8 @@ export type ContentTypeKey =
   | "events"
   | "webinars"
   | "conference-videos"
-  | "articles"
-  | "newsletters"
   | "board"
-  | "partners"
-  | "academic-papers"
-  | "resource-websites"
-  | "podcasts"
-  | "resource-videos";
+  | "partners";
 
 export interface SelectOption {
   value: string;
@@ -164,36 +158,6 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "published", label: "Published", type: "checkbox" },
     ],
   },
-  articles: {
-    key: "articles",
-    label: "Articles",
-    singularLabel: "Article",
-    titleField: "title",
-    fields: [
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "richTextBody", label: "Body", type: "richtext" },
-      {
-        name: "category",
-        label: "Category",
-        type: "select",
-        required: true,
-        options: ["Podcast", "Presentation", "Referral", "Ethics"],
-      },
-      { name: "published", label: "Published", type: "checkbox" },
-    ],
-  },
-  newsletters: {
-    key: "newsletters",
-    label: "Newsletters",
-    singularLabel: "Newsletter",
-    titleField: "title",
-    fields: [
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "fileUrl", label: "PDF / File", type: "file" },
-      { name: "publishedDate", label: "Published Date", type: "date" },
-      { name: "published", label: "Published", type: "checkbox" },
-    ],
-  },
   board: {
     key: "board",
     label: "Board Members",
@@ -203,7 +167,13 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "name", label: "Name", type: "text", required: true },
       { name: "role", label: "Role / Title", type: "text" },
       { name: "bio", label: "Bio", type: "textarea" },
-      { name: "photoUrl", label: "Photo", type: "file" },
+      {
+        name: "photoUrl",
+        label: "Photo",
+        type: "file",
+        helpText:
+          "Dimensions: 720 × 900 px (4:5 portrait). You can upload photos up to 10MB but for quick page load use images under 500KB.",
+      },
       { name: "order", label: "Display Order", type: "number" },
       { name: "published", label: "Published", type: "checkbox" },
     ],
@@ -222,92 +192,8 @@ export const CONTENT_TYPES: Record<ContentTypeKey, ContentTypeConfig> = {
       { name: "published", label: "Published", type: "checkbox" },
     ],
   },
-  "academic-papers": {
-    defaultPublished: true,
-    key: "academic-papers",
-    label: "Academic Papers",
-    singularLabel: "Academic Paper",
-    titleField: "title",
-    fields: [
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "description", label: "Description", type: "textarea" },
-      { name: "fileUrl", label: "Upload PDF", type: "file", helpText: "PDF, up to 10 MB." },
-      { name: "published", label: "Published", type: "checkbox" },
-    ],
-  },
-  "resource-websites": {
-    defaultPublished: true,
-    key: "resource-websites",
-    label: "Websites",
-    singularLabel: "Website",
-    titleField: "title",
-    fields: [
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "description", label: "Description", type: "textarea" },
-      { name: "linkUrl", label: "Website Link", type: "text", required: true, helpText: "Full address, e.g. https://example.org/" },
-      { name: "published", label: "Published", type: "checkbox" },
-    ],
-  },
-  podcasts: {
-    defaultPublished: true,
-    key: "podcasts",
-    label: "Podcasts",
-    singularLabel: "Podcast",
-    titleField: "title",
-    fields: [
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "description", label: "Description", type: "textarea" },
-      { name: "linkUrl", label: "Podcast Link (optional)", type: "text", helpText: "YouTube or Vimeo link (or any page where it can be listened to)." },
-      {
-        name: "embedCode",
-        label: "Embed Code (optional)",
-        type: "textarea",
-        helpText: "Paste the <iframe> embed code. Leave empty to embed automatically from a YouTube/Vimeo link.",
-      },
-      { name: "published", label: "Published", type: "checkbox" },
-    ],
-  },
-  "resource-videos": {
-    defaultPublished: true,
-    key: "resource-videos",
-    label: "Videos",
-    singularLabel: "Video",
-    titleField: "title",
-    fields: [
-      { name: "title", label: "Title", type: "text", required: true },
-      { name: "description", label: "Description", type: "textarea" },
-      { name: "linkUrl", label: "Video Link (optional)", type: "text", helpText: "YouTube or Vimeo link." },
-      {
-        name: "embedCode",
-        label: "Embed Code (optional)",
-        type: "textarea",
-        helpText: "Paste the <iframe> embed code. Leave empty to embed automatically from a YouTube/Vimeo link.",
-      },
-      { name: "published", label: "Published", type: "checkbox" },
-    ],
-  },
 };
 
-// The tabs on the admin Resources page, in order. Articles and Newsletters
-// are older content types that already have their own forms — their tabs
-// just reuse those.
-export const RESOURCE_TAB_KEYS: ContentTypeKey[] = [
-  "academic-papers",
-  "resource-websites",
-  "podcasts",
-  "resource-videos",
-  "articles",
-  "newsletters",
-];
-
-// These are managed from the Resources page (under Website Content), not
-// from a list page of their own: adding, editing and deleting one sends the
-// admin back to its tab there, and they're left out of the Website Content
-// menu and overview.
-export function isResourceOnlyType(key: ContentTypeKey): boolean {
-  return RESOURCE_TAB_KEYS.includes(key);
-}
-
 export function contentListPath(key: ContentTypeKey): string {
-  return isResourceOnlyType(key) ? `/admin/content/resources?tab=${key}` : `/admin/content/${key}`;
+  return `/admin/content/${key}`;
 }
