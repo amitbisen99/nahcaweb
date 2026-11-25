@@ -1,17 +1,29 @@
+import { preload } from "react-dom";
 import { Container } from "./Container";
 import { Button } from "./Button";
 
+const VIDEO = "/brand/homevideo2.mp4";
+// The video's first frame (about 40 KB). It shows while the video downloads, and
+// stays if the video can't play (slow network, phone battery saver). Re-create
+// it whenever the video is replaced.
+const POSTER = "/brand/homevideo2-poster.jpg";
+
 export function Hero() {
+  preload(POSTER, { as: "image", fetchPriority: "high" });
+
   return (
-    <section className="relative isolate -mt-16 overflow-hidden lg:-mt-20">
+    // The dark background keeps the white heading readable before anything loads.
+    <section className="relative isolate -mt-16 overflow-hidden bg-neutral-800 lg:-mt-20">
       <video
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
+        poster={POSTER}
         className="absolute inset-0 h-full w-full scale-110 object-cover blur-xs"
       >
-        <source src="/brand/homevideo2.mp4" type="video/mp4" />
+        <source src={VIDEO} type="video/mp4" />
       </video>
 
       <Container>
